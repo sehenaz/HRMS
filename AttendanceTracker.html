@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#3f51b5" />
+  <title>MEVTENCIA — Attendance Tracker</title>
+  <link rel="icon" href="assets/logo.png" type="image/x-icon">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%); min-height: 100vh; }
+    .navbar { background-color: #3f51b5; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 10; }
+    .logo { color: white; font-size: 20px; font-weight: 800; text-decoration: none; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-links { list-style: none; display: flex; gap: 8px; }
+    .nav-links a { color: white; text-decoration: none; font-size: 12px; padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.12); }
+    .container { max-width: 700px; margin: 0 auto; padding: 25px 18px 60px; }
+    .profile-bar { background: white; border-radius: 16px; padding: 18px 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
+    .profile-img { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #3f51b5, #2c3e9e); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid #e0e7ff; flex-shrink: 0; }
+    .profile-img img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-img svg { width: 28px; height: 28px; fill: white; }
+    .profile-info { flex: 1; }
+    .profile-info h3 { color: #333; font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .profile-info p { color: #888; font-size: 12px; }
+    .profile-location { font-size: 12px; color: #3f51b5; background: #e8eef5; padding: 4px 10px; border-radius: 20px; margin-top: 5px; display: inline-block; }
+    .clock-section { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
+    .clock-section h3 { color: #3f51b5; margin-bottom: 15px; font-size: 16px; font-weight: 700; }
+    .date-display { font-size: 15px; color: #666; margin-bottom: 6px; }
+    .time-display { font-size: 46px; color: #3f51b5; font-weight: bold; margin-bottom: 8px; font-family: 'Courier New', monospace; line-height: 1; }
+    .shift-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; margin-bottom: 18px; }
+    .shift-normal { background: #d4edda; color: #155724; }
+    .shift-half { background: #fff3cd; color: #856404; }
+    .shift-dot { width: 7px; height: 7px; border-radius: 50%; animation: blink 1.5s infinite; }
+    .dot-green { background: #28a745; }
+    .dot-amber { background: #ffc107; }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .clock-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .btn { padding: 14px 35px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-in { background: linear-gradient(135deg, #4caf50, #45a049); color: white; }
+    .btn-out { background: linear-gradient(135deg, #f44336, #da190b); color: white; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .status-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .status-card h3 { color: #3f51b5; margin-bottom: 18px; font-size: 16px; font-weight: 700; }
+    .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .status-item { background: #f5f7fa; padding: 16px; border-radius: 12px; text-align: center; }
+    .status-item label { display: block; color: #888; font-size: 12px; margin-bottom: 8px; }
+    .status-item .value { font-size: 22px; font-weight: bold; color: #3f51b5; }
+    .badge-full { font-size: 11px; font-weight: 700; background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 4px; }
+    .badge-half { font-size: 11px; font-weight: 700; background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 4px; }
+    .badge-live { font-size: 11px; font-weight: 700; background: #cce5ff; color: #004085; padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 4px; }
+    .summary-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
+    .sum-card { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center; }
+    .sum-card .num { font-size: 30px; font-weight: bold; color: #3f51b5; margin-bottom: 6px; }
+    .sum-card .lbl { color: #888; font-size: 12px; }
+    .attendance-table { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow-x: auto; }
+    .attendance-table h3 { color: #3f51b5; margin-bottom: 18px; font-size: 16px; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+    th { background: #3f51b5; color: white; padding: 12px 14px; text-align: left; font-weight: 600; font-size: 13px; }
+    td { padding: 12px 14px; border-bottom: 1px solid #e0e7ff; font-size: 13px; }
+    tr:hover { background: #f5f7fa; }
+    tr:last-child td { border-bottom: none; }
+    .status-present { color: #4caf50; font-weight: 600; }
+    .status-half { color: #ff9800; font-weight: 600; }
+    .status-wip { color: #3f51b5; font-weight: 600; }
+    .status-error { color: #e53e3e; font-weight: 600; }
+    .loc-cell { max-width: 180px; font-size: 11px; color: #555; line-height: 1.4; }
+    .loc-short { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; white-space: normal; font-size: 11px; color: #555; line-height: 1.4; margin-bottom: 3px; }
+    .map-btn { display: inline-flex; align-items: center; gap: 3px; color: #3f51b5; text-decoration: none; font-size: 10px; font-weight: 600; background: #e8eef5; padding: 2px 8px; border-radius: 6px; margin-top: 3px; }
+    .map-btn:hover { background: #c5cee0; }
+    .toast { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 22px; border-radius: 25px; font-size: 14px; z-index: 999; transition: transform 0.3s; white-space: nowrap; box-shadow: 0 5px 20px rgba(0,0,0,0.25); }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .insights-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media(min-width: 600px) { .insights-card { grid-template-columns: 1.2fr 1fr; align-items: center; } }
+    .chart-container { position: relative; height: 220px; width: 100%; }
+    .salary-payout-box { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
+    .salary-payout-box h4 { color: #3f51b5; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+    .salary-payout-box .payout-amount { font-size: 28px; font-weight: 800; color: #10b981; margin-bottom: 8px; }
+    .salary-details { font-size: 12px; color: #64748b; line-height: 1.6; }
+    .salary-details strong { color: #334155; }
+
+    /* ===================== CLOCKOUT POPUP STYLES ===================== */
+    .popup-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .popup-overlay.active { opacity: 1; pointer-events: all; }
+
+    .popup-box {
+      background: white;
+      border-radius: 24px;
+      padding: 28px 24px 24px;
+      width: 100%; max-width: 480px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+      transform: translateY(30px) scale(0.97);
+      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .popup-overlay.active .popup-box { transform: translateY(0) scale(1); }
+
+    .popup-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #f1f5f9;
+    }
+    .popup-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, #f44336, #da190b);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .popup-header h2 { color: #1e293b; font-size: 18px; font-weight: 800; margin-bottom: 2px; }
+    .popup-header p { color: #94a3b8; font-size: 12px; }
+
+    .popup-section-title {
+      font-size: 12px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      margin-bottom: 10px; margin-top: 18px;
+    }
+    .popup-section-title:first-of-type { margin-top: 0; }
+
+    /* Task entry rows */
+    .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      transition: border-color 0.2s;
+    }
+    .task-row:focus-within { border-color: #3f51b5; background: #f0f4ff; }
+
+    .task-row .task-num {
+      grid-column: 1 / -1;
+      font-size: 10px; font-weight: 700; color: #3f51b5;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .task-desc {
+      grid-column: 1 / -1;
+      width: 100%;
+      border: none; outline: none;
+      background: transparent;
+      font-size: 14px; color: #1e293b;
+      font-family: inherit;
+      resize: none;
+      min-height: 40px;
+    }
+    .task-desc::placeholder { color: #cbd5e1; }
+
+    .task-meta-row {
+      grid-column: 1 / -1;
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+
+    .task-select {
+      border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 4px 8px; font-size: 12px; color: #475569;
+      background: white; outline: none; cursor: pointer;
+      font-family: inherit;
+    }
+    .task-select:focus { border-color: #3f51b5; }
+
+    .task-hours-input {
+      width: 70px;
+      border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 4px 8px; font-size: 12px; color: #475569;
+      background: white; outline: none;
+      font-family: inherit;
+    }
+    .task-hours-input:focus { border-color: #3f51b5; }
+
+    .remove-task-btn {
+      background: none; border: none; cursor: pointer;
+      color: #f43f5e; font-size: 18px; line-height: 1;
+      padding: 2px 4px; border-radius: 6px;
+      transition: background 0.15s;
+      align-self: flex-start;
+    }
+    .remove-task-btn:hover { background: #fff1f2; }
+
+    .add-task-btn {
+      width: 100%;
+      padding: 10px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      background: none;
+      color: #94a3b8;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 6px;
+      font-family: inherit;
+    }
+    .add-task-btn:hover { border-color: #3f51b5; color: #3f51b5; background: #f0f4ff; }
+
+    /* Overall note */
+    .popup-note {
+      width: 100%;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px; color: #1e293b;
+      font-family: inherit;
+      resize: none; outline: none;
+      background: #f8fafc;
+      min-height: 70px;
+      transition: border-color 0.2s;
+    }
+    .popup-note:focus { border-color: #3f51b5; background: #f0f4ff; }
+    .popup-note::placeholder { color: #cbd5e1; }
+
+    /* Popup action buttons */
+    .popup-actions {
+      display: flex; gap: 10px;
+      margin-top: 22px;
+    }
+    .popup-cancel-btn {
+      flex: 1; padding: 13px;
+      border: 2px solid #e2e8f0; border-radius: 12px;
+      background: white; color: #64748b;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: all 0.2s;
+    }
+    .popup-cancel-btn:hover { border-color: #94a3b8; color: #334155; }
+
+    .popup-submit-btn {
+      flex: 2; padding: 13px;
+      border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #f44336, #da190b);
+      color: white;
+      font-size: 15px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 15px rgba(244,67,54,0.35);
+      transition: all 0.2s;
+    }
+    .popup-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244,67,54,0.45); }
+    .popup-submit-btn:active { transform: scale(0.98); }
+
+    /* Task summary in history table */
+    .task-summary-cell {
+      font-size: 11px; color: #475569; max-width: 160px;
+      line-height: 1.5;
+    }
+    .task-tag {
+      display: inline-block;
+      background: #e0e7ff; color: #3730a3;
+      font-size: 10px; font-weight: 600;
+      padding: 1px 6px; border-radius: 6px;
+      margin: 1px 2px 1px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <img src="assets/logo.png" alt="Mevrick Logo"
+        style="height: 60px; width: 60px; object-fit: contain; background: white; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+      <a class="logo" href="index.html">MEVTENCIA</a>
+    </div>
+    <div class="nav-right">
+      <ul class="nav-links">
+        <li><a href="SalaryHistory.html">Salary</a></li>
+        <li><a href="index.html" onclick="logout()">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="profile-bar">
+      <div class="profile-img" id="profileImg">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      <div class="profile-info">
+        <h3 id="empName">Employee</h3>
+        <p id="empMeta">—</p>
+        <div class="profile-location" id="empLocation" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="clock-section">
+      <h3>Clock In / Clock Out</h3>
+      <div class="date-display" id="currentDate">Loading...</div>
+      <div class="time-display" id="currentTime">00:00:00</div>
+      <div class="shift-tag shift-normal" id="shiftTag">
+        <span class="shift-dot dot-green"></span> Normal Shift
+      </div>
+      <div class="clock-buttons">
+        <button class="btn btn-in" id="btnIn" onclick="doClockin()">Clock In</button>
+        <button class="btn btn-out" id="btnOut" onclick="openClockoutPopup()" disabled>Clock Out</button>
+      </div>
+    </div>
+
+    <div class="status-card">
+      <h3>Today's Status</h3>
+      <div class="status-grid">
+        <div class="status-item"><label>Clock In Time</label><div class="value" id="statIn">--:--</div></div>
+        <div class="status-item"><label>Clock Out Time</label><div class="value" id="statOut">--:--</div></div>
+        <div class="status-item"><label>Work Hours</label><div class="value" id="statHours">0h 0m</div></div>
+        <div class="status-item"><label>Status</label><div class="value" id="statStatus">—</div><div id="statBadge"></div></div>
+      </div>
+    </div>
+
+    <div class="summary-row">
+      <div class="sum-card"><div class="num" id="sumTotal">0</div><div class="lbl">Total Days</div></div>
+      <div class="sum-card"><div class="num" id="sumPresent">0</div><div class="lbl">Present Days</div></div>
+      <div class="sum-card"><div class="num" id="sumHalf">0</div><div class="lbl">Half Days</div></div>
+      <div class="sum-card"><div class="num" id="sumHours">0h</div><div class="lbl">Total Hours</div></div>
+    </div>
+
+    <div class="insights-card">
+      <div class="chart-container"><canvas id="attendanceChart"></canvas></div>
+      <div class="salary-payout-box">
+        <h4>💰 Estimated Payout (Current Month)</h4>
+        <div class="payout-amount" id="salaryPayout">₹0</div>
+        <div class="salary-details" id="salaryDetails">
+          Base Salary: <strong>₹0/mo</strong><br>
+          Working Days: <strong id="workDaysCount">0</strong> / <span id="monthDays">30</span><br>
+          Absent Days: <strong id="absentDaysCount">0</strong><br>
+          <small>(Formula: Paid Days × Daily Rate)</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="attendance-table">
+      <h3>Attendance History</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Work Hours</th>
+            <th>Status</th>
+            <th>Tasks Done</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- ===================== CLOCK OUT POPUP ===================== -->
+  <div class="popup-overlay" id="clockoutPopup">
+    <div class="popup-box">
+      <div class="popup-header">
+        <div class="popup-icon">📋</div>
+        <div>
+          <h2>Daily Work Report</h2>
+          <p>Add today's tasks before clocking out</p>
+        </div>
+      </div>
+
+      <div class="popup-section-title">✅ Tasks Completed Today</div>
+      <div class="task-list" id="taskList"></div>
+      <button class="add-task-btn" onclick="addTaskRow()">+ Add Another Task</button>
+
+      <div class="popup-section-title" style="margin-top:18px;">📝 Additional Notes (Optional)</div>
+      <textarea class="popup-note" id="popupNote" placeholder="Any blockers, updates, or notes for your manager..."></textarea>
+
+      <div class="popup-actions">
+        <button class="popup-cancel-btn" onclick="closeClockoutPopup()">Cancel</button>
+        <button class="popup-submit-btn" onclick="submitClockout()">Submit & Clock Out 🚪</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const HALF_IN_H = 11, HALF_IN_M = 30;
+    const HALF_OUT_H = 16, HALF_OUT_M = 30;
+    const AUTO_CLOCKOUT_H = 23, AUTO_CLOCKOUT_M = 0;
+
+    let session = null;
+    let clockInTime = null;
+    let autoClockoutTimer = null;
+    let taskCount = 0;
+
+    window.onload = async function () {
+      session = JSON.parse(localStorage.getItem('mev_session') || 'null');
+      if (!session || session.type !== 'employee') { window.location.href = 'index.html'; return; }
+
+      document.getElementById('empName').textContent = session.name;
+      const city = (session.city && session.city !== 'undefined' && session.city !== 'null') ? session.city : '';
+      const dept = (session.dept && session.dept !== 'undefined') ? session.dept : 'Employee';
+      const metaParts = [session.id, dept];
+      if (city) metaParts.push(city);
+      document.getElementById('empMeta').textContent = metaParts.join(' · ');
+
+      const photo = localStorage.getItem('mev_capturedPhoto');
+      if (photo) {
+        const img = document.createElement('img'); img.src = photo;
+        const wrap = document.getElementById('profileImg'); wrap.innerHTML = ''; wrap.appendChild(img);
+      }
+
+      const loc = localStorage.getItem('mev_capturedLocation');
+      if (loc) {
+        try {
+          const d = JSON.parse(loc);
+          if (d.address && d.address !== 'Unknown') {
+            document.getElementById('empLocation').textContent = '📍 ' + d.address;
+            document.getElementById('empLocation').style.display = 'inline-block';
+          }
+        } catch (e) {}
+      }
+
+      setInterval(tickClock, 1000); tickClock();
+      loadTodayState();
+      renderHistory();
+      updateSummary();
+      initAnalytics();
+      schedule11PMClockout();
+
+      const captureAt = localStorage.getItem('mev_captureAt');
+      const rec = getRecord();
+      if (photo && captureAt && !rec) {
+        const captureTime = new Date(captureAt);
+        if ((Date.now() - captureTime.getTime()) / 60000 < 30) {
+          doClockin(captureTime);
+        }
+      }
+
+      (async () => {
+        try {
+          const backendRecords = await getRecordsFromBackend();
+          if (backendRecords && Array.isArray(backendRecords) && backendRecords.length > 0) {
+            const localRecords = getRecords();
+            const merged = [...backendRecords];
+            localRecords.forEach(lr => {
+              if (lr && lr.date && !merged.find(br => br.date === lr.date)) merged.push(lr);
+            });
+            merged.sort((a, b) => {
+              if (!a.date || !b.date) return 0;
+              const da = a.date.includes('/') ? a.date.split('/').reverse().join('') : a.date;
+              const db2 = b.date.includes('/') ? b.date.split('/').reverse().join('') : b.date;
+              return db2.localeCompare(da);
+            });
+            localStorage.setItem(getKey(), JSON.stringify(merged));
+            renderHistory(); updateSummary(); initAnalytics();
+          }
+        } catch (e) { console.warn('Background sync failed:', e); }
+      })();
+    };
+
+    // ===================== POPUP FUNCTIONS =====================
+
+    function openClockoutPopup() {
+      taskCount = 0;
+      document.getElementById('taskList').innerHTML = '';
+      document.getElementById('popupNote').value = '';
+      addTaskRow(); // Start with 1 task row
+      document.getElementById('clockoutPopup').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeClockoutPopup() {
+      document.getElementById('clockoutPopup').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Close popup if clicking outside
+    document.addEventListener('click', function(e) {
+      const popup = document.getElementById('clockoutPopup');
+      if (e.target === popup) closeClockoutPopup();
+    });
+
+    function addTaskRow() {
+      taskCount++;
+      const num = taskCount;
+      const div = document.createElement('div');
+      div.className = 'task-row';
+      div.id = `task-row-${num}`;
+      div.innerHTML = `
+        <div class="task-num">Task #${num}</div>
+        <textarea class="task-desc" id="task-desc-${num}" placeholder="Describe what you worked on..." rows="2"></textarea>
+        <div class="task-meta-row">
+          <select class="task-select" id="task-cat-${num}">
+            <option value="">📂 Category</option>
+            <option value="Development">💻 Development</option>
+            <option value="Design">🎨 Design</option>
+            <option value="Meeting">🤝 Meeting</option>
+            <option value="Testing">🧪 Testing</option>
+            <option value="Documentation">📄 Documentation</option>
+            <option value="Support">🛠️ Support</option>
+            <option value="Research">🔍 Research</option>
+            <option value="Deployment">🚀 Deployment</option>
+            <option value="Other">📌 Other</option>
+          </select>
+          <input type="number" class="task-hours-input" id="task-hrs-${num}" placeholder="Hrs" min="0.5" max="12" step="0.5">
+          <select class="task-select" id="task-status-${num}">
+            <option value="Completed">✅ Done</option>
+            <option value="In Progress">🔄 In Progress</option>
+            <option value="Pending">⏳ Pending</option>
+          </select>
+          ${num > 1 ? `<button class="remove-task-btn" onclick="removeTaskRow(${num})" title="Remove">✕</button>` : ''}
+        </div>
+      `;
+      document.getElementById('taskList').appendChild(div);
+      document.getElementById(`task-desc-${num}`).focus();
+    }
+
+    function removeTaskRow(num) {
+      const el = document.getElementById(`task-row-${num}`);
+      if (el) el.remove();
+    }
+
+    function collectTasks() {
+      const tasks = [];
+      const rows = document.querySelectorAll('.task-row');
+      rows.forEach(row => {
+        const id = row.id.replace('task-row-', '');
+        const desc = (document.getElementById(`task-desc-${id}`)?.value || '').trim();
+        if (!desc) return; // Skip empty tasks
+        tasks.push({
+          desc,
+          category: document.getElementById(`task-cat-${id}`)?.value || '',
+          hours: document.getElementById(`task-hrs-${id}`)?.value || '',
+          status: document.getElementById(`task-status-${id}`)?.value || 'Completed'
+        });
+      });
+      return tasks;
+    }
+
+    function submitClockout() {
+      const tasks = collectTasks();
+      if (tasks.length === 0) {
+        // Highlight first task field
+        const firstDesc = document.querySelector('.task-desc');
+        if (firstDesc) { firstDesc.style.borderColor = '#f43f5e'; firstDesc.focus(); setTimeout(() => firstDesc.style.borderColor = '', 2000); }
+        showToast('⚠️ Please add at least one task!');
+        return;
+      }
+      const note = document.getElementById('popupNote').value.trim();
+      closeClockoutPopup();
+      doClockout(false, tasks, note);
+    }
+
+    // ===================== CLOCK FUNCTIONS =====================
+
+    function schedule11PMClockout() {
+      if (autoClockoutTimer) clearTimeout(autoClockoutTimer);
+      const now = new Date();
+      const target = new Date(now);
+      target.setHours(AUTO_CLOCKOUT_H, AUTO_CLOCKOUT_M, 0, 0);
+      if (now >= target) return;
+      const msUntil11PM = target - now;
+      autoClockoutTimer = setTimeout(() => {
+        const rec = getRecord();
+        if (rec && !rec.clock_out && clockInTime) {
+          doClockout(true, [], 'Auto clock-out at 11 PM');
+        }
+      }, msUntil11PM);
+    }
+
+    let attChart = null;
+
+    async function initAnalytics() {
+      const records = getRecords();
+      const now = new Date();
+      const totalMonthDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      document.getElementById('monthDays').textContent = totalMonthDays;
+
+      const thisMonthRecs = records.filter(r => r.date && r.date.endsWith(String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear()));
+      const attMap = {};
+      thisMonthRecs.forEach(r => { const day = parseInt(r.date.split('/')[0]); attMap[day] = r.attendance_type; });
+
+      let payableDays = 0, absentDays = 0, holidays = 0, sandwiches = 0, presentFull = 0, presentHalf = 0;
+      for (let day = 1; day <= totalMonthDays; day++) {
+        if (day > now.getDate()) continue;
+        const d = new Date(now.getFullYear(), now.getMonth(), day);
+        const isSunday = d.getDay() === 0;
+        const status = attMap[day];
+        if (status === 'Full Day') { payableDays += 1; presentFull += 1; }
+        else if (status && status.includes('Half')) { payableDays += 0.5; absentDays += 0.5; presentHalf += 1; }
+        else if (isSunday) {
+          const satDay = day - 1, monDay = day + 1;
+          const satStatus = satDay >= 1 ? attMap[satDay] : null;
+          const monStatus = monDay <= now.getDate() ? attMap[monDay] : null;
+          const satAbsent = !satStatus || satStatus === 'Absent' || satStatus === 'In Progress';
+          const monAbsent = monDay <= now.getDate() ? (!monStatus || monStatus === 'Absent' || monStatus === 'In Progress') : false;
+          if (satAbsent && monAbsent) { sandwiches += 1; absentDays += 1; }
+          else { payableDays += 1; holidays += 1; }
+        } else { absentDays += 1; }
+      }
+
+      let monthlySalary = 15000;
+      try {
+        const lsDB = JSON.parse(localStorage.getItem('mevtencia_employeeDatabase') || '{}');
+        let localEmp = lsDB[session.id] || Object.values(lsDB).find(e => e.id === session.id || e.employeeId === session.id || e.email === session.email);
+        if (localEmp && localEmp.salary) monthlySalary = parseInt(localEmp.salary);
+      } catch (e) {}
+      try {
+        const resp = await fetch('/api/employees');
+        if (resp.ok) { const emps = await resp.json(); const me = emps.find(e => e.emp_id === session.id); if (me && me.salary) monthlySalary = parseInt(me.salary); }
+      } catch (e) {}
+
+      const dailyRate = monthlySalary / totalMonthDays;
+      document.getElementById('salaryPayout').textContent = '₹' + Math.round(payableDays * dailyRate).toLocaleString('en-IN');
+      document.getElementById('workDaysCount').textContent = payableDays;
+      document.getElementById('absentDaysCount').textContent = absentDays.toFixed(1);
+      document.getElementById('salaryDetails').innerHTML = `Base Salary: <strong>₹${monthlySalary.toLocaleString('en-IN')}</strong><br>Paid Days (YTD): <strong>${payableDays}</strong> / ${now.getDate()}<br>Sundays (Paid): <strong>${holidays}</strong> | Sandwiches (Unpaid): <strong style="color:red;">${sandwiches}</strong><br><small>(Formula: Paid Days × Daily Rate of Current Month)</small>`;
+
+      const ctx = document.getElementById('attendanceChart').getContext('2d');
+      if (attChart) attChart.destroy();
+      attChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels: ['Full Day', 'Half Day', 'Absent (incl. Sandwiches)'], datasets: [{ data: [presentFull, presentHalf, absentDays], backgroundColor: ['#10b981', '#fbbf24', '#f43f5e'], borderWidth: 0, hoverOffset: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } }, title: { display: true, text: 'Attendance Share (Current Month)', font: { size: 13, weight: 'bold' }, color: '#3f51b5' } }, cutout: '65%' }
+      });
+    }
+
+    async function getRecordsFromBackend() {
+      const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
+      if (!response.ok) throw new Error('Failed');
+      return await response.json();
+    }
+
+    async function syncToBackend(record) {
+      if (!record) return;
+      try {
+        const data = {
+          emp_id: session.id, emp_name: session.name, dept: session.dept || 'Employee', city: session.city,
+          date: record.date, clock_in: record.clock_in, clock_out: record.clock_out || '',
+          work_hours: record.work_hours || '', attendance_type: record.attendance_type || 'In Progress',
+          location: record.location, lat: record.lat || null, lng: record.lng || null, photo: record.photo
+        };
+        await fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+      } catch (e) { console.error('Sync failed:', e); }
+    }
+
+    function getToday() {
+      const d = new Date();
+      return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+    }
+    function fmtTimeShort(d) { return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }); }
+    function diffHM(ms) { const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000); return `${h}h ${m}m`; }
+
+    function tickClock() {
+      const now = new Date();
+      document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-IN', { hour12: false });
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const h = now.getHours(), m = now.getMinutes();
+      const lateIn = h > HALF_IN_H || (h === HALF_IN_H && m >= HALF_IN_M);
+      const shiftTag = document.getElementById('shiftTag');
+      if (!clockInTime && lateIn) {
+        shiftTag.className = 'shift-tag shift-half';
+        shiftTag.innerHTML = '<span class="shift-dot dot-amber"></span> After 11:30 AM — Half Day If Clocked In Now';
+      } else {
+        shiftTag.className = 'shift-tag shift-normal';
+        shiftTag.innerHTML = '<span class="shift-dot dot-green"></span> Normal Shift';
+      }
+      if (clockInTime && !getRecord()?.clock_out) {
+        document.getElementById('statHours').textContent = diffHM(now - clockInTime);
+      }
+    }
+
+    function getKey() { return `mev_att_${session.id}`; }
+    function getRecords() { return JSON.parse(localStorage.getItem(getKey()) || '[]'); }
+
+    function saveRecords(recs, syncIdx = 0) {
+      localStorage.setItem(getKey(), JSON.stringify(recs));
+      pushToAdminLog(recs);
+      if (recs.length > syncIdx) syncToBackend(recs[syncIdx]);
+    }
+
+    function getRecord() { return getRecords().find(r => r.date === getToday()) || null; }
+
+    function pushToAdminLog(recs) {
+      const all = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+      const loc = JSON.parse(localStorage.getItem('mev_capturedLocation') || '{}');
+      const photo = localStorage.getItem('mev_capturedPhoto') || '';
+      recs.forEach(r => {
+        const existingIdx = all.findIndex(item => item.emp_id === session.id && item.date === r.date);
+        const recordData = { emp_id: session.id, emp_name: session.name, dept: session.dept, city: session.city, date: r.date, clock_in: r.clock_in, clock_out: r.clock_out || '', work_hours: r.work_hours || '', attendance_type: r.attendance_type || 'In Progress', location: loc.address || 'Unknown', photo: photo || r.photo || '' };
+        if (existingIdx !== -1) all[existingIdx] = recordData; else all.push(recordData);
+      });
+      localStorage.setItem('mev_adminLog', JSON.stringify(all));
+    }
+
+    function determineType(inTime, outTime) {
+      const ih = inTime.getHours(), im = inTime.getMinutes();
+      const oh = outTime.getHours(), om = outTime.getMinutes();
+      const lateIn = ih > HALF_IN_H || (ih === HALF_IN_H && im >= HALF_IN_M);
+      const earlyOut = oh < HALF_OUT_H || (oh === HALF_OUT_H && om < HALF_OUT_M);
+      return (lateIn || earlyOut) ? 'Half Day' : 'Full Day';
+    }
+
+    function loadTodayState() {
+      const rec = getRecord();
+      if (!rec) return;
+      clockInTime = new Date(rec.clock_in_iso);
+      document.getElementById('statIn').textContent = rec.clock_in;
+      if (rec.clock_out) {
+        document.getElementById('statOut').textContent = rec.clock_out;
+        document.getElementById('statHours').textContent = rec.work_hours;
+        setStatusBadge(rec.attendance_type);
+        document.getElementById('btnIn').disabled = true;
+        document.getElementById('btnOut').disabled = true;
+      } else {
+        document.getElementById('btnIn').disabled = true;
+        document.getElementById('btnOut').disabled = false;
+        document.getElementById('statStatus').textContent = 'Working';
+        setStatusBadge('In Progress');
+        schedule11PMClockout();
+      }
+    }
+
+    function doClockin(timeOverride = null) {
+      const rec = getRecord();
+      if (rec) { showToast('Already clocked in today!'); return; }
+      const now = timeOverride || new Date();
+      const ih = now.getHours(), im = now.getMinutes();
+      const lateIn = ih > HALF_IN_H || (ih === HALF_IN_H && im >= HALF_IN_M);
+      const loc = JSON.parse(localStorage.getItem('mev_capturedLocation') || '{}');
+      const photo = localStorage.getItem('mev_capturedPhoto') || '';
+      const record = { date: getToday(), clock_in: fmtTimeShort(now), clock_in_iso: now.toISOString(), clock_out: null, work_hours: null, attendance_type: lateIn ? 'Half Day' : 'In Progress', location: loc.address || 'Unknown', lat: loc.lat || null, lng: loc.lng || null, photo, tasks: [], note: '' };
+      const recs = getRecords(); recs.unshift(record); saveRecords(recs);
+      clockInTime = now;
+      document.getElementById('statIn').textContent = record.clock_in;
+      document.getElementById('statStatus').textContent = 'Working';
+      setStatusBadge('In Progress');
+      document.getElementById('btnIn').disabled = true;
+      document.getElementById('btnOut').disabled = false;
+      showToast(lateIn ? '⚠️ Clocked In — Half Day (after 11:30 AM)' : '✅ Clocked In successfully!');
+      schedule11PMClockout();
+      renderHistory(); updateSummary();
+    }
+
+    // ✅ MODIFIED: accepts tasks and note
+    function doClockout(auto = false, tasks = [], note = '') {
+      if (!clockInTime) return;
+      const rec = getRecord();
+      if (!rec || rec.clock_out) return;
+
+      const now = auto
+        ? (() => { const t = new Date(); t.setHours(23, 0, 0, 0); return t; })()
+        : new Date();
+
+      const type = determineType(clockInTime, now);
+      rec.clock_out = fmtTimeShort(now);
+      rec.clock_out_iso = now.toISOString();
+      rec.work_hours = diffHM(now - clockInTime);
+      rec.attendance_type = type;
+      rec.tasks = tasks;
+      rec.note = note;
+
+      const recs = getRecords();
+      const idx = recs.findIndex(r => r.date === getToday());
+      if (idx !== -1) { recs[idx] = rec; saveRecords(recs, idx); }
+
+      document.getElementById('statOut').textContent = rec.clock_out;
+      document.getElementById('statHours').textContent = rec.work_hours;
+      setStatusBadge(type);
+      document.getElementById('btnOut').disabled = true;
+      clockInTime = null;
+
+      if (autoClockoutTimer) { clearTimeout(autoClockoutTimer); autoClockoutTimer = null; }
+
+      const taskMsg = tasks.length > 0 ? ` · ${tasks.length} task(s) logged` : '';
+      showToast(auto ? `⏰ Auto Clocked Out at 11 PM · ${type}` : `✅ Clocked Out · ${type}${taskMsg}`);
+      renderHistory(); updateSummary(); initAnalytics();
+    }
+
+    function setStatusBadge(type) {
+      const el = document.getElementById('statStatus');
+      const badge = document.getElementById('statBadge');
+      if (type === 'Full Day') { el.textContent = 'Full Day'; badge.innerHTML = '<div class="badge-full">✓ FULL DAY</div>'; }
+      else if (type === 'Half Day') { el.textContent = 'Half Day'; badge.innerHTML = '<div class="badge-half">½ HALF DAY</div>'; }
+      else { el.textContent = 'Working'; badge.innerHTML = '<div class="badge-live">● IN PROGRESS</div>'; }
+    }
+
+    function renderHistory() {
+      const body = document.getElementById('historyBody');
+      const recs = getRecords();
+      if (!recs.length) {
+        body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px;">No attendance records yet.</td></tr>';
+        return;
+      }
+      body.innerHTML = recs.slice(0, 30).map(r => {
+        const isHalf = (r.attendance_type || '').includes('Half');
+        const isDone = !!r.clock_out;
+        const isError = !isDone && r.date !== getToday() && r.clock_in;
+
+        let statusClass, statusText;
+        if (isError) { statusClass = 'status-error'; statusText = '⚠️ Missed Clock Out'; }
+        else if (isDone) { statusClass = isHalf ? 'status-half' : 'status-present'; statusText = isHalf ? 'Half Day' : 'Present'; }
+        else { statusClass = 'status-wip'; statusText = 'In Progress'; }
+
+        const locText = r.location && r.location !== 'Unknown' ? r.location : null;
+        const mapLink = r.lat && r.lng ? `<a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" class="map-btn">📍 Map</a>` : '';
+        const locationCell = locText
+          ? `<div class="loc-cell"><div class="loc-short" title="${locText}">${locText}</div>${mapLink}</div>`
+          : `<div class="loc-cell" style="color:#bbb;">Unknown ${mapLink}</div>`;
+
+        const clockOutDisplay = isError
+          ? '<span style="color:#e53e3e;font-size:11px;">⚠️ Not recorded</span>'
+          : (r.clock_out || '--:--');
+
+        // ✅ Tasks cell
+        let tasksCell = '<span style="color:#cbd5e1;font-size:11px;">—</span>';
+        if (r.tasks && r.tasks.length > 0) {
+          const tags = r.tasks.map(t => `<span class="task-tag">${t.category || '📌'}</span>`).join('');
+          const taskList = r.tasks.map(t => `• ${t.desc}${t.hours ? ` (${t.hours}h)` : ''} <em style="color:#94a3b8;">[${t.status}]</em>`).join('<br>');
+          tasksCell = `<div class="task-summary-cell">${tags}<br><small style="color:#64748b;">${taskList}</small>${r.note ? `<br><small style="color:#94a3b8;font-style:italic;">📝 ${r.note}</small>` : ''}</div>`;
+        }
+
+        return `<tr>
+          <td>${r.date}</td>
+          <td>${r.clock_in}</td>
+          <td>${clockOutDisplay}</td>
+          <td>${r.work_hours || (isError ? '<span style="color:#e53e3e;">Unknown</span>' : 'In Progress')}</td>
+          <td class="${statusClass}">${statusText}</td>
+          <td>${tasksCell}</td>
+          <td>${locationCell}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function updateSummary() {
+      const recs = getRecords();
+      document.getElementById('sumTotal').textContent = recs.length;
+      document.getElementById('sumPresent').textContent = recs.filter(r => r.clock_out && r.attendance_type === 'Full Day').length;
+      document.getElementById('sumHalf').textContent = recs.filter(r => (r.attendance_type || '').includes('Half')).length;
+      let mins = 0;
+      recs.forEach(r => { if (r.work_hours) { const m = r.work_hours.match(/(\d+)h (\d+)m/); if (m) mins += parseInt(m[1]) * 60 + parseInt(m[2]); } });
+      document.getElementById('sumHours').textContent = Math.floor(mins / 60) + 'h';
+    }
+
+    let toastTimer;
+    function showToast(msg) {
+      const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function logout() {
+      localStorage.removeItem('mev_session');
+      localStorage.removeItem('mev_capturedPhoto');
+      localStorage.removeItem('mev_capturedLocation');
+      localStorage.removeItem('mev_captureAt');
+    }
+  </script>
+</body>
+</html>

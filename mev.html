@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#3f51b5" />
+  <title>MEVTENCIA — Camera Login</title>
+  <link rel="icon" href="assets/logo.png" type="image/x-icon">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .navbar {
+      background-color: #3f51b5;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      color: white;
+      font-size: 20px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 30px auto 50px;
+      padding: 0 20px;
+    }
+
+    .header-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .header-card h2 {
+      color: #3f51b5;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .header-card p {
+      color: #666;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .step {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      border: 2px solid #ddd;
+      color: #aaa;
+      transition: all 0.3s;
+    }
+
+    .step.active {
+      border-color: #3f51b5;
+      color: #3f51b5;
+      background: #e8eef5;
+    }
+
+    .step.done {
+      border-color: #4caf50;
+      background: #4caf50;
+      color: white;
+    }
+
+    .step-line {
+      width: 40px;
+      height: 2px;
+      background: #ddd;
+      transition: background 0.3s;
+    }
+
+    .step-line.done {
+      background: #4caf50;
+    }
+
+    .main-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .video-wrap {
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .video-wrap.active {
+      display: block;
+    }
+
+    #video {
+      width: 100%;
+      display: block;
+      background: #111;
+      max-height: 320px;
+      object-fit: cover;
+    }
+
+    canvas {
+      display: none;
+    }
+
+    .photo-wrap {
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .photo-wrap.active {
+      display: block;
+    }
+
+    #photo {
+      width: 100%;
+      display: block;
+      max-height: 320px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .location-box {
+      background: #f5f7fa;
+      border: 1px solid #e0e7ff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .location-box.show {
+      display: block;
+    }
+
+    .location-box strong {
+      color: #3f51b5;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .location-address {
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .location-coords {
+      color: #888;
+      font-size: 11px;
+      margin-top: 4px;
+      font-family: monospace;
+    }
+
+    .loc-verify-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 12px;
+      background: #eef2ff;
+      color: #3f51b5;
+      border: 1px solid #c7d2fe;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .loc-verify-btn:hover {
+      background: #e0e7ff;
+      border-color: #3f51b5;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #607d8b;
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: white;
+    }
+
+    .btn-disabled {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .status-msg {
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .status-msg.show {
+      display: block;
+    }
+
+    .status-msg.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-msg.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-msg.warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <img src="assets/logo.png" alt="Mevrick Logo" style="height: 60px; width: 60px; object-fit: contain; background: white; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+      <a class="logo" href="index.html">MEVTENCIA</a>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="EmployeeProfile.html">Login</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="header-card">
+      <div style="margin-bottom: 20px;">
+        <img src="assets/logo.png" alt="Mevrick Logo" style="width: 100px; height: 100px; border-radius: 50%; object-fit: contain; background: white; padding: 10px; box-shadow: 0 8px 25px rgba(63, 81, 181, 0.3);">
+      </div>
+      <h2>Camera + Location Verification</h2>
+      <p>Enable your camera and GPS to capture your photo and current address for attendance verification.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step active" id="s1">1</div>
+      <div class="step-line" id="sl1"></div>
+      <div class="step" id="s2">2</div>
+      <div class="step-line" id="sl2"></div>
+      <div class="step" id="s3">3</div>
+    </div>
+
+    <div class="main-card">
+      <!-- Video element is always in DOM, only visibility is toggled -->
+      <div class="video-wrap" id="videoWrap">
+        <video id="video" autoplay playsinline muted></video>
+      </div>
+      <canvas id="canvas"></canvas>
+      <div class="photo-wrap" id="photoWrap">
+        <img id="photo" alt="Captured" />
+      </div>
+      <div class="location-box" id="locationBox">
+        <strong>📍 Current Building Location</strong>
+        <div class="location-address" id="locationAddress">Fetching precise GPS...</div>
+        <div class="location-coords" id="locationCoords"></div>
+        <a id="locVerifyLink" class="loc-verify-btn" target="_blank" style="display:none;">🗺️ Verify on Google Maps</a>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()">📷 Enable Camera</button>
+        <button class="btn btn-primary btn-disabled" id="captureBtn" onclick="capturePhoto()" style="display:none;">✓ Capture Photo</button>
+        <button class="btn btn-secondary" id="retakeBtn" onclick="retake()" style="display:none;">↩ Retake</button>
+        <button class="btn btn-success" id="continueBtn" onclick="continueToLogin()" style="display:none;">Continue →</button>
+      </div>
+
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global state
+    let stream = null;
+    let capturedData = null;
+    let locationData = null;
+
+    // ─── Utility ────────────────────────────────────────────────────────────────
+
+    function setStep(n) {
+      [1, 2, 3].forEach(i => {
+        const s = document.getElementById('s' + i);
+        if (i < n)       { s.className = 'step done';   s.textContent = '✓'; }
+        else if (i === n){ s.className = 'step active'; s.textContent = i;   }
+        else             { s.className = 'step';        s.textContent = i;   }
+        if (i < 3)
+          document.getElementById('sl' + i).className = i < n ? 'step-line done' : 'step-line';
+      });
+    }
+
+    function showMsg(msg, type) {
+      const el = document.getElementById('statusMsg');
+      el.textContent = msg;
+      el.className = 'status-msg show ' + type;
+    }
+
+    // ─── Enable Camera ───────────────────────────────────────────────────────────
+    //
+    // Root causes of AbortError / "Timeout starting video source":
+    //   1. Video element was hidden in DOM when srcObject was assigned
+    //   2. onloadedmetadata never fires if video is display:none
+    //   3. play() promise was rejected due to autoplay policy
+    //
+    // Fix strategy:
+    //   • Show videoWrap first (display:block) — then assign stream
+    //   • 100ms DOM settle timeout
+    //   • Await onloadedmetadata + play()
+    //   • Resolve even if play() rejects (ignore autoplay block)
+    //   • 8s safety timeout that resolves (not rejects)
+    //   • Fallback to plain { video: true } if facingMode fails
+
+    async function enableCamera() {
+      const video     = document.getElementById('video');
+      const videoWrap = document.getElementById('videoWrap');
+
+      try {
+        // Check support
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showMsg('❌ Camera API not supported. Please use HTTPS and a modern browser.', 'error');
+          return;
+        }
+
+        showMsg('⏳ Starting camera, please wait...', 'warning');
+
+        // STEP 1 — Show video element first (AbortError fix)
+        videoWrap.classList.add('active');
+
+        // STEP 2 — Allow DOM to settle
+        await new Promise(r => setTimeout(r, 100));
+
+        // STEP 3 — Get stream; fallback if facingMode fails
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+          });
+        } catch (constraintErr) {
+          console.warn('facingMode constraint failed, trying basic video:', constraintErr.message);
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        }
+
+        // STEP 4 — Assign stream
+        video.srcObject = stream;
+
+        // STEP 5 — Wait for video to be ready
+        await new Promise((resolve) => {
+          video.onloadedmetadata = () => {
+            video.play()
+              .then(resolve)
+              .catch(err => {
+                // Autoplay blocked — ignore, video usually plays anyway
+                console.warn('play() blocked (autoplay policy):', err.message);
+                resolve();
+              });
+          };
+          // 8 second safety net — resolve (not reject)
+          // (stream received, video may start slightly late)
+          setTimeout(resolve, 8000);
+        });
+
+        // STEP 6 — Update UI
+        document.getElementById('enableBtn').style.display  = 'none';
+        document.getElementById('captureBtn').style.display = 'flex';
+        document.getElementById('captureBtn').classList.remove('btn-disabled');
+        setStep(2);
+        showMsg('✅ Camera ready! Please position your face and capture.', 'success');
+
+      } catch (e) {
+        // Cleanup on error
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        videoWrap.classList.remove('active');
+
+        const errorMap = {
+          NotAllowedError           : '❌ Camera permission denied. Please allow camera access in your browser settings.',
+          PermissionDeniedError     : '❌ Camera permission denied. Please allow camera access in your browser settings.',
+          NotFoundError             : '❌ No camera found on this device.',
+          DevicesNotFoundError      : '❌ No camera found on this device.',
+          NotReadableError          : '❌ Camera is being used by another app. Please close Zoom/Teams/Meet and retry.',
+          TrackStartError           : '❌ Camera is being used by another app. Please close other apps and retry.',
+          OverconstrainedError      : '❌ Camera constraints not supported. Please retry.',
+          ConstraintNotSatisfiedError: '❌ Camera constraints not supported. Please retry.',
+          AbortError                : '❌ Camera could not start (AbortError). Please restart your browser or try a different one.',
+          SecurityError             : '❌ Security error — please use HTTPS.',
+        };
+        const msg = errorMap[e.name] || `❌ Camera error: ${e.name} — ${e.message}`;
+        showMsg(msg, 'error');
+        console.error('Camera error detail:', e.name, e.message, e);
+      }
+    }
+
+    // ─── Capture Photo ───────────────────────────────────────────────────────────
+
+    async function capturePhoto() {
+      const video = document.getElementById('video');
+
+      if (!stream) {
+        showMsg('⏳ Camera not ready. Please wait...', 'warning');
+        return;
+      }
+      if (!video.videoWidth || !video.videoHeight) {
+        showMsg('⏳ Video still loading, please wait a moment...', 'warning');
+        return;
+      }
+
+      const canvas = document.getElementById('canvas');
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      capturedData = canvas.toDataURL('image/jpeg', 0.92);
+
+      document.getElementById('photo').src = capturedData;
+
+      // Stop stream
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+
+      // Toggle UI
+      document.getElementById('videoWrap').classList.remove('active');
+      document.getElementById('photoWrap').classList.add('active');
+      document.getElementById('captureBtn').style.display  = 'none';
+      document.getElementById('retakeBtn').style.display   = 'flex';
+      document.getElementById('continueBtn').style.display = 'flex';
+      setStep(3);
+
+      showMsg('⏳ Fetching your location...', 'warning');
+      await fetchLocation();
+
+      showMsg('✅ Photo and location verified! Redirecting...', 'success');
+      setTimeout(() => continueToLogin(), 1500);
+    }
+
+    // ─── Retake ──────────────────────────────────────────────────────────────────
+
+    function retake() {
+      capturedData = null;
+      locationData = null;
+
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+
+      document.getElementById('photoWrap').classList.remove('active');
+      document.getElementById('videoWrap').classList.remove('active');
+      document.getElementById('locationBox').classList.remove('show');
+      document.getElementById('retakeBtn').style.display   = 'none';
+      document.getElementById('continueBtn').style.display = 'none';
+      document.getElementById('enableBtn').style.display   = 'flex';
+      document.getElementById('statusMsg').className       = 'status-msg';
+      setStep(1);
+    }
+
+    // ─── Fetch Location ──────────────────────────────────────────────────────────
+
+    async function fetchLocation() {
+      const box = document.getElementById('locationBox');
+      box.classList.add('show');
+      document.getElementById('locationAddress').textContent = '⏳ Fetching precise GPS location...';
+
+      if (!navigator.geolocation) {
+        document.getElementById('locationAddress').textContent = 'Geolocation is not supported.';
+        locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
+        return;
+      }
+
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+          })
+        );
+
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        document.getElementById('locationCoords').textContent =
+          `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+
+        let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+
+        try {
+          const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18&extratags=1&namedetails=1`,
+            { headers: { 'Accept': 'application/json', 'User-Agent': 'MevtenciaAttendanceApp/1.0' } }
+          );
+          const d = await r.json();
+
+          if (d && d.address) {
+            const a = d.address;
+            const landmark =
+              a.building || a.office || a.amenity || a.shop || a.tourism || a.industrial ||
+              a.leisure || a.house_name || a.residential || a.apartments || a.mall ||
+              a.hotel || a.theatre || a.school || a.college || a.university ||
+              a.hospital || a.government || a.public_building || a.retail ||
+              a.bank || a.restaurant || a.cafe || a.fast_food || a.clinic || a.pharmacy ||
+              a.commercial || a.warehouse || a.chapel || a.place_of_worship || a.clubhouse || '';
+
+            const parts = [
+              landmark,
+              a.house_number || '',
+              a.road || a.pedestrian || '',
+              a.suburb || a.neighbourhood || '',
+              a.city || a.town || a.village || '',
+              a.state_district || '',
+              a.state || '',
+              a.postcode || ''
+            ].filter(Boolean);
+
+            address = parts.join(', ');
+
+            if (d.display_name && (landmark === '' || d.display_name.length > address.length)) {
+              address = d.display_name;
+            }
+          }
+        } catch (geoErr) {
+          console.error('Geocoding failed:', geoErr);
+        }
+
+        locationData = { address, lat, lng, capturedAt: new Date().toISOString() };
+        document.getElementById('locationAddress').textContent = address;
+
+        const verLink = document.getElementById('locVerifyLink');
+        verLink.href          = `https://www.google.com/maps?q=${lat},${lng}`;
+        verLink.style.display = 'inline-block';
+
+      } catch (e) {
+        document.getElementById('locationAddress').textContent =
+          'Location not available. Please enable GPS.';
+        locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
+        showMsg('⚠️ GPS unavailable — Please enable high-accuracy location.', 'warning');
+      }
+    }
+
+    // ─── Continue to Login ───────────────────────────────────────────────────────
+
+    function continueToLogin() {
+      if (!capturedData) {
+        showMsg('❌ Please capture your photo first.', 'error');
+        return;
+      }
+      localStorage.setItem('mev_capturedPhoto',    capturedData);
+      localStorage.setItem('mev_capturedLocation', JSON.stringify(locationData || { address: 'Unknown', lat: 0, lng: 0 }));
+      localStorage.setItem('mev_captureAt',        new Date().toISOString());
+      window.location.href = 'EmployeeProfile.html';
+    }
+
+    // ─── Cleanup on page leave ───────────────────────────────────────────────────
+
+    window.addEventListener('beforeunload', () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    });
+  </script>
+</body>
+
+</html>
