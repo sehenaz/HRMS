@@ -552,8 +552,10 @@
     </div>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="AddEmployee.html">Edit Employee</a></li>
-      <li><a href="EmployeeHistory.html">Registered</a></li>
+      <li><a href="EmployeeHistory.html">Employee Database</a></li>
+      <!-- <li><a href="AddEmployee.html">Edit Employee</a></li> -->
+      <li><a href="EmployeeHistory.html">Registration</a></li>
+      <li><a href="#" onclick="openCredModal()" style="background:rgba(255,200,0,0.18);">🔑 Credentials</a></li>
       <li><a href="#dailySheetSection" onclick="openDailySheet()">📸 Daily Sheet</a></li>
       <li><a href="index.html" onclick="adminLogout()">Logout</a></li>
     </ul>
@@ -567,9 +569,12 @@
         <p>Real-time Pan India Monitoring · View all employee logs · Mevrick Solution Pvt. Ltd.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <a href="AddEmployee.html"
+        <!-- <a href="AddEmployee.html"
           style="background:#4caf50;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">+
-          Edit Employee</a>
+          Edit Employee</a> -->
+          <a href="EmployeeHistory.html"
+  style="background:#4caf50;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">👥
+  Employee Database</a>
         <a href="EmployeeHistory.html"
           style="background:#3f51b5;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">👥
           Registered</a>
@@ -615,12 +620,12 @@
       <div class="sandwich-list" id="sandwichList"></div>
     </div>
 
-    <!-- View Toggle -->
-    <div class="view-toggle">
+    View Toggle
+    <!-- <div class="view-toggle">
       <button class="vt-btn active" id="btnViewAll"    onclick="setView('all')">📋 All Records</button>
       <button class="vt-btn"        id="btnViewDaily"  onclick="setView('daily')">📅 Daily View</button>
       <button class="vt-btn"        id="btnViewEmp"    onclick="setView('employee')">👤 By Employee</button>
-    </div>
+    </div> -->
 
     <!-- Filters -->
     <div class="filters">
@@ -2224,5 +2229,398 @@
       showToast(`✅ Excel downloaded: ${fileName}`, '#1d6f42');
     }
   </script>
+  <style>
+  /* Employee Credentials Modal */
+  .cred-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .cred-overlay.open { display: flex; }
+ 
+  .cred-box {
+    background: white;
+    border-radius: 22px;
+    width: 100%; max-width: 620px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+    animation: credPop 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes credPop { from { transform: scale(0.93) translateY(20px); opacity:0; } to { transform: scale(1) translateY(0); opacity:1; } }
+ 
+  .cred-header {
+    background: linear-gradient(135deg, #1a237e, #3f51b5);
+    padding: 22px 24px;
+    border-radius: 22px 22px 0 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cred-header h2 { color: white; font-size: 17px; font-weight: 800; }
+  .cred-header p  { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 3px; }
+  .cred-close {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: white; width: 34px; height: 34px; border-radius: 50%;
+    cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+  }
+ 
+  .cred-body { padding: 22px 24px; }
+ 
+  /* Add form */
+  .cred-add-form {
+    background: #f8faff;
+    border: 2px solid #e0e7ff;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+  .cred-add-form h3 { color: #1a237e; font-size: 13px; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+ 
+  .cred-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  @media(max-width:500px) { .cred-fields { grid-template-columns: 1fr; } }
+ 
+  .cred-field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .cred-field input {
+    width: 100%; padding: 10px 12px;
+    border: 2px solid #e2e8f0; border-radius: 10px;
+    font-size: 14px; font-family: 'Segoe UI', sans-serif;
+    outline: none; transition: border-color 0.2s; background: white;
+  }
+  .cred-field input:focus { border-color: #3f51b5; }
+ 
+  .cred-dept-city { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+ 
+  .cred-add-btn {
+    width: 100%; padding: 11px;
+    background: linear-gradient(135deg, #1a237e, #3f51b5);
+    color: white; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; font-family: 'Segoe UI', sans-serif;
+  }
+  .cred-add-btn:hover { box-shadow: 0 5px 18px rgba(63,81,181,0.4); transform: translateY(-1px); }
+ 
+  /* Employee list */
+  .cred-list-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .cred-list-header h3 { color: #334155; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cred-count { background: #e0e7ff; color: #3f51b5; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+ 
+  .cred-search {
+    width: 100%; padding: 9px 14px;
+    border: 2px solid #e2e8f0; border-radius: 10px;
+    font-size: 13px; font-family: 'Segoe UI', sans-serif;
+    outline: none; margin-bottom: 12px; transition: border-color 0.2s;
+  }
+  .cred-search:focus { border-color: #3f51b5; }
+ 
+  .cred-emp-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+ 
+  .cred-emp-row {
+    background: #f8faff;
+    border: 1.5px solid #e0e7ff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.2s;
+  }
+  .cred-emp-row:hover { border-color: #3f51b5; }
+ 
+  .cred-emp-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #3f51b5, #1a237e);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 800; font-size: 15px; flex-shrink: 0;
+  }
+ 
+  .cred-emp-info { flex: 1; min-width: 0; }
+  .cred-emp-name { font-weight: 700; color: #1e293b; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cred-emp-id   { font-size: 11px; color: #64748b; font-family: monospace; margin-top: 1px; }
+  .cred-emp-meta { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+ 
+  .cred-pw-display {
+    font-family: monospace; font-size: 12px;
+    background: #e0e7ff; color: #1a237e;
+    padding: 3px 10px; border-radius: 8px;
+    cursor: pointer; user-select: all;
+    white-space: nowrap; flex-shrink: 0;
+  }
+ 
+  .cred-actions { display: flex; gap: 6px; flex-shrink: 0; }
+ 
+  .cred-edit-btn, .cred-del-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: none; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .cred-edit-btn { background: #e0f2fe; color: #0369a1; }
+  .cred-edit-btn:hover { background: #0369a1; color: white; }
+  .cred-del-btn  { background: #fee2e2; color: #dc2626; }
+  .cred-del-btn:hover  { background: #dc2626; color: white; }
+ 
+  .cred-empty { text-align: center; padding: 30px; color: #94a3b8; font-size: 13px; }
+ 
+  /* Edit inline */
+  .cred-editing { background: #fffbeb; border-color: #f59e0b; }
+  .cred-edit-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .cred-edit-input {
+    padding: 7px 10px; border: 2px solid #e2e8f0; border-radius: 8px;
+    font-size: 13px; font-family: 'Segoe UI', sans-serif; outline: none;
+    transition: border-color 0.2s;
+  }
+  .cred-edit-input:focus { border-color: #3f51b5; }
+  .cred-save-btn {
+    grid-column: 1/-1;
+    padding: 8px; background: #10b981; color: white;
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: 'Segoe UI', sans-serif;
+  }
+</style>
+ 
+<!-- Credentials Modal -->
+<div class="cred-overlay" id="credOverlay">
+  <div class="cred-box">
+    <div class="cred-header">
+      <div>
+        <h2>🔑 Employee Credentials Manager</h2>
+        <p>Add, edit or remove employee login credentials</p>
+      </div>
+      <button class="cred-close" onclick="closeCredModal()">✕</button>
+    </div>
+    <div class="cred-body">
+ 
+      <!-- Add New Employee Form -->
+      <div class="cred-add-form">
+        <h3>➕ Add New Employee</h3>
+        <div class="cred-fields">
+          <div class="cred-field">
+            <label>Employee Name</label>
+            <input type="text" id="credName" placeholder="e.g. Rahul Sharma" />
+          </div>
+          <div class="cred-field">
+            <label>Employee ID</label>
+            <input type="text" id="credId" placeholder="e.g. MEV/341/2026" />
+          </div>
+          <div class="cred-field">
+            <label>Password</label>
+            <input type="text" id="credPw" placeholder="e.g. MEVRICK1707" />
+          </div>
+          <div class="cred-field">
+            <label>Department</label>
+            <input type="text" id="credDept" placeholder="e.g. Sales" />
+          </div>
+          <div class="cred-field">
+            <label>City</label>
+            <input type="text" id="credCity" placeholder="e.g. Kolkata" />
+          </div>
+          <div class="cred-field">
+            <label>Salary (₹/month)</label>
+            <input type="number" id="credSalary" placeholder="e.g. 15000" />
+          </div>
+        </div>
+        <button class="cred-add-btn" onclick="credAdd()">✓ Add Employee</button>
+      </div>
+ 
+      <!-- Employee List -->
+      <div class="cred-list-header">
+        <h3>👥 Registered Employees</h3>
+        <span class="cred-count" id="credCount">0 employees</span>
+      </div>
+      <input class="cred-search" id="credSearch" placeholder="🔍 Search by name or ID..." oninput="credRenderList()" />
+      <div class="cred-emp-list" id="credEmpList">
+        <div class="cred-empty">No employees added yet.</div>
+      </div>
+ 
+    </div>
+  </div>
+</div>
+ 
+<script>
+/* ══════════════════════════════════════════════════════
+   EMPLOYEE CREDENTIALS MANAGER
+   Storage: localStorage key 'mev_employeeDB'
+   Format: { "EMP_ID": { id, name, password, dept, city, salary } }
+   EmployeeProfile.html will read this same key.
+══════════════════════════════════════════════════════ */
+ 
+// Default employees already in EmployeeProfile.html — load them first
+const CRED_DEFAULTS = {
+  "MEV/336/2025": { id:"MEV/336/2025", name:"Sehenaz Khatun",   password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/340/2026": { id:"MEV/340/2026", name:"Ishika Nayak",     password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/296/2025": { id:"MEV/296/2025", name:"Udita Karmakar",   password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/110/2022": { id:"MEV/110/2022", name:"Indrani Ganguly",  password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/339/2026": { id:"MEV/339/2026", name:"Sreeparna Biswas", password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/322/2025": { id:"MEV/322/2025", name:"Tathagata Roy",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/323/2025": { id:"MEV/323/2025", name:"Swagata Dutta",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/264/2024": { id:"MEV/264/2024", name:"Sumit Naskar",     password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/337/2025": { id:"MEV/337/2025", name:"Adisree Tapader",  password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/259/2024": { id:"MEV/259/2024", name:"Subir Kumar Gosh", password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/316/2025": { id:"MEV/316/2025", name:"Enakshi Ghosh",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/288/2024": { id:"MEV/288/2024", name:"Madhumita Das",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/262/2024": { id:"MEV/262/2024", name:"Subhojit Gosh",    password:"MEVRICK1707", dept:"", city:"" },
+};
+ 
+function credGetDB() {
+  const stored = localStorage.getItem('mev_employeeDB');
+  if (!stored) {
+    // First time — seed with defaults
+    localStorage.setItem('mev_employeeDB', JSON.stringify(CRED_DEFAULTS));
+    return { ...CRED_DEFAULTS };
+  }
+  return JSON.parse(stored);
+}
+ 
+function credSaveDB(db) {
+  localStorage.setItem('mev_employeeDB', JSON.stringify(db));
+}
+ 
+function openCredModal() {
+  // Seed defaults if empty
+  credGetDB();
+  credRenderList();
+  document.getElementById('credOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+ 
+function closeCredModal() {
+  document.getElementById('credOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+ 
+// Close on outside click
+document.getElementById('credOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeCredModal();
+});
+ 
+function credAdd() {
+  const name   = document.getElementById('credName').value.trim();
+  const id     = document.getElementById('credId').value.trim().toUpperCase();
+  const pw     = document.getElementById('credPw').value.trim();
+  const dept   = document.getElementById('credDept').value.trim();
+  const city   = document.getElementById('credCity').value.trim();
+  const salary = document.getElementById('credSalary').value.trim();
+ 
+  if (!name || !id || !pw) {
+    showToast('⚠️ Name, ID aur Password required hai!', '#e53935');
+    return;
+  }
+ 
+  const db = credGetDB();
+  if (db[id]) {
+    showToast('⚠️ Ye Employee ID already exist karta hai!', '#f59e0b');
+    return;
+  }
+ 
+  db[id] = { id, name, password: pw, dept, city, salary };
+  credSaveDB(db);
+ 
+  // Clear form
+  ['credName','credId','credPw','credDept','credCity','credSalary'].forEach(f => document.getElementById(f).value = '');
+ 
+  credRenderList();
+  showToast(`✅ ${name} add ho gaya!`, '#10b981');
+}
+ 
+function credDelete(id) {
+  if (!confirm(`"${id}" ko delete karna chahte ho?`)) return;
+  const db = credGetDB();
+  delete db[id];
+  credSaveDB(db);
+  credRenderList();
+  showToast('🗑️ Employee removed.', '#64748b');
+}
+ 
+let credEditingId = null;
+ 
+function credStartEdit(id) {
+  credEditingId = id;
+  credRenderList();
+}
+ 
+function credSaveEdit(id) {
+  const newName = document.getElementById(`cedit-name-${id}`).value.trim();
+  const newPw   = document.getElementById(`cedit-pw-${id}`).value.trim();
+  const newDept = document.getElementById(`cedit-dept-${id}`).value.trim();
+  const newCity = document.getElementById(`cedit-city-${id}`).value.trim();
+ 
+  if (!newName || !newPw) { showToast('⚠️ Name aur Password required!', '#e53935'); return; }
+ 
+  const db = credGetDB();
+  db[id].name     = newName;
+  db[id].password = newPw;
+  db[id].dept     = newDept;
+  db[id].city     = newCity;
+  credSaveDB(db);
+  credEditingId = null;
+  credRenderList();
+  showToast(`✅ ${newName} updated!`, '#10b981');
+}
+ 
+function credRenderList() {
+  const db     = credGetDB();
+  const search = (document.getElementById('credSearch')?.value || '').toLowerCase();
+  const list   = document.getElementById('credEmpList');
+  const count  = document.getElementById('credCount');
+ 
+  let entries = Object.values(db);
+  if (search) {
+    entries = entries.filter(e =>
+      (e.name||'').toLowerCase().includes(search) ||
+      (e.id||'').toLowerCase().includes(search)
+    );
+  }
+ 
+  count.textContent = `${Object.keys(db).length} employees`;
+ 
+  if (!entries.length) {
+    list.innerHTML = '<div class="cred-empty">Koi employee nahi mila.</div>';
+    return;
+  }
+ 
+  list.innerHTML = entries.map(emp => {
+    const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const isEditing = credEditingId === emp.id;
+ 
+    if (isEditing) {
+      return `
+      <div class="cred-emp-row cred-editing">
+        <div class="cred-emp-avatar">${initials}</div>
+        <div style="flex:1;">
+          <div class="cred-emp-id">${emp.id}</div>
+          <div class="cred-edit-inputs">
+            <input class="cred-edit-input" id="cedit-name-${emp.id}" value="${emp.name||''}" placeholder="Name" />
+            <input class="cred-edit-input" id="cedit-pw-${emp.id}"   value="${emp.password||''}" placeholder="Password" />
+            <input class="cred-edit-input" id="cedit-dept-${emp.id}" value="${emp.dept||''}" placeholder="Department" />
+            <input class="cred-edit-input" id="cedit-city-${emp.id}" value="${emp.city||''}" placeholder="City" />
+            <button class="cred-save-btn" onclick="credSaveEdit('${emp.id}')">✓ Save Changes</button>
+          </div>
+        </div>
+        <button class="cred-del-btn" onclick="credEditingId=null;credRenderList()">✕</button>
+      </div>`;
+    }
+ 
+    return `
+    <div class="cred-emp-row">
+      <div class="cred-emp-avatar">${initials}</div>
+      <div class="cred-emp-info">
+        <div class="cred-emp-name">${emp.name||'—'}</div>
+        <div class="cred-emp-id">${emp.id}</div>
+        <div class="cred-emp-meta">${[emp.dept, emp.city].filter(Boolean).join(' · ') || 'No dept/city'}</div>
+      </div>
+      <div class="cred-pw-display" title="Click to copy" onclick="navigator.clipboard.writeText('${emp.password||''}');showToast('📋 Password copied!','#3f51b5')">
+        🔑 ${emp.password||'—'}
+      </div>
+      <div class="cred-actions">
+        <button class="cred-edit-btn" onclick="credStartEdit('${emp.id}')" title="Edit">✏️</button>
+        <button class="cred-del-btn"  onclick="credDelete('${emp.id}')"   title="Delete">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+</script>
 </body>
 </html>
