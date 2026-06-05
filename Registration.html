@@ -7,13 +7,8 @@
     <title>Mevrick Solution - Employee Registration</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -28,195 +23,146 @@
             background: white;
             padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+        .header { text-align: center; margin-bottom: 30px; }
 
-        .company-logo {
-            color: #1a408d;
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
+        .company-logo { color: #1a408d; font-size: 32px; font-weight: bold; margin-bottom: 5px; }
 
-        .company-tagline {
-            color: #666;
-            font-size: 14px;
-            font-style: italic;
-        }
-
-        h1 {
-            color: #1a408d;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 28px;
-            margin-top: 20px;
-        }
+        h1 { color: #1a408d; text-align: center; margin-bottom: 10px; font-size: 28px; margin-top: 20px; }
 
         h2 {
-            color: #1a408d;
-            margin-top: 30px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #1a408d;
-            font-size: 20px;
+            color: #1a408d; margin-top: 30px; margin-bottom: 20px;
+            padding-bottom: 10px; border-bottom: 2px solid #1a408d; font-size: 20px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+        .form-group { margin-bottom: 20px; }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
-            font-size: 14px;
-        }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
 
-        .required::after {
-            content: " *";
-            color: #e74c3c;
-        }
+        .required::after { content: " *"; color: #e74c3c; }
 
-        input[type="text"],
-        input[type="email"],
-        input[type="number"],
-        input[type="date"],
-        input[type="tel"],
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-            font-family: 'Arial', sans-serif;
+        input[type="text"], input[type="email"], input[type="number"],
+        input[type="date"], input[type="tel"], select, textarea {
+            width: 100%; padding: 12px; border: 2px solid #e0e0e0;
+            border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border: 2px dashed #667eea;
-            border-radius: 8px;
-            background: #f8f9ff;
-            cursor: pointer;
+            width: 100%; padding: 10px; border: 2px dashed #667eea;
+            border-radius: 8px; background: #f8f9ff; cursor: pointer;
         }
 
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; }
 
-        textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
+        textarea { min-height: 80px; resize: vertical; }
 
-        .row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
         button {
-            width: 100%;
-            padding: 15px;
+            width: 100%; padding: 15px;
             background: linear-gradient(135deg, #1a408d 0%, #0d2552 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: all 0.3s ease;
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            margin-top: 20px; transition: all 0.3s ease;
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-        button:disabled {
-            opacity: 0.6;
-            cursor: allowed;
-            transform: none;
-        }
-
-        .note {
-            font-size: 12px;
-            color: #666;
-            font-style: italic;
-            margin-top: 5px;
-        }
+        .note { font-size: 12px; color: #666; font-style: italic; margin-top: 5px; }
 
         .success-message {
-            display: none;
-            background: #d4edda;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #c3e6cb;
+            display: none; background: #d4edda; color: #155724;
+            padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;
         }
 
         .error-message {
-            display: none;
-            background: #f8d7da;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #f5c6cb;
+            display: none; background: #f8d7da; color: #721c24;
+            padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb;
         }
 
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            color: #1a408d;
-            font-weight: bold;
-        }
+        .loading { display: none; text-align: center; padding: 20px; color: #1a408d; font-weight: bold; }
 
         .info-box {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
+            background: #e7f3ff; border-left: 4px solid #2196F3;
+            padding: 15px; margin-bottom: 20px; border-radius: 4px;
         }
 
-        .info-box h3 {
-            color: #2196F3;
+        .info-box h3 { color: #2196F3; margin-bottom: 10px; font-size: 16px; }
+        .info-box ul { margin-left: 20px; color: #555; }
+        .info-box li { margin-bottom: 5px; }
+
+        /* ── Credential Fields Special Styling ── */
+        .cred-section {
+            background: linear-gradient(135deg, #1a237e08, #3f51b508);
+            border: 2px solid #3f51b5;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 10px;
             margin-bottom: 10px;
-            font-size: 16px;
         }
 
-        .info-box ul {
-            margin-left: 20px;
-            color: #555;
+        .cred-section h2 {
+            border-bottom: 2px solid #3f51b5;
+            color: #1a237e;
+            margin-top: 0;
         }
 
-        .info-box li {
-            margin-bottom: 5px;
+        .cred-section .form-group input {
+            border: 2px solid #3f51b5;
+            font-family: monospace;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
+
+        .cred-section .form-group input:focus { border-color: #1a237e; background: #f0f3ff; }
+
+        .cred-hint {
+            background: #e8eaf6;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            color: #3f51b5;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Password show/hide toggle */
+        .pw-wrap { position: relative; }
+        .pw-toggle {
+            position: absolute; right: 12px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: #888; font-size: 16px; padding: 0;
+            margin: 0; width: auto;
+        }
+        .pw-toggle:hover { color: #3f51b5; transform: translateY(-50%); box-shadow: none; }
+
+        /* Preview box */
+        .cred-preview {
+            background: #1a237e;
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+            align-items: center;
+        }
+
+        .cp-label { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+        .cp-val { font-size: 15px; font-weight: 800; font-family: monospace; color: white; }
+        .cp-item { flex: 1; min-width: 130px; }
 
         @media (max-width: 768px) {
-            .row {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 20px;
-            }
+            .row { grid-template-columns: 1fr; }
+            .container { padding: 20px; }
         }
     </style>
 </head>
@@ -225,7 +171,8 @@
     <div class="container">
         <div class="header">
             <div style="margin-bottom: 15px;">
-                <img src="assets/logo.png" alt="Mevrick Solution" style="width: 100px; height: 100px; object-fit: contain; background: white; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid #1a408d; padding: 10px;">
+                <img src="assets/logo.png" alt="Mevrick Solution"
+                    style="width:100px;height:100px;object-fit:contain;background:white;border-radius:50%;box-shadow:0 10px 30px rgba(0,0,0,0.1);border:2px solid #1a408d;padding:10px;">
             </div>
             <div class="company-logo">MEVRICK SOLUTION PRIVATE LIMITED</div>
         </div>
@@ -236,17 +183,60 @@
             <h3>📋 Registration Process</h3>
             <ul>
                 <li>Complete all required fields marked with (*)</li>
-                <li>Your appointment letter will be generated based on your employment type</li>
-                <li>All documents will be downloaded automatically upon submission</li>
+                <li>Admin manually enters Employee ID and Password in the credentials section</li>
+                <li>Appointment letter will be generated and downloaded automatically</li>
                 <li>Please ensure all information is accurate before submitting</li>
             </ul>
         </div>
 
         <div id="successMessage" class="success-message"></div>
-        <div id="errorMessage" class="error-message"></div>
-        <div id="loading" class="loading">⏳ Generating your appointment letter and processing registration...</div>
+        <div id="errorMessage"   class="error-message"></div>
+        <div id="loading"        class="loading">⏳ Generating appointment letter and processing registration...</div>
 
         <form id="registrationForm">
+
+            <!-- ══════════════════════════════════════════════
+                 🔑 EMPLOYEE CREDENTIALS  (Admin fills this)
+            ══════════════════════════════════════════════ -->
+            <div class="cred-section">
+                <h2>🔑 Employee Login Credentials <span style="font-size:13px;font-weight:400;color:#5c6bc0;">(Admin fills this)</span></h2>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label class="required">Employee ID</label>
+                        <input type="text" id="employeeId" name="employeeId"
+                            placeholder="e.g. MEV/341/2026"
+                            oninput="updateCredPreview()"
+                            required />
+                        <div class="cred-hint">🪪 Format: MEV/[Number]/[Year] — e.g. MEV/341/2026</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Login Password</label>
+                        <div class="pw-wrap">
+                            <input type="text" id="loginPassword" name="loginPassword"
+                                placeholder="e.g. MEVRICK1707"
+                                oninput="updateCredPreview()"
+                                required />
+                            <button type="button" class="pw-toggle" onclick="togglePw()" id="pwToggleBtn" title="Show/Hide">👁️</button>
+                        </div>
+                        <div class="cred-hint">🔒 Admin sets this password. Employee will use it to login.</div>
+                    </div>
+                </div>
+
+                <!-- Live Preview -->
+                <div class="cred-preview" id="credPreview">
+                    <div class="cp-item">
+                        <div class="cp-label">Employee ID</div>
+                        <div class="cp-val" id="prevId">—</div>
+                    </div>
+                    <div class="cp-item">
+                        <div class="cp-label">Password</div>
+                        <div class="cp-val" id="prevPw">—</div>
+                    </div>
+                    <div style="font-size:11px;color:rgba(255,255,255,0.5);align-self:flex-end;">Live Preview</div>
+                </div>
+            </div>
+
             <!-- Personal Details -->
             <h2>📄 Personal Details</h2>
 
@@ -262,8 +252,7 @@
                 </div>
                 <div class="form-group">
                     <label class="required">Phone Number</label>
-                    <input type="tel" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10}" placeholder="10 digits"
-                        required>
+                    <input type="tel" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10}" placeholder="10 digits" required>
                 </div>
             </div>
 
@@ -280,13 +269,11 @@
 
             <div class="form-group">
                 <label>Alternative Phone</label>
-                <input type="tel" id="alternativePhone" name="alternativePhone" pattern="[0-9]{10}"
-                    placeholder="10 digits (optional)">
+                <input type="tel" id="alternativePhone" name="alternativePhone" pattern="[0-9]{10}" placeholder="10 digits (optional)">
             </div>
 
             <div class="row">
                 <div class="form-group">
-
                     <label class="required">Marital Status</label>
                     <select id="maritalStatus" name="maritalStatus" required>
                         <option value="">Select</option>
@@ -314,8 +301,7 @@
 
             <div class="form-group">
                 <label class="required">Complete Address</label>
-                <textarea id="address" name="address" placeholder="House No., Street, City, State, PIN Code"
-                    required></textarea>
+                <textarea id="address" name="address" placeholder="House No., Street, City, State, PIN Code" required></textarea>
             </div>
 
             <!-- Nominee Details -->
@@ -328,8 +314,7 @@
                 </div>
                 <div class="form-group">
                     <label class="required">Nominee Phone Number</label>
-                    <input type="tel" id="nomineePhone" name="nomineePhone" pattern="[0-9]{10}" placeholder="10 digits"
-                        required>
+                    <input type="tel" id="nomineePhone" name="nomineePhone" pattern="[0-9]{10}" placeholder="10 digits" required>
                 </div>
             </div>
 
@@ -354,8 +339,7 @@
                 </div>
                 <div class="form-group">
                     <label class="required">IFSC Code</label>
-                    <input type="text" id="ifscCode" name="ifscCode" pattern="[A-Z]{4}0[A-Z0-9]{6}"
-                        placeholder="e.g., SBIN0001234" required>
+                    <input type="text" id="ifscCode" name="ifscCode" placeholder="e.g., SBIN0001234" required>
                 </div>
             </div>
 
@@ -384,15 +368,13 @@
                 </div>
                 <div class="form-group">
                     <label class="required">Monthly Salary (₹)</label>
-                    <input type="number" id="salary" name="salary" min="0" step="500" placeholder="Enter monthly salary"
-                        required>
+                    <input type="number" id="salary" name="salary" min="0" step="500" placeholder="Enter monthly salary" required>
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="required">Designation/Position</label>
-                <input type="text" id="designation" name="designation"
-                    placeholder="e.g., Software Developer, Digitization Associate" required>
+                <input type="text" id="designation" name="designation" placeholder="e.g., Software Developer, Digitization Associate" required>
             </div>
 
             <div class="row">
@@ -447,25 +429,35 @@
     </div>
 
     <script>
-        // ─────────────────────────────────────────────────────────────────────────
-        // Generate Appointment Letter — matches Sehenaz Khatun PDF exactly
-        // ─────────────────────────────────────────────────────────────────────────
+        // ── Live preview update ──────────────────────────
+        function updateCredPreview() {
+            const id = document.getElementById('employeeId').value.trim().toUpperCase();
+            const pw = document.getElementById('loginPassword').value.trim();
+            document.getElementById('prevId').textContent = id || '—';
+            document.getElementById('prevPw').textContent = pw || '—';
+            // Also auto-uppercase the ID field
+            document.getElementById('employeeId').value = id;
+        }
+
+        function togglePw() {
+            const inp = document.getElementById('loginPassword');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        // ── Appointment Letter Generator ─────────────────
         async function generateAppointmentLetter(formData) {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-            const pageWidth  = doc.internal.pageSize.getWidth();   // 210
-            const pageHeight = doc.internal.pageSize.getHeight();  // 297
-            const mL = 18;   // left margin
-            const mR = 18;   // right margin
-            const cW = pageWidth - mL - mR;  // content width
+            const pageWidth  = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const mL = 18, mR = 18;
+            const cW = pageWidth - mL - mR;
 
-            // ── Ordinal helper ──────────────────────────────────────────────────
             const ordinal = n =>
                 n + (n > 10 && n < 20 ? 'th' : ({ 1:'st', 2:'nd', 3:'rd' }[n % 10] || 'th'));
 
-            // ── Date / salary helpers ───────────────────────────────────────────
-            const employeeId    = formData.employeeId || `MEV/${Math.floor(Math.random()*899)+100}/2025`;
+            const employeeId    = formData.employeeId || 'MEV/000/2026';
             const today         = new Date();
             const currentDate   = `${String(today.getDate()).padStart(2,'0')}.${String(today.getMonth()+1).padStart(2,'0')}.${today.getFullYear()}`;
             const jDate         = formData.joiningDate ? new Date(formData.joiningDate) : today;
@@ -473,448 +465,330 @@
             const monthlySalary = parseFloat(formData.salary) || 12000;
             const annualSalary  = monthlySalary * 12;
             const fmtMoney      = v => v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const posTitle      = (formData.designation || 'Software Developer');
+            const posTitle      = formData.designation || 'Associate';
             const empType       = formData.employeeType || 'Full Time';
             const empTypeLabel  = empType === 'Full Time' ? 'Full time' : 'Casual/Contractual';
             const location      = formData.workLocation || 'Kalyani (HO)';
             const empName       = formData.employeeName || 'Employee';
 
-            // ── PAGE TEMPLATE (header + watermark + contact) ──────────────────
             const drawTemplate = (d) => {
                 const pW = d.internal.pageSize.getWidth();
                 const pH = d.internal.pageSize.getHeight();
-
-                // ── WATERMARK ──
                 d.saveGraphicsState();
                 const gState = new d.GState({ opacity: 0.05 });
                 d.setGState(gState);
-                d.setFontSize(32);
-                d.setFont('helvetica', 'bold');
-                d.setTextColor(180, 180, 180);
-                d.text("MEVRICK SOLUTIONS PRIVATE LIMITED", pW / 2, pH / 2, {
-                    align: 'center',
-                    angle: 45
-                });
+                d.setFontSize(32); d.setFont('helvetica','bold');
+                d.setTextColor(180,180,180);
+                d.text("MEVRICK SOLUTIONS PRIVATE LIMITED", pW/2, pH/2, { align:'center', angle:45 });
                 d.restoreGraphicsState();
-
-                // ── HEADER DESIGN (Navy Shape from Image) ──
-                d.setFillColor(26, 64, 141); // Navy Blue
-                // Top rectangle
-                d.rect(0, 0, pW, 12, 'F');
-                // Ellipse to create the curve/swoosh effect
-                d.ellipse(40, 8, 110, 35, 'F');
-
-                // Logo Circle
-                d.setFillColor(255, 255, 255);
-                d.circle(38, 28, 18, 'F');
-                d.setDrawColor(26, 64, 141);
-                d.setLineWidth(1);
-                d.circle(38, 28, 15, 'D');
-
-                d.setFillColor(26, 64, 141);
-                d.circle(38, 28, 12, 'F');
-
-                d.setTextColor(255, 255, 255);
-                d.setFontSize(10);
-                d.setFont('helvetica', 'bold');
-                d.text('MS', 38, 28, { align: 'center', baseline: 'middle' });
-                d.setFontSize(2.2);
-                d.text('MEVRICK', 38, 32, { align: 'center' });
-                d.text('SOLUTION', 38, 34, { align: 'center' });
-
-                // Contact info
-                d.setTextColor(26, 64, 141);
-                d.setFontSize(8);
-                d.setFont('helvetica', 'bold');
-                const contactRX = pW - 12;
-                d.text('Webel IT Park, Phase - 2, Kalyani, WB - 741235', contactRX, 10, { align: 'right' });
-                d.text('033-46019562 / +91-8450841207', contactRX, 14, { align: 'right' });
-                d.text('info@mevrick.in', contactRX, 18, { align: 'right' });
-                d.text('www.mevrick.in', contactRX, 22, { align: 'right' });
-
-                d.setTextColor(0, 0, 0);
+                d.setFillColor(26,64,141); d.rect(0,0,pW,12,'F'); d.ellipse(40,8,110,35,'F');
+                d.setFillColor(255,255,255); d.circle(38,28,18,'F');
+                d.setDrawColor(26,64,141); d.setLineWidth(1); d.circle(38,28,15,'D');
+                d.setFillColor(26,64,141); d.circle(38,28,12,'F');
+                d.setTextColor(255,255,255); d.setFontSize(10); d.setFont('helvetica','bold');
+                d.text('MS',38,28,{align:'center',baseline:'middle'});
+                d.setFontSize(2.2); d.text('MEVRICK',38,32,{align:'center'}); d.text('SOLUTION',38,34,{align:'center'});
+                d.setTextColor(26,64,141); d.setFontSize(8); d.setFont('helvetica','bold');
+                const cx = pW-12;
+                d.text('Webel IT Park, Phase - 2, Kalyani, WB - 741235',cx,10,{align:'right'});
+                d.text('033-46019562 / +91-8450841207',cx,14,{align:'right'});
+                d.text('info@mevrick.in',cx,18,{align:'right'});
+                d.text('www.mevrick.in',cx,22,{align:'right'});
+                d.setTextColor(0,0,0);
             };
 
-            const lineH   = 5.2;
-            const secGap  = 4;
-            const bodyTop = 38;
-            const bodyBot = pageHeight - 14;
+            const lineH=5.2, secGap=4, bodyTop=38, bodyBot=pageHeight-14;
+            let y = bodyTop;
 
-            const ensureSpace = (d, needed) => {
-                if (y + needed > bodyBot) {
-                    d.addPage();
-                    drawTemplate(d);
-                    y = bodyTop + 10;
-                }
+            const ensureSpace = (d,needed) => {
+                if (y+needed > bodyBot) { d.addPage(); drawTemplate(d); y=bodyTop+10; }
+            };
+            const printText = (d,text,x,w,size,bold) => {
+                d.setFontSize(size); d.setFont('helvetica', bold?'bold':'normal');
+                d.splitTextToSize(text,w).forEach(line => { ensureSpace(d,lineH); d.text(line,x,y); y+=lineH; });
+            };
+            const printBullet = (d,text,size) => {
+                const bi=8, bW=cW-bi-8;
+                d.setFontSize(size); d.setFont('helvetica','normal');
+                d.splitTextToSize(text,bW).forEach((line,i) => {
+                    ensureSpace(d,lineH);
+                    if(i===0) d.text('\u2022',mL+bi-4,y);
+                    d.text(line,mL+bi,y); y+=lineH;
+                }); y+=1;
+            };
+            const secHead = (d,text,size) => {
+                ensureSpace(d,lineH+4); d.setFontSize(size); d.setFont('helvetica','bold');
+                d.text(text,mL,y); y+=lineH+1;
             };
 
-            const printText = (d, text, x, w, size, bold, indent) => {
-                d.setFontSize(size);
-                d.setFont('helvetica', bold ? 'bold' : 'normal');
-                const lines = d.splitTextToSize(text, w);
-                lines.forEach(line => {
-                    ensureSpace(d, lineH);
-                    d.text(line, x + (indent || 0), y);
-                    y += lineH;
-                });
-            };
+            drawTemplate(doc); y=bodyTop;
+            doc.setFontSize(10); doc.setFont('helvetica','bold');
+            doc.text(`Employee ID: ${employeeId}`,mL,y);
+            doc.text(`Date: ${currentDate}`,pageWidth-mR,y,{align:'right'});
+            y+=lineH+4;
+            doc.setFontSize(10.5); doc.setFont('helvetica','bold');
+            const sub=`Subject: Appointment Letter for the Position of ${posTitle}`;
+            doc.text(sub,mL,y); doc.setLineWidth(0.4); doc.line(mL,y+1.2,mL+doc.getTextWidth(sub),y+1.2); y+=lineH+6;
+            doc.setFontSize(11); doc.setFont('helvetica','normal');
+            doc.text('Dear ',mL,y); const dW=doc.getTextWidth('Dear ');
+            doc.setFont('helvetica','bold'); doc.text(`${empName},`,mL+dW,y); y+=lineH+3;
+            printText(doc,`We are pleased to appoint you the position of ${posTitle} with Mevrick Solutions Private Limited on a ${empTypeLabel} basis under the terms and conditions set forth in this letter.`,mL,cW,10.5,false);
+            y+=secGap;
+            secHead(doc,'1. Joining Date & Reporting',10);
+            printText(doc,`Your joining date will be ${jDateStr}. You will report to your designated Manager.`,mL+5,cW-8,9.5,false);
+            printBullet(doc,`Your initial posting will be at ${location}, however, you may be transferred to any of our offices in India or abroad based on business requirements.`,9.5);
+            y+=secGap;
+            secHead(doc,'2. Compensation',10);
+            printText(doc,`Your current annual Gross CTC will be INR ${fmtMoney(annualSalary)}. The structure may be revised from time to time.`,mL,cW,9.5,false);
+            y+=secGap;
+            secHead(doc,'3. Confidentiality & Code of Conduct',10);
+            printBullet(doc,'Maintain strict confidentiality of all business information.',9.5);
+            printBullet(doc,'Adhere to company rules, policies, and procedures.',9.5);
+            printBullet(doc,'Avoid any activity deemed as a conflict of interest.',9.5);
+            y+=secGap;
+            secHead(doc,'4. Terms of Contract & Termination',10);
+            printBullet(doc,`This appointment is ${empType==='Full Time'?'full-time':'casual/contractual'} in nature.`,9.5);
+            printBullet(doc,"Probation period: 6 months. Either party may terminate with 1 week's notice during probation.",9.5);
+            printBullet(doc,'After probation, notice period is 30 days on either side.',9.5);
+            y+=secGap;
+            secHead(doc,'5. Non-Payment Policy',10);
+            printText(doc,'Employees confirm they have not made any payments to Mevrick Solutions Pvt. Ltd. in relation to their employment.',mL,cW,9.5,false);
+            y+=secGap;
 
-            const printBullet = (d, text, size) => {
-                const bIndent = 8;
-                const bW = cW - bIndent - 8;
-                d.setFontSize(size);
-                d.setFont('helvetica', 'normal');
-                const lines = d.splitTextToSize(text, bW);
-                lines.forEach((line, i) => {
-                    ensureSpace(d, lineH);
-                    if (i === 0) d.text('\u2022', mL + bIndent - 4, y);
-                    d.text(line, mL + bIndent, y);
-                    y += lineH;
-                });
-                y += 1;
-            };
+            ensureSpace(doc,70);
+            const tX=mL, tW=cW-6, c1W=tW*0.52, c2W=tW*0.24, c3W=tW*0.24, rH=7;
+            doc.setFillColor(230,230,230); doc.rect(tX,y,tW,rH,'FD');
+            doc.setFontSize(8.5); doc.setFont('helvetica','bold');
+            doc.setDrawColor(150,150,150); doc.setLineWidth(0.3);
+            doc.text(`Compensation Break up effective from ${jDateStr}`,tX+2,y+5); y+=rH;
+            doc.setFillColor(245,245,245); doc.rect(tX,y,tW,rH,'FD');
+            doc.text(empName,tX+2,y+5); y+=rH;
+            doc.setFillColor(255,255,255);
+            doc.rect(tX,y,c1W,rH,'D'); doc.rect(tX+c1W,y,c2W,rH,'D'); doc.rect(tX+c1W+c2W,y,c3W,rH,'D');
+            doc.text('Monthly',tX+c1W+2,y+5); doc.text('Annual',tX+c1W+c2W+2,y+5); y+=rH;
+            doc.rect(tX,y,c1W,rH,'D'); doc.rect(tX+c1W,y,c2W,rH,'D'); doc.rect(tX+c1W+c2W,y,c3W,rH,'D');
+            doc.setFont('helvetica','normal');
+            doc.text('Gross Salary',tX+2,y+5);
+            doc.text(fmtMoney(monthlySalary),tX+c1W+2,y+5);
+            doc.text(fmtMoney(annualSalary),tX+c1W+c2W+2,y+5);
+            y+=rH+secGap+2;
 
-            const printSubBullet = (d, text, size) => {
-                const bIndent = 14;
-                const bW      = cW - bIndent - 4;
-                d.setFontSize(size);
-                d.setFont('helvetica', 'normal');
-                const lines = d.splitTextToSize(text, bW);
-                lines.forEach((line, i) => {
-                    ensureSpace(d, lineH);
-                    if (i === 0) d.text('o', mL + bIndent - 3, y);
-                    d.text(line, mL + bIndent, y);
-                    y += lineH;
-                });
-                y += 1;
-            };
-
-            const sectionHeader = (d, text, size) => {
-                ensureSpace(d, lineH + 4);
-                d.setFontSize(size);
-                d.setFont('helvetica', 'bold');
-                d.text(text, mL, y);
-                y += lineH + 1;
-            };
-
-            drawTemplate(doc);
-            y = bodyTop;
-
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Employee ID: ${employeeId}`, mL, y);
-            doc.text(`Date: ${currentDate}`, pageWidth - mR, y, { align: 'right' });
-            y += lineH + 4;
-
-            doc.setFontSize(10.5);
-            doc.setFont('helvetica', 'bold');
-            const subjectText = `Subject: Appointment Letter for the Position of ${posTitle}`;
-            doc.text(subjectText, mL, y);
-            const subW = doc.getTextWidth(subjectText);
-            doc.setLineWidth(0.4);
-            doc.line(mL, y + 1.2, mL + subW, y + 1.2);
-            y += lineH + 6;
-
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Dear ', mL, y);
-            const dearW = doc.getTextWidth('Dear ');
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${empName},`, mL + dearW, y);
-            y += lineH + 3;
-
-            printText(doc, `We are pleased to appoint you the position of ${posTitle} with Mevrick Solutions Private Limited on a ${empTypeLabel} basis under the terms and conditions set forth in this letter.`, mL, cW, 10.5, false);
-            y += secGap;
-
-            sectionHeader(doc, '1. Joining Date & Reporting', 10);
-            printText(doc, `Your joining date, as per our records, will be ${jDateStr}. You will report to your designated Manager.`, mL + 5, cW - 8, 9.5, false);
-            printBullet(doc, `Your initial posting will be at ${location}, however, you may be transferred to any of our offices in India or abroad based on business requirements.`, 9.5);
-            y += secGap;
-
-            sectionHeader(doc, '2. Compensation', 10);
-            printText(doc, `Your current annual Gross CTC will be INR ${fmtMoney(annualSalary)} as decided. However, the structure of your compensation plan may be Revised from time to time in accordance with the company's policies, industry practices and market standards.`, mL, cW, 9.5, false);
-            y += secGap;
-
-            sectionHeader(doc, '3. Confidentiality & Code of Conduct', 10);
-            printText(doc, 'As a member of our team, you may have access to confidential and proprietary information related to our company, its clients, and partners. You are required to:', mL, cW, 9.5, false);
-            printBullet(doc, 'Maintain strict confidentiality of all business information.', 9.5);
-            printBullet(doc, 'Adhere to company rules, policies, and procedures, which may be revised from time to time.', 9.5);
-            printBullet(doc, 'Avoid any activity that may be deemed as a conflict of interest.', 9.5);
-            y += secGap;
-
-            sectionHeader(doc, '4. Work & Performance', 10);
-            printBullet(doc, 'Develop clean, efficient code and follow company coding standards.', 9.5);
-            printBullet(doc, 'Complete tasks assigned by your Manager/Team Lead within deadlines.', 9.5);
-            printBullet(doc, 'Participate in development, testing, and troubleshooting as required.', 9.5);
-            printBullet(doc, 'Performance will be reviewed regularly; failure to meet expectations may lead to corrective actions or termination.', 9.5);
-            y += secGap;
-
-            sectionHeader(doc, '5. Terms of Contract & Termination', 10);
-            printBullet(doc, `This appointment is ${empType === 'Full Time' ? 'full-time' : 'casual/contractual'} in nature.`, 9.5);
-            printBullet(doc, "As per company policy, your probation period will be 6 months. During this period, either party may terminate the employment with 1 week's notice.", 9.5);
-            printBullet(doc, 'After the probation period, the notice period for resignation will be 30 days (1 month) on either side.', 9.5);
-            printBullet(doc, 'The company reserves the right to terminate your employment immediately in case of gross misconduct, violation of rules, or non-performance.', 9.5);
-            y += secGap;
-
-            sectionHeader(doc, '6. Company Property & Assets', 10);
-            printBullet(doc, 'You are not permitted to remove, misuse, or take away any company assets without prior written authorization.', 9.5);
-            y += secGap;
-
-            sectionHeader(doc, '7. Non-Payment Policy', 10);
-            printText(doc, 'Employees confirm that they have not made any payments to Mevrick Solutions Pvt. Ltd. in relation to their employment. Any attempt to offer or accept money, gifts, or favors will be treated as fraudulent activity.', mL, cW, 9.5, false);
-            y += secGap;
-
-            ensureSpace(doc, 70);
-            const tX  = mL;
-            const tW  = cW - 6;
-            const c1W = tW * 0.52;
-            const c2W = tW * 0.24;
-            const c3W = tW * 0.24;
-            const rH  = 7;
-
-            doc.setFillColor(230, 230, 230);
-            doc.rect(tX, y, tW, rH, 'FD');
-            doc.setFontSize(8.5);
-            doc.setFont('helvetica', 'bold');
-            doc.setDrawColor(150, 150, 150);
-            doc.setLineWidth(0.3);
-            doc.text(`Compensation Break up with effective from ${jDateStr}`, tX + 2, y + 5);
-            y += rH;
-
-            doc.setFillColor(245, 245, 245);
-            doc.rect(tX, y, tW, rH, 'FD');
-            doc.text(empName, tX + 2, y + 5);
-            y += rH;
-
-            doc.setFillColor(255, 255, 255);
-            doc.rect(tX, y, c1W, rH, 'D');
-            doc.rect(tX + c1W, y, c2W, rH, 'D');
-            doc.rect(tX + c1W + c2W, y, c3W, rH, 'D');
-            doc.text('Monthly', tX + c1W + 2, y + 5);
-            doc.text('Annual', tX + c1W + c2W + 2, y + 5);
-            y += rH;
-
-            doc.rect(tX, y, c1W, rH, 'D');
-            doc.rect(tX + c1W, y, c2W, rH, 'D');
-            doc.rect(tX + c1W + c2W, y, c3W, rH, 'D');
-            doc.setFont('helvetica', 'normal');
-            doc.text('Gross Salary', tX + 2, y + 5);
-            doc.text(fmtMoney(monthlySalary), tX + c1W + 2, y + 5);
-            doc.text(fmtMoney(annualSalary), tX + c1W + c2W + 2, y + 5);
-            y += rH + secGap + 2;
-
-            sectionHeader(doc, '8. Acceptance of Terms', 10);
-            printText(doc, 'By signing this letter, you acknowledge that you have read, understood, and agreed to abide by the above terms and conditions of employment.', mL, cW, 9.5, false);
-            printText(doc, 'We welcome you to Mevrick Solutions Private Limited and look forward to your valuable contribution.', mL, cW, 9.5, false);
-            y += secGap;
-
-            sectionHeader(doc, '9. Acknowledgement & Acceptance', 10);
-            printText(doc, `I, ${empName}, accept the appointment as ${posTitle} at Mevrick Solutions Pvt. Ltd. and agree to abide by the terms and conditions stated above.`, mL, cW, 9.5, false);
-            y += 12;
-
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Sincerely,', mL, y);
-            y += lineH + 2;
-
-            doc.setFont('helvetica', 'bold');
-            doc.text('For MEVRICK SOLUTION PVT LTD', mL, y);
-            y += 15;
-            doc.text('Authorized Signatory', mL, y);
-            
-            const sigLineEnd = pageWidth - mR;
-            const sigLineStart = sigLineEnd - 55;
-            doc.setDrawColor(0, 0, 0);
-            doc.setLineWidth(0.3);
-            doc.line(sigLineStart, y, sigLineEnd, y);
-            doc.setFontSize(8);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Employee Signature', sigLineStart + 5, y + 4);
+            secHead(doc,'Acknowledgement & Acceptance',10);
+            printText(doc,`I, ${empName}, accept the appointment as ${posTitle} at Mevrick Solutions Pvt. Ltd. and agree to abide by the terms and conditions stated above.`,mL,cW,9.5,false);
+            y+=12;
+            doc.setFontSize(10); doc.setFont('helvetica','normal');
+            doc.text('Sincerely,',mL,y); y+=lineH+2;
+            doc.setFont('helvetica','bold'); doc.text('For MEVRICK SOLUTION PVT LTD',mL,y); y+=15;
+            doc.text('Authorized Signatory',mL,y);
+            const sEnd=pageWidth-mR, sStart=sEnd-55;
+            doc.setDrawColor(0,0,0); doc.setLineWidth(0.3); doc.line(sStart,y,sEnd,y);
+            doc.setFontSize(8); doc.setFont('helvetica','normal');
+            doc.text('Employee Signature',sStart+5,y+4);
 
             return doc;
         }
 
-        // Form submission handler
-        document.getElementById('registrationForm').addEventListener('submit', async function (e) {
+        function fileToBase64(file) {
+            return new Promise((resolve,reject) => {
+                if (!file) { resolve(null); return; }
+                const r = new FileReader();
+                r.onload  = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        // ── Form Submit ──────────────────────────────────
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
             const successMsg = document.getElementById('successMessage');
-            const errorMsg = document.getElementById('errorMessage');
-            const loading = document.getElementById('loading');
-            const submitBtn = document.getElementById('submitBtn');
+            const errorMsg   = document.getElementById('errorMessage');
+            const loading    = document.getElementById('loading');
+            const submitBtn  = document.getElementById('submitBtn');
 
             successMsg.style.display = 'none';
-            errorMsg.style.display = 'none';
-            loading.style.display = 'block';
-            submitBtn.disabled = true;
+            errorMsg.style.display   = 'none';
+            loading.style.display    = 'block';
+            submitBtn.disabled       = true;
 
-            const employeeId = `MEV/${Math.floor(Math.random() * 999) + 100}/2025`;
+            // ── Read admin-entered credentials ──
+            const employeeId    = document.getElementById('employeeId').value.trim().toUpperCase();
+            const loginPassword = document.getElementById('loginPassword').value.trim();
 
-            console.log("Submitting form with data:", Object.fromEntries(new FormData(document.getElementById('registrationForm'))));
+            if (!employeeId || !loginPassword) {
+                errorMsg.innerHTML = '❌ Employee ID aur Password dono required hain!';
+                errorMsg.style.display = 'block';
+                loading.style.display  = 'none';
+                submitBtn.disabled     = false;
+                return;
+            }
+
+            // Check duplicate ID
+            const existingCredDB = JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
+            if (existingCredDB[employeeId]) {
+                errorMsg.innerHTML = `❌ Employee ID <strong>${employeeId}</strong> already exists! Please use a different ID.`;
+                errorMsg.style.display = 'block';
+                loading.style.display  = 'none';
+                submitBtn.disabled     = false;
+                return;
+            }
 
             try {
-                // 1. Generate Appointment Letter PDF
-                console.log("Starting PDF generation...");
-                const doc = await generateAppointmentLetter({
-                    ...Object.fromEntries(new FormData(document.getElementById('registrationForm'))),
-                    employeeId: employeeId
-                });
-                console.log("PDF generated successfully:", doc);
-                const appointmentBlob = doc.output('blob');
+                // Collect all text form data
+                const fd = new FormData(document.getElementById('registrationForm'));
+                const textFormData = {};
+                fd.forEach((v,k) => { if (typeof v === 'string') textFormData[k] = v; });
+                textFormData.employeeId = employeeId;
 
-                // 2. Prepare FormData for Multiparts Upload
-                const fd = new FormData();
-                const formInputs = document.getElementById('registrationForm').elements;
-                for (let i = 0; i < formInputs.length; i++) {
-                    const input = formInputs[i];
-                    if (input.name && input.type !== 'file') {
-                        fd.append(input.name, input.value);
-                    }
-                }
-                fd.append('employeeId', employeeId);
-
-                // Add files from form
-                const cvFile = document.getElementById('cvResume').files[0];
-                const idFile = document.getElementById('idProof').files[0];
+                // Files
+                const cvFile   = document.getElementById('cvResume').files[0];
+                const idFile   = document.getElementById('idProof').files[0];
                 const bankFile = document.getElementById('bankPassbook').files[0];
-                const marksheetFile = document.getElementById('marksheet').files[0];
+                const markFile = document.getElementById('marksheet').files[0];
 
-                if (cvFile) fd.append('cvResume', cvFile);
-                if (idFile) fd.append('idProof', idFile);
-                if (bankFile) fd.append('bankPassbook', bankFile);
-                if (marksheetFile) fd.append('marksheet', marksheetFile);
+                // Generate appointment letter
+                const doc  = await generateAppointmentLetter(textFormData);
+                doc.save(`Appointment_Letter_${employeeId.replace(/\//g,'_')}.pdf`);
 
-                // Add generated PDF
-                fd.append('appointmentLetter', appointmentBlob, `Appointment_Letter_${employeeId.replace(/\//g, '_')}.pdf`);
+                // Files to base64
+                const [cvB64, idB64, bankB64, markB64] = await Promise.all([
+                    fileToBase64(cvFile), fileToBase64(idFile),
+                    fileToBase64(bankFile), fileToBase64(markFile)
+                ]);
 
-                const formData = Object.fromEntries(fd.entries());
-
-                // ALWAYS download the PDF for the user immediately
-                doc.save(`Appointment_Letter_${employeeId.replace(/\//g, '_')}.pdf`);
-
-                // 3. Attempt Server Save
-                try {
-                    const response = await fetch('http://127.0.0.1:3000/api/register', {
-                        method: 'POST',
-                        body: fd
-                    });
-
-                    if (!response.ok) {
-                        const result = await response.json();
-                        throw new Error(result.error || 'Server save failed');
-                    }
-                } catch (fetchError) {
-                    console.warn("Backend save failed, continuing with local persistence:", fetchError);
-                    // We don't throw here so the user still gets local success feedback
-                }
-
-                // 4. Local Persistence (LocalStorage & Excel)
-                const LS_DB = "mevtencia_employeeDatabase";
-                let employeeDatabase = JSON.parse(localStorage.getItem(LS_DB) || "{}");
-                employeeDatabase[employeeId] = { id: employeeId, ...formData };
-                localStorage.setItem(LS_DB, JSON.stringify(employeeDatabase));
-
-                // Excel data
-                const excelData = {
-                    'Registration Date': new Date().toLocaleDateString('en-IN'),
-                    'Employee ID': employeeId,
-                    'Employee Name': formData.employeeName,
-                    'Employee Email': formData.employeeEmail,
-                    'Designation': formData.designation,
-                    'Monthly Salary (₹)': formData.salary,
-                    'Joining Date': formData.joiningDate,
-                    'Work Location': formData.workLocation
+                // ── Save to mevtencia_employeeDatabase ──
+                const LS_DB = 'mevtencia_employeeDatabase';
+                let empDB = JSON.parse(localStorage.getItem(LS_DB) || '{}');
+                empDB[employeeId] = {
+                    ...textFormData,
+                    id:            employeeId,
+                    employeeId:    employeeId,
+                    registered_at: new Date().toISOString(),
+                    cvResume:      cvB64,
+                    idProof:       idB64,
+                    bankPassbook:  bankB64,
+                    marksheet:     markB64
                 };
 
+                try {
+                    localStorage.setItem(LS_DB, JSON.stringify(empDB));
+                } catch(se) {
+                    empDB[employeeId].cvResume = empDB[employeeId].idProof =
+                    empDB[employeeId].bankPassbook = empDB[employeeId].marksheet = null;
+                    localStorage.setItem(LS_DB, JSON.stringify(empDB));
+                }
+
+                // ══════════════════════════════════════════
+                // ✅ Save to mev_employeeDB (Login DB)
+                // Admin ne jo ID + Password diya wahi save hoga
+                // ══════════════════════════════════════════
+                const credDB = JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
+                credDB[employeeId] = {
+                    id:       employeeId,
+                    name:     textFormData.employeeName  || '',
+                    password: loginPassword,
+                    dept:     textFormData.designation   || '',
+                    city:     textFormData.workLocation  || '',
+                    salary:   textFormData.salary        || ''
+                };
+                localStorage.setItem('mev_employeeDB', JSON.stringify(credDB));
+                // ══════════════════════════════════════════
+
+                // Excel log
                 let existingData = [];
                 const existingFile = localStorage.getItem('mevrickEmployeeRegistrations');
                 if (existingFile) {
                     try {
-                        const workbook = XLSX.read(existingFile, { type: 'string' });
-                        existingData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                    } catch (e) { }
+                        const wb2 = XLSX.read(existingFile, { type:'string' });
+                        existingData = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]]);
+                    } catch(ex) {}
                 }
-                existingData.push(excelData);
+                existingData.push({
+                    'Registration Date':  new Date().toLocaleDateString('en-IN'),
+                    'Employee ID':        employeeId,
+                    'Employee Name':      textFormData.employeeName,
+                    'Employee Email':     textFormData.employeeEmail,
+                    'Designation':        textFormData.designation,
+                    'Monthly Salary (₹)': textFormData.salary,
+                    'Joining Date':       textFormData.joiningDate,
+                    'Work Location':      textFormData.workLocation
+                });
                 const ws = XLSX.utils.json_to_sheet(existingData);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Employees');
-                localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wb, { bookType: 'xlsx', type: 'string' }));
+                const wbk = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wbk, ws, 'Employees');
+                localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wbk, { bookType:'xlsx', type:'string' }));
 
-                // 5. Success Feedback
+                // ── Success message with credentials ──
                 successMsg.innerHTML = `
-                    <div style="text-align: center; padding: 10px;">
-                        <strong style="font-size: 20px;">✅ Registration Successful!</strong><br><br>
-                        <strong>Welcome to Mevrick Solutions, ${formData.employeeName}!</strong><br><br>
-                        📄 Your appointment letter has been generated and downloaded.<br>
-                        💼 Employment Type: ${formData.employeeType}<br>
-                        📍 Work Location: ${formData.workLocation}<br>
-                        📅 Joining Date: ${new Date(formData.joiningDate).toLocaleDateString('en-IN')}<br><br>
-                        <a href="EmployeeHistory.html" style="display: inline-block; background: #667eea; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; margin-bottom: 15px;">👥 View Registration History</a>
+                    <div style="text-align:center;padding:10px;">
+                        <strong style="font-size:20px;">✅ Registration Successful!</strong><br><br>
+                        <strong>Welcome to Mevrick Solutions, ${textFormData.employeeName}!</strong><br><br>
+                        📄 Appointment letter downloaded.<br>
+                        💼 Type: ${textFormData.employeeType} &nbsp;|&nbsp;
+                        📍 ${textFormData.workLocation} &nbsp;|&nbsp;
+                        📅 ${new Date(textFormData.joiningDate).toLocaleDateString('en-IN')}<br><br>
+
+                        <div style="background:linear-gradient(135deg,#1a237e,#3f51b5);border-radius:12px;padding:22px;margin-top:14px;color:white;">
+                            <div style="font-size:14px;opacity:0.85;margin-bottom:14px;">🔑 Employee Login Credentials</div>
+                            <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:12px;">
+                                <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:12px 22px;min-width:160px;">
+                                    <div style="font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Employee ID</div>
+                                    <div style="font-size:18px;font-weight:800;font-family:monospace;">${employeeId}</div>
+                                </div>
+                                <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:12px 22px;min-width:160px;">
+                                    <div style="font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Password</div>
+                                    <div style="font-size:18px;font-weight:800;font-family:monospace;">${loginPassword}</div>
+                                </div>
+                            </div>
+                            <div style="font-size:11px;opacity:0.65;">⚠️ Ye credentials note kar lo. Employee in se login karega.</div>
+                        </div>
+
+                        <br>
+                        <a href="EmployeeHistory.html"
+                           style="display:inline-block;background:#667eea;color:white;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:bold;">
+                           👥 View Registration History
+                        </a>
                     </div>
                 `;
                 successMsg.style.display = 'block';
                 document.getElementById('registrationForm').reset();
+                document.getElementById('prevId').textContent = '—';
+                document.getElementById('prevPw').textContent = '—';
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            } catch (error) {
-                errorMsg.innerHTML = `<strong>❌ Error:</strong> ${error.message}<br><br>PDF generation failed. Please check the form and try again.`;
+            } catch(error) {
+                errorMsg.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
                 errorMsg.style.display = 'block';
-                console.error('Final Error:', error);
+                console.error(error);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } finally {
                 loading.style.display = 'none';
-                submitBtn.disabled = false;
+                submitBtn.disabled    = false;
             }
-
         });
 
-        // Helper functions
-        function s2ab(s) {
-            const buf = new ArrayBuffer(s.length);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i < s.length; i++) {
-                view[i] = s.charCodeAt(i) & 0xFF;
-            }
-            return buf;
-        }
-
-        function blobToBase64(blob) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(blob);
-            });
-        }
-
-        // Auto-calculate age from DOB
-        document.getElementById('dob').addEventListener('change', function () {
-            const dob = new Date(this.value);
+        // DOB → Age
+        document.getElementById('dob').addEventListener('change', function() {
+            const dob   = new Date(this.value);
             const today = new Date();
             let age = today.getFullYear() - dob.getFullYear();
-            const monthDiff = today.getMonth() - dob.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-
-                age--;
-            }
+            if (today.getMonth() < dob.getMonth() ||
+               (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--;
             document.getElementById('age').value = age;
         });
 
-        // File size validation
-        const fileInputs = ['cvResume', 'idProof', 'bankPassbook', 'marksheet'];
-        fileInputs.forEach(inputId => {
-            document.getElementById(inputId).addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                if (file && file.size > 5 * 1024 * 1024) { // 5MB limit
-                    alert('File size should not exceed 5MB. Please choose a smaller file.');
+        // File size limit 5MB
+        ['cvResume','idProof','bankPassbook','marksheet'].forEach(id => {
+            document.getElementById(id).addEventListener('change', function(e) {
+                if (e.target.files[0]?.size > 5*1024*1024) {
+                    alert('File size should not exceed 5MB.');
                     e.target.value = '';
                 }
             });
         });
 
-        // Set minimum joining date to today
         document.getElementById('joiningDate').min = new Date().toISOString().split('T')[0];
     </script>
 </body>
-
 </html>

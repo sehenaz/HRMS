@@ -19,7 +19,6 @@
     .header-card h2 { color: #3f51b5; font-size: 20px; font-weight: 700; }
     .header-card p { color: #666; font-size: 13px; margin-top: 4px; }
 
-    /* Stats */
     .stats-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 22px; }
     @media(min-width:600px) { .stats-row { grid-template-columns: repeat(4,1fr); } }
     .stat-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 5px 20px rgba(0,0,0,.08); text-align: center; }
@@ -29,7 +28,6 @@
     .stat-card .num.purple { color: #9c27b0; }
     .stat-card .lbl { color: #888; font-size: 12px; }
 
-    /* Filters */
     .filters { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
     .filters input, .filters select { padding: 10px 15px; border-radius: 10px; border: 2px solid #e0e0e0; font-size: 14px; outline: none; background: white; font-family: inherit; }
     .filters input:focus, .filters select:focus { border-color: #3f51b5; }
@@ -39,7 +37,6 @@
     .export-btn { padding: 10px 18px; background: #2e7d32; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .export-btn:hover { background: #1b5e20; }
 
-    /* Table */
     .table-container { background: #fff; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,.1); overflow-x: auto; }
     .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
     .table-header h3 { color: #3f51b5; font-size: 16px; font-weight: 700; }
@@ -62,7 +59,6 @@
     .view-btn { background: #3f51b5; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 4px; }
     .view-btn:hover { background: #303f9f; }
 
-    /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: white; border-radius: 20px; padding: 30px; max-width: 700px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; }
@@ -76,6 +72,10 @@
     .section-title { grid-column: span 2; font-size: 13px; font-weight: 800; color: #3f51b5; border-bottom: 2px solid #e0e7ff; padding-bottom: 6px; margin-top: 8px; }
 
     .empty-state { text-align: center; padding: 50px 20px; color: #aaa; font-size: 15px; }
+
+    .doc-btn { display: inline-block; background: #3f51b5; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 11px; }
+    .doc-btn:hover { background: #303f9f; }
+    .doc-na { color: #aaa; font-style: italic; font-size: 13px; }
   </style>
 </head>
 
@@ -163,13 +163,52 @@
     let allData = [];
 
     window.onload = function() {
-      // Guard: must be admin
       if (!localStorage.getItem('mev_adminSession')) {
         window.location.href = 'AdminLogin.html';
         return;
       }
       loadData();
     };
+
+    // ─────────────────────────────────────────────────────────────────────
+    // localStorage se employee data normalize karo
+    // Registration.html camelCase mein save karta hai (cvResume, idProof etc.)
+    // Yahan hum dono formats support karte hain
+    // ─────────────────────────────────────────────────────────────────────
+    function normalizeEmployee(obj) {
+      return {
+        emp_id:           obj.employeeId   || obj.emp_id   || obj.id,
+        employee_name:    obj.employeeName || obj.employee_name,
+        employee_email:   obj.employeeEmail|| obj.employee_email,
+        phone_number:     obj.phoneNumber  || obj.phone_number,
+        alternative_phone:obj.alternativePhone || obj.alternative_phone,
+        dob:              obj.dob,
+        age:              obj.age,
+        marital_status:   obj.maritalStatus|| obj.marital_status,
+        blood_group:      obj.bloodGroup   || obj.blood_group,
+        address:          obj.address,
+        nominee_name:     obj.nomineeName  || obj.nominee_name,
+        nominee_phone:    obj.nomineePhone || obj.nominee_phone,
+        bank_name:        obj.bankName     || obj.bank_name,
+        branch_name:      obj.branchName   || obj.branch_name,
+        account_number:   obj.accountNumber|| obj.account_number,
+        ifsc_code:        obj.ifscCode     || obj.ifsc_code,
+        branch_code:      obj.branchCode   || obj.branch_code,
+        upi_id:           obj.upiId        || obj.upi_id,
+        employee_type:    obj.employeeType || obj.employee_type,
+        salary:           obj.salary,
+        designation:      obj.designation,
+        joining_date:     obj.joiningDate  || obj.joining_date,
+        work_location:    obj.workLocation || obj.work_location,
+        // ✅ Documents — camelCase aur snake_case dono check karo
+        cv_resume:        obj.cvResume     || obj.cv_resume     || null,
+        id_proof:         obj.idProof      || obj.id_proof      || null,
+        bank_passbook:    obj.bankPassbook || obj.bank_passbook || null,
+        marksheet:        obj.marksheet    || null,
+        appointment_letter: obj.appointmentLetter || obj.appointment_letter || null,
+        registered_at:    obj.registered_at || obj.registeredAt || new Date().toISOString()
+      };
+    }
 
     async function loadData() {
       let backendData = [];
@@ -182,7 +221,6 @@
           document.getElementById('serverStatus').style.color = '#2e7d32';
         }
       } catch (e) {
-        console.warn('Backend fetch failed, relying on local storage:', e);
         document.getElementById('serverStatus').textContent = '✕ Server Offline (Port 3000)';
       }
 
@@ -190,37 +228,7 @@
       try {
         const lsStr = localStorage.getItem('mevtencia_employeeDatabase');
         if (lsStr) {
-          localData = Object.values(JSON.parse(lsStr)).map(obj => ({
-            emp_id: obj.employeeId || obj.id,
-            employee_name: obj.employeeName,
-            employee_email: obj.employeeEmail,
-            phone_number: obj.phoneNumber,
-            alternative_phone: obj.alternativePhone,
-            dob: obj.dob,
-            age: obj.age,
-            marital_status: obj.maritalStatus,
-            blood_group: obj.bloodGroup,
-            address: obj.address,
-            nominee_name: obj.nomineeName,
-            nominee_phone: obj.nomineePhone,
-            bank_name: obj.bankName,
-            branch_name: obj.branchName,
-            account_number: obj.accountNumber,
-            ifsc_code: obj.ifscCode,
-            branch_code: obj.branchCode,
-            upi_id: obj.upiId,
-            employee_type: obj.employeeType || obj.employee_type,
-            salary: obj.salary,
-            designation: obj.designation,
-            joining_date: obj.joiningDate || obj.joining_date,
-            work_location: obj.workLocation || obj.work_location,
-            cv_resume: obj.cvResume || obj.cv_resume,
-            id_proof: obj.idProof || obj.id_proof,
-            bank_passbook: obj.bankPassbook || obj.bank_passbook,
-            marksheet: obj.marksheet || obj.marksheet,
-            appointment_letter: obj.appointmentLetter || obj.appointment_letter,
-            registered_at: obj.registered_at || new Date().toISOString()
-          }));
+          localData = Object.values(JSON.parse(lsStr)).map(normalizeEmployee);
         }
       } catch (e) {
         console.warn('Local storage load failed:', e);
@@ -229,41 +237,42 @@
       const mergedMap = new Map();
       backendData.forEach(r => mergedMap.set(r.emp_id, r));
       localData.forEach(r => {
-        if (!mergedMap.has(r.emp_id)) {
+        if (r.emp_id && !mergedMap.has(r.emp_id)) {
           mergedMap.set(r.emp_id, r);
         }
       });
-      
+
       allData = Array.from(mergedMap.values());
 
       if (allData.length === 0) {
-         document.getElementById('tableBody').innerHTML = `<tr><td colspan="10" class="empty-state">No employees registered yet. <a href="Registration.html">Register one now →</a></td></tr>`;
+        document.getElementById('tableBody').innerHTML =
+          `<tr><td colspan="10" class="empty-state">No employees registered yet. <a href="Registration.html">Register one now →</a></td></tr>`;
       } else {
-         renderTable();
+        renderTable();
       }
     }
 
     function renderTable() {
-      const search = document.getElementById('searchFilter').value.toLowerCase();
+      const search  = document.getElementById('searchFilter').value.toLowerCase();
       const typeVal = document.getElementById('typeFilter').value;
 
       const filtered = allData.filter(r => {
-        const matchS = !search || [r.employee_name, r.emp_id, r.employee_email, r.work_location, r.designation].some(v => (v || '').toLowerCase().includes(search));
+        const matchS = !search || [r.employee_name, r.emp_id, r.employee_email, r.work_location, r.designation]
+          .some(v => (v || '').toLowerCase().includes(search));
         const matchT = !typeVal || (r.employee_type || '').includes(typeVal);
         return matchS && matchT;
       });
 
-      // Stats
-      const thisMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-      document.getElementById('statTotal').textContent = allData.length;
-      document.getElementById('statFull').textContent = allData.filter(r => r.employee_type === 'Full Time').length;
-      document.getElementById('statCasual').textContent = allData.filter(r => r.employee_type === 'Casual').length;
+      const thisMonth = new Date().toISOString().slice(0, 7);
+      document.getElementById('statTotal').textContent     = allData.length;
+      document.getElementById('statFull').textContent      = allData.filter(r => r.employee_type === 'Full Time').length;
+      document.getElementById('statCasual').textContent    = allData.filter(r => r.employee_type === 'Casual').length;
       document.getElementById('statThisMonth').textContent = allData.filter(r => (r.registered_at || '').startsWith(thisMonth)).length;
-      document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
+      document.getElementById('recordCount').textContent   = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
 
       const tbody = document.getElementById('tableBody');
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">${allData.length ? 'No records match your filters.' : 'No employees registered yet. <a href="Registration.html">Register one now →</a>'}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="empty-state">${allData.length ? 'No records match your filters.' : 'No employees registered yet.'}</td></tr>`;
         return;
       }
 
@@ -272,7 +281,7 @@
           ? `<span class="type-badge type-full">Full Time</span>`
           : `<span class="type-badge type-casual">Casual</span>`;
         const regDate = r.registered_at ? new Date(r.registered_at).toLocaleDateString('en-IN') : '—';
-        const salary = r.salary ? `₹${parseInt(r.salary).toLocaleString('en-IN')}` : '—';
+        const salary  = r.salary ? `₹${parseInt(r.salary).toLocaleString('en-IN')}` : '—';
         return `
           <tr>
             <td><span class="emp-id">${r.emp_id || '—'}</span></td>
@@ -295,50 +304,106 @@
       }).join('');
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Document field ke liye display value banao
+    // Base64 (data:...) → View button
+    // Server path (/uploads/...) → View button
+    // null / N/A → N/A text
+    // ─────────────────────────────────────────────────────────────────────
+    function docDisplay(val) {
+      if (val && typeof val === 'string' && val.startsWith('data:')) {
+        return `<a class="doc-btn" href="${val}" target="_blank">📄 View Document</a>`;
+      }
+      if (val && typeof val === 'string' && val.startsWith('/uploads/')) {
+        return `<a class="doc-btn" href="http://127.0.0.1:3000${val}" target="_blank">📄 View Document</a>`;
+      }
+      return `<span class="doc-na">N/A</span>`;
+    }
+
     function viewEmployee(empId) {
       const emp = allData.find(r => r.emp_id === empId);
       if (!emp) return;
 
       document.getElementById('modalTitle').textContent = `📄 ${emp.employee_name} — ${emp.emp_id}`;
 
-      const sections = {
-        '👤 Personal': { 'Name': 'employee_name', 'Email': 'employee_email', 'Phone': 'phone_number', 'Alt. Phone': 'alternative_phone', 'DOB': 'dob', 'Age': 'age', 'Marital Status': 'marital_status', 'Blood Group': 'blood_group' },
-        '🏠 Address': { 'Address': 'address' },
-        '👨‍👩‍👧 Nominee': { 'Nominee Name': 'nominee_name', 'Nominee Phone': 'nominee_phone' },
-        '🏦 Bank': { 'Bank Name': 'bank_name', 'Branch': 'branch_name', 'Account No.': 'account_number', 'IFSC': 'ifsc_code', 'Branch Code': 'branch_code', 'UPI ID': 'upi_id' },
-        '💼 Job': { 'Emp Type': 'employee_type', 'Designation': 'designation', 'Salary/mo': 'salary', 'Joining Date': 'joining_date', 'Location': 'work_location' },
-        '📄 Documents': { 'CV/Resume': 'cv_resume', 'ID Proof': 'id_proof', 'Bank Passbook': 'bank_passbook', 'Marksheet': 'marksheet', 'Appointment Letter': 'appointment_letter' }
-      };
+      const sections = [
+        {
+          title: '👤 Personal',
+          fields: [
+            ['Name',           emp.employee_name],
+            ['Email',          emp.employee_email],
+            ['Phone',          emp.phone_number],
+            ['Alt. Phone',     emp.alternative_phone],
+            ['DOB',            emp.dob],
+            ['Age',            emp.age],
+            ['Marital Status', emp.marital_status],
+            ['Blood Group',    emp.blood_group],
+          ]
+        },
+        {
+          title: '🏠 Address',
+          fields: [['Address', emp.address]]
+        },
+        {
+          title: '👨‍👩‍👧 Nominee',
+          fields: [
+            ['Nominee Name',  emp.nominee_name],
+            ['Nominee Phone', emp.nominee_phone],
+          ]
+        },
+        {
+          title: '🏦 Bank',
+          fields: [
+            ['Bank Name',   emp.bank_name],
+            ['Branch',      emp.branch_name],
+            ['Account No.', emp.account_number],
+            ['IFSC',        emp.ifsc_code],
+            ['Branch Code', emp.branch_code],
+            ['UPI ID',      emp.upi_id],
+          ]
+        },
+        {
+          title: '💼 Job',
+          fields: [
+            ['Emp Type',     emp.employee_type],
+            ['Designation',  emp.designation],
+            ['Salary/mo',    emp.salary ? `₹${parseInt(emp.salary).toLocaleString('en-IN')}/month` : 'N/A'],
+            ['Joining Date', emp.joining_date],
+            ['Location',     emp.work_location],
+          ]
+        }
+      ];
 
       let html = '';
-      for (const [section, fields] of Object.entries(sections)) {
-        html += `<div class="section-title">${section}</div>`;
-        for (const [label, key] of Object.entries(fields)) {
-          let val = emp[key] || 'N/A';
-          let displayVal = val;
+      sections.forEach(sec => {
+        html += `<div class="section-title">${sec.title}</div>`;
+        sec.fields.forEach(([label, val]) => {
+          html += `<div class="detail-item">
+            <div class="dlabel">${label}</div>
+            <div class="dval">${val || 'N/A'}</div>
+          </div>`;
+        });
+      });
 
-          if (key === 'salary' && val !== 'N/A' && val !== null) {
-            displayVal = `₹${parseInt(val).toLocaleString('en-IN')}/month`;
-          } else if (['cv_resume', 'id_proof', 'bank_passbook', 'marksheet', 'appointment_letter'].includes(key)) {
-             if (val && typeof val === 'string' && val.startsWith('/uploads/')) {
-                const docUrl = `http://127.0.0.1:3000${val}`;
-                displayVal = `<a href="${docUrl}" target="_blank" style="display: inline-block; background: #3f51b5; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 11px;">📄 View Document</a>`;
-             } else if (val && (typeof val === 'object' || (typeof val === 'string' && val.includes('[object File]')))) {
-                displayVal = `<span style="color: #666; font-style: italic;">Saved Locally (Restart server to sync)</span>`;
-             } else {
-                displayVal = 'N/A';
-             }
-          } else {
-             displayVal = val;
-          }
-
-          html += `<div class="detail-item"><div class="dlabel">${label}</div><div class="dval">${displayVal}</div></div>`;
-        }
-      }
+      // ✅ Documents section — docDisplay() use karo
+      html += `<div class="section-title">📄 Documents</div>`;
+      const docs = [
+        ['CV / Resume',         emp.cv_resume],
+        ['ID Proof',            emp.id_proof],
+        ['Bank Passbook',       emp.bank_passbook],
+        ['Marksheet',           emp.marksheet],
+        ['Appointment Letter',  emp.appointment_letter],
+      ];
+      docs.forEach(([label, val]) => {
+        html += `<div class="detail-item">
+          <div class="dlabel">${label}</div>
+          <div class="dval">${docDisplay(val)}</div>
+        </div>`;
+      });
 
       html += `<div style="grid-column: span 2; margin-top: 20px; text-align: center;">
-                <button onclick="exportProfilePDF('${empId}')" style="background:#3f51b5; color:white; border:none; padding:12px 24px; border-radius:10px; font-weight:bold; cursor:pointer;">📥 Export Full Profile (PDF)</button>
-               </div>`;
+        <button onclick="exportProfilePDF('${empId}')" style="background:#3f51b5; color:white; border:none; padding:12px 24px; border-radius:10px; font-weight:bold; cursor:pointer;">📥 Export Full Profile (PDF)</button>
+      </div>`;
 
       document.getElementById('modalContent').innerHTML = html;
       document.getElementById('detailModal').classList.add('show');
@@ -348,73 +413,59 @@
       const emp = allData.find(r => r.emp_id === empId);
       if (!emp) return;
 
-      const { jsPDF } = window.jspdf;
+      let jsPDF = window.jspdf && window.jspdf.jsPDF;
       if (!jsPDF) {
-          // Load jsPDF dynamically if not present
-          const script = document.createElement('script');
-          script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-          document.head.appendChild(script);
-          script.onload = () => exportProfilePDF(empId);
-          return;
+        await new Promise((res) => {
+          const s = document.createElement('script');
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+          s.onload = res;
+          document.head.appendChild(s);
+        });
+        jsPDF = window.jspdf.jsPDF;
       }
-      
+
       const doc = new jsPDF();
       doc.setFontSize(22);
       doc.setTextColor(63, 81, 181);
       doc.text("EMPLOYEE REGISTRATION PROFILE", 105, 20, { align: "center" });
-      
       doc.setDrawColor(63, 81, 181);
       doc.setLineWidth(1);
       doc.line(20, 25, 190, 25);
-      
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont("helvetica", "bold");
-      
+
       let y = 40;
-      const leftCol = 20;
-      const rightCol = 110;
-      
       const addRow = (label, value) => {
         if (y > 270) { doc.addPage(); y = 20; }
+        doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text(`${label}:`, leftCol, y);
+        doc.text(`${label}:`, 20, y);
         doc.setFont("helvetica", "normal");
-        doc.text(`${value || 'N/A'}`, leftCol + 40, y);
+        doc.text(`${value || 'N/A'}`, 70, y);
         y += 10;
       };
 
-      doc.setFontSize(14);
-      doc.text("Personal Information", leftCol, y);
-      y += 8;
-      doc.setFontSize(10);
-      addRow("Employee ID", emp.emp_id);
-      addRow("Full Name", emp.employee_name);
-      addRow("Email", emp.employee_email);
-      addRow("Phone", emp.phone_number);
-      addRow("Date of Birth", emp.dob);
-      addRow("Blood Group", emp.blood_group);
-      
+      doc.setFontSize(14); doc.setFont("helvetica","bold");
+      doc.text("Personal Information", 20, y); y += 10;
+      addRow("Employee ID",  emp.emp_id);
+      addRow("Full Name",    emp.employee_name);
+      addRow("Email",        emp.employee_email);
+      addRow("Phone",        emp.phone_number);
+      addRow("Date of Birth",emp.dob);
+      addRow("Blood Group",  emp.blood_group);
+
       y += 5;
-      doc.setFontSize(14);
-      doc.text("Employment Details", leftCol, y);
-      y += 8;
-      doc.setFontSize(10);
-      addRow("Designation", emp.designation);
-      addRow("Salary", `INR ${parseInt(emp.salary || 0).toLocaleString('en-IN')}/month`);
+      doc.setFontSize(14); doc.text("Employment Details", 20, y); y += 10;
+      addRow("Designation",  emp.designation);
+      addRow("Salary",       `INR ${parseInt(emp.salary || 0).toLocaleString('en-IN')}/month`);
       addRow("Joining Date", emp.joining_date);
-      addRow("Work Location", emp.work_location);
-      
+      addRow("Work Location",emp.work_location);
+
       y += 5;
-      doc.setFontSize(14);
-      doc.text("Bank Information", leftCol, y);
-      y += 8;
-      doc.setFontSize(10);
-      addRow("Bank Name", emp.bank_name);
-      addRow("Account No", emp.account_number);
-      addRow("IFSC Code", emp.ifsc_code);
-      
-      doc.save(`Profile_${emp.emp_id.replace(/\//g, '_')}.pdf`);
+      doc.setFontSize(14); doc.text("Bank Information", 20, y); y += 10;
+      addRow("Bank Name",    emp.bank_name);
+      addRow("Account No",   emp.account_number);
+      addRow("IFSC Code",    emp.ifsc_code);
+
+      doc.save(`Profile_${(emp.emp_id || 'employee').replace(/\//g, '_')}.pdf`);
     }
 
     function closeModal(e) {
@@ -425,71 +476,60 @@
 
     async function deleteEmployee(empId) {
       if (!confirm(`Delete employee ${empId}? This cannot be undone.`)) return;
-      
-      let backendSuccess = false;
-      try {
-        const resp = await fetch(`http://127.0.0.1:3000/api/employees/${encodeURIComponent(empId)}`, { method: 'DELETE' });
-        if (resp.ok) backendSuccess = true;
-      } catch (e) {
-        console.warn('Backend delete failed/offline:', e.message);
-      }
 
-      // Also try deleting from local storage
+      try {
+        await fetch(`http://127.0.0.1:3000/api/employees/${encodeURIComponent(empId)}`, { method: 'DELETE' });
+      } catch (e) {}
+
       try {
         const lsStr = localStorage.getItem('mevtencia_employeeDatabase');
         if (lsStr) {
           const db = JSON.parse(lsStr);
-          // Find the key the employee is stored under (usually their empId)
           for (let key in db) {
-             if (db[key].id === empId || db[key].employeeId === empId) {
-                 delete db[key];
-                 break;
-             }
+            const obj = db[key];
+            if (obj.id === empId || obj.employeeId === empId || obj.emp_id === empId) {
+              delete db[key]; break;
+            }
           }
           localStorage.setItem('mevtencia_employeeDatabase', JSON.stringify(db));
         }
       } catch(e) {}
 
-      // Regardless of backend, remove from UI array and re-render
       allData = allData.filter(r => r.emp_id !== empId);
       renderTable();
-      
-      if (!backendSuccess) {
-         console.log('Employee removed from local view/storage.');
-      }
     }
 
     function clearFilters() {
       document.getElementById('searchFilter').value = '';
-      document.getElementById('typeFilter').value = '';
+      document.getElementById('typeFilter').value   = '';
       renderTable();
     }
 
     function exportToExcel() {
       if (!allData.length) { alert('No records to export!'); return; }
       const exportData = allData.map(r => ({
-        'Employee ID': r.emp_id,
-        'Name': r.employee_name,
-        'Email': r.employee_email,
-        'Phone': r.phone_number,
-        'DOB': r.dob,
-        'Marital Status': r.marital_status,
-        'Blood Group': r.blood_group,
-        'Address': r.address,
-        'Nominee Name': r.nominee_name,
-        'Nominee Phone': r.nominee_phone,
-        'Bank Name': r.bank_name,
-        'Branch': r.branch_name,
-        'Account No': r.account_number,
-        'IFSC': r.ifsc_code,
-        'UPI ID': r.upi_id || '',
-        'Employee Type': r.employee_type,
-        'Designation': r.designation,
+        'Employee ID':        r.emp_id,
+        'Name':               r.employee_name,
+        'Email':              r.employee_email,
+        'Phone':              r.phone_number,
+        'DOB':                r.dob,
+        'Marital Status':     r.marital_status,
+        'Blood Group':        r.blood_group,
+        'Address':            r.address,
+        'Nominee Name':       r.nominee_name,
+        'Nominee Phone':      r.nominee_phone,
+        'Bank Name':          r.bank_name,
+        'Branch':             r.branch_name,
+        'Account No':         r.account_number,
+        'IFSC':               r.ifsc_code,
+        'UPI ID':             r.upi_id || '',
+        'Employee Type':      r.employee_type,
+        'Designation':        r.designation,
         'Monthly Salary (₹)': r.salary,
-        'Annual CTC (₹)': parseInt(r.salary || 0) * 12,
-        'Joining Date': r.joining_date,
-        'Work Location': r.work_location,
-        'Registered At': r.registered_at
+        'Annual CTC (₹)':     parseInt(r.salary || 0) * 12,
+        'Joining Date':       r.joining_date,
+        'Work Location':      r.work_location,
+        'Registered At':      r.registered_at
       }));
 
       const ws = XLSX.utils.json_to_sheet(exportData);
