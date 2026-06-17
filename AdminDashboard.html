@@ -705,11 +705,30 @@
     };
 
     // ── DATA ───────────────────────────────────────────────
+    // async function getAllRecords() {
+    //   try {
+    //     const response = await fetch('/api/attendance');
+    //     if (response.ok) return await response.json();
+    //   } catch (e) { console.error('Fetch failed:', e); }
+    //   return JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+    // }
+
     async function getAllRecords() {
       try {
-        const response = await fetch('/api/attendance');
-        if (response.ok) return await response.json();
-      } catch (e) { console.error('Fetch failed:', e); }
+        const response = await fetch('http://localhost:4000/api/attendance');
+        if (response.ok) {
+          const serverData = await response.json();
+          const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+          const merged = [...serverData];
+          localData.forEach(lr => {
+            const exists = merged.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
+            if (!exists) merged.push(lr);
+          });
+          return merged;
+        }
+      } catch (e) {
+        console.warn('Server offline:', e.message);
+      }
       return JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
     }
 

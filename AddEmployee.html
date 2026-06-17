@@ -478,35 +478,68 @@
     }
 
     // ─── Backend Sync ────────────────────────────
-    async function pushToBackend(emp) {
-      try {
-        const payload = {
-          employeeId: emp.id,
-          employeeName: emp.name,
-          employeeEmail: emp.email,
-          phoneNumber: emp.phone,
-          designation: emp.designation || emp.department || '',
-          salary: emp.salary,
-          employeeType: emp.employeeType,
-          workLocation: emp.work_location,
-          joiningDate: new Date().toISOString().split('T')[0],
-          dob: '', age: '', maritalStatus: '', bloodGroup: '',
-          address: '', nomineeName: '', nomineePhone: '',
-          bankName: '', branchName: '', accountNumber: '',
-          ifscCode: '', branchCode: '', upiId: ''
-        };
-        const resp = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (resp.ok) {
-          console.log(`Synced ${emp.id} to backend`);
-        }
-      } catch (err) {
-        console.warn('Backend sync failed (offline?):', err.message);
-      }
+    // async function pushToBackend(emp) {
+    //   try {
+    //     const payload = {
+    //       employeeId: emp.id,
+    //       employeeName: emp.name,
+    //       employeeEmail: emp.email,
+    //       phoneNumber: emp.phone,
+    //       designation: emp.designation || emp.department || '',
+    //       salary: emp.salary,
+    //       employeeType: emp.employeeType,
+    //       workLocation: emp.work_location,
+    //       joiningDate: new Date().toISOString().split('T')[0],
+    //       dob: '', age: '', maritalStatus: '', bloodGroup: '',
+    //       address: '', nomineeName: '', nomineePhone: '',
+    //       bankName: '', branchName: '', accountNumber: '',
+    //       ifscCode: '', branchCode: '', upiId: ''
+    //     };
+    //     const resp = await fetch('/api/register', {
+    //       method: 'POST',
+    //       headers: { 'Content-Type': 'application/json' },
+    //       body: JSON.stringify(payload)
+    //     });
+    //     if (resp.ok) {
+    //       console.log(`Synced ${emp.id} to backend`);
+    //     }
+    //   } catch (err) {
+    //     console.warn('Backend sync failed (offline?):', err.message);
+    //   }
+    // }
+
+
+async function pushToBackend(emp) {
+  try {
+    const payload = {
+      employeeId:    emp.id,
+      employeeName:  emp.name,
+      employeeEmail: emp.email,
+      phoneNumber:   emp.phone,
+      department:    emp.department || '',
+      designation:   emp.designation || '',
+      salary:        emp.salary,
+      employeeType:  emp.employeeType,
+      workLocation:  emp.work_location,
+      password:      emp.password || 'MEVRICK1707',
+      joiningDate:   new Date().toISOString().split('T')[0]
+    };
+    const resp = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      console.log(`✅ Synced ${emp.id} to MongoDB`);
+    } else {
+      console.error('Sync failed:', data);
     }
+  } catch (err) {
+    console.warn('Backend sync failed:', err.message);
+  }
+}
+
 
     async function syncAllToBackend() {
       const all = Object.values(db);

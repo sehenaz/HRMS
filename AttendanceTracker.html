@@ -630,24 +630,63 @@
       });
     }
 
+    // async function getRecordsFromBackend() {
+    //   const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
+    //   if (!response.ok) throw new Error('Failed');
+    //   return await response.json();
+    // }
     async function getRecordsFromBackend() {
-      const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
+      const response = await fetch(`http://localhost:3000/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
       if (!response.ok) throw new Error('Failed');
       return await response.json();
     }
 
+    // async function syncToBackend(record) {
+    //   if (!record) return;
+    //   try {
+    //     const data = {
+    //       emp_id: session.id, emp_name: session.name, dept: session.dept || 'Employee', city: session.city,
+    //       date: record.date, clock_in: record.clock_in, clock_out: record.clock_out || '',
+    //       work_hours: record.work_hours || '', attendance_type: record.attendance_type || 'In Progress',
+    //       location: record.location, lat: record.lat || null, lng: record.lng || null, photo: record.photo
+    //     };
+    //     await fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    //   } catch (e) { console.error('Sync failed:', e); }
+    // }
+
     async function syncToBackend(record) {
-      if (!record) return;
+      if (!record || !session) return;
       try {
+        const loc   = JSON.parse(localStorage.getItem('mev_capturedLocation') || '{}');
+        const photo = localStorage.getItem('mev_capturedPhoto') || '';
         const data = {
-          emp_id: session.id, emp_name: session.name, dept: session.dept || 'Employee', city: session.city,
-          date: record.date, clock_in: record.clock_in, clock_out: record.clock_out || '',
-          work_hours: record.work_hours || '', attendance_type: record.attendance_type || 'In Progress',
-          location: record.location, lat: record.lat || null, lng: record.lng || null, photo: record.photo
+          emp_id:          session.id,
+          emp_name:        session.name,
+          dept:            session.dept || 'Employee',
+          city:            session.city || loc.city || '',
+          date:            record.date,
+          clock_in:        record.clock_in  || '',
+          clock_out:       record.clock_out || '',
+          work_hours:      record.work_hours || '',
+          attendance_type: record.attendance_type || 'In Progress',
+          location:        record.location || loc.address || 'Unknown',
+          lat:             record.lat || loc.lat || null,
+          lng:             record.lng || loc.lng || null,
+          photo:           record.photo || photo || '',
+          tasks:           record.tasks || [],
+          note:            record.note  || ''
         };
-        await fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-      } catch (e) { console.error('Sync failed:', e); }
+        const resp = await fetch('http://localhost:3000/api/attendance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (resp.ok) console.log('✅ Synced:', record.date);
+      } catch (e) {
+        console.warn('📴 Server offline, local backup saved');
+      }
     }
+
 
     function getToday() {
       const d = new Date();

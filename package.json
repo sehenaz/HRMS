@@ -1,20 +1,17 @@
 {
   "name": "mevtencia-hrms",
   "version": "1.0.0",
-  "description": "MEVTENCIA HRMS System",
-  "author": "Mevrick Solution Pvt Ltd",
   "main": "main.js",
   "scripts": {
-    "start": "node server.js",
-    "electron": "electron .",
-    "build": "electron-builder build --win"
+    "start": "electron .",
+    "dist": "electron-builder --win --x64"
   },
   "build": {
-    "appId": "com.mevrick.hrms",
+    "appId": "com.mevrick.mevtencia",
     "productName": "MEVTENCIA HRMS",
     "win": {
       "target": "nsis",
-      "icon": "assets/logo.png"
+      "icon": "assets/logo.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -22,19 +19,28 @@
     },
     "files": [
       "**/*",
-      "!node_modules/.cache",
-      "!node_modules/.bin"
+      "!mevtencia-server/**/*",
+      "!.git/**/*",
+      "!uploads/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets"
+      }
     ]
   },
   "dependencies": {
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "multer": "^1.4.4",
-    "better-sqlite3": "^9.4.3"
+    "body-parser": "^2.2.2",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.7.0",
+    "multer": "^2.1.1",
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
-    "electron": "^28.3.0",
-    "electron-builder": "^23.6.0"
+    "electron": "^28.3.3",
+    "electron-builder": "^26.15.3"
   }
 }

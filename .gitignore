@@ -1,4 +1,10 @@
-node_modules
-.DS_Store
-attendance.db
+node_modules/
 .env
+uploads/
+data/
+*.db
+dist/
+*.exe
+electron.js
+main.js
+mevtencia-server/
