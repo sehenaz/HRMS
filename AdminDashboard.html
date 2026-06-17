@@ -715,7 +715,7 @@
 
     async function getAllRecords() {
       try {
-        const response = await fetch('http://localhost:4000/api/attendance');
+        const response = await fetch('/api/attendance');
         if (response.ok) {
           const serverData = await response.json();
           const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
@@ -1831,11 +1831,30 @@
     const DS_DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const DS_MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-    function openDailySheet() {
-      document.getElementById('dailySheetSection').classList.add('ds-open');
-      document.body.style.overflow = 'hidden';
-      if (!ds_currentDate) dsGoToday(); else dsRender();
+    // function openDailySheet() {
+    //   document.getElementById('dailySheetSection').classList.add('ds-open');
+    //   document.body.style.overflow = 'hidden';
+    //   if (!ds_currentDate) dsGoToday(); else dsRender();
+    // }
+    //////////////////////////////////////
+    async function openDailySheet() {
+  // Load leaves from MongoDB
+  try {
+    const resp = await fetch('/api/leaves');
+    if (resp.ok) {
+      const serverLeaves = await resp.json();
+      ds_leaveStore = { ...serverLeaves, ...ds_leaveStore };
+      localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
     }
+  } catch(e) { console.warn('Leave fetch failed:', e); }
+
+  document.getElementById('dailySheetSection').classList.add('ds-open');
+  document.body.style.overflow = 'hidden';
+  if (!ds_currentDate) dsGoToday(); else dsRender();
+}
+
+
+
 
     function closeDailySheet() {
       document.getElementById('dailySheetSection').classList.remove('ds-open');
@@ -2091,21 +2110,53 @@
       document.getElementById('dsLeaveModal').classList.remove('open');
       ds_leaveTarget = null;
     }
+////////////////////////////////////////////////////
+    // function dsSaveLeave() {
+    //   if (!ds_leaveTarget) return;
+    //   const date   = document.getElementById('dsLeaveDate').value   || ds_currentDate;
+    //   const type   = document.getElementById('dsLeaveType').value;
+    //   const reason = document.getElementById('dsLeaveReason').value.trim();
+    //   const storeKey = `${ds_leaveTarget}|${date}`;
+    //   const nameEl   = document.getElementById('dsLeaveEmpName').textContent;
+    //   const idEl     = document.getElementById('dsLeaveEmpId').textContent;
+    //   ds_leaveStore[storeKey] = { type, reason, empName: nameEl, empId: idEl, date };
+    //   localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
+    //   dsCloseLeaveModal();
+    //   dsRender();
+    //   showToast(`✅ Leave marked: ${nameEl} — ${type}`, '#5b21b6');
+    // }
 
-    function dsSaveLeave() {
-      if (!ds_leaveTarget) return;
-      const date   = document.getElementById('dsLeaveDate').value   || ds_currentDate;
-      const type   = document.getElementById('dsLeaveType').value;
-      const reason = document.getElementById('dsLeaveReason').value.trim();
-      const storeKey = `${ds_leaveTarget}|${date}`;
-      const nameEl   = document.getElementById('dsLeaveEmpName').textContent;
-      const idEl     = document.getElementById('dsLeaveEmpId').textContent;
-      ds_leaveStore[storeKey] = { type, reason, empName: nameEl, empId: idEl, date };
-      localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
-      dsCloseLeaveModal();
-      dsRender();
-      showToast(`✅ Leave marked: ${nameEl} — ${type}`, '#5b21b6');
-    }
+    async function dsSaveLeave() {
+  if (!ds_leaveTarget) return;
+  const date    = document.getElementById('dsLeaveDate').value   || ds_currentDate;
+  const type    = document.getElementById('dsLeaveType').value;
+  const reason  = document.getElementById('dsLeaveReason').value.trim();
+  const storeKey = `${ds_leaveTarget}|${date}`;
+  const nameEl   = document.getElementById('dsLeaveEmpName').textContent;
+  const idEl     = document.getElementById('dsLeaveEmpId').textContent;
+
+  const leaveData = { type, reason, empName: nameEl, empId: idEl, date };
+
+  // Local save
+  ds_leaveStore[storeKey] = leaveData;
+  localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
+
+  // MongoDB save
+  try {
+    await fetch('/api/leaves', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: storeKey, data: leaveData })
+    });
+    console.log('✅ Leave saved to MongoDB!');
+  } catch(e) {
+    console.warn('Leave MongoDB sync failed:', e.message);
+  }
+
+  dsCloseLeaveModal();
+  dsRender();
+  showToast(`✅ Leave marked: ${nameEl} — ${type}`, '#5b21b6');
+}
 
     // ── EXCEL EXPORT (Daily Sheet) ───────────────────────
     async function dsExportExcel() {
@@ -2496,7 +2547,24 @@ function credGetDB() {
 function credSaveDB(db) {
   localStorage.setItem('mev_employeeDB', JSON.stringify(db));
 }
- 
+////////////////////////////////////
+ // MongoDB mein bhi save karo
+fetch('/api/employees', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+   emp_id:        empId || id || '',
+    employee_name: name,
+    password:      pw,
+    dept:          dept,
+    city:          city,
+    salary:        salary,
+    work_location: city,
+    employee_type: 'Full Time'
+  })
+}).then(() => console.log('✅ Employee saved to MongoDB'))
+  .catch(e => console.warn('MongoDB save failed:', e));
+  /////////////////////////////////////////////
 function openCredModal() {
   // Seed defaults if empty
   credGetDB();
@@ -2534,12 +2602,35 @@ function credAdd() {
     return;
   }
  
-  db[id] = { id, name, password: pw, dept, city, salary };
-  credSaveDB(db);
+  // db[id] = { id, name, password: pw, dept, city, salary };
+  // credSaveDB(db);
  
+  // // Clear form
+  // ['credName','credId','credPw','credDept','credCity','credSalary'].forEach(f => document.getElementById(f).value = '');
+ /////////////////////////////////////////
+ db[id] = { id, name, password: pw, dept, city, salary };
+  credSaveDB(db);
+
+  // MongoDB mein bhi save karo
+  fetch('/api/employees', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      emp_id:        id,
+      employee_name: name,
+      password:      pw,
+      dept:          dept,
+      city:          city,
+      salary:        salary,
+      work_location: city,
+      employee_type: 'Full Time'
+    })
+  }).then(() => console.log('✅ Employee saved to MongoDB'))
+    .catch(e => console.warn('MongoDB save failed:', e));
+
   // Clear form
   ['credName','credId','credPw','credDept','credCity','credSalary'].forEach(f => document.getElementById(f).value = '');
- 
+  ////////////////////////////////////////////////////////////
   credRenderList();
   showToast(`✅ ${name} add ho gaya!`, '#10b981');
 }

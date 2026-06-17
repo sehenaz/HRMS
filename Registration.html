@@ -694,13 +694,64 @@
                 };
                 localStorage.setItem('mev_employeeDB', JSON.stringify(credDB));
                 // ══════════════════════════════════════════
+                /////////////////////////////////////////////////////////////////////////////////////
+                // ── Save to MongoDB Atlas ──
+try {
+    const mongoPayload = {
+        employeeId:      employeeId,
+        employeeName:    textFormData.employeeName    || '',
+        employeeEmail:   textFormData.employeeEmail   || '',
+        phoneNumber:     textFormData.phoneNumber     || '',
+        alternativePhone: textFormData.alternativePhone || '',
+        dob:             textFormData.dob             || '',
+        age:             textFormData.age             || '',
+        maritalStatus:   textFormData.maritalStatus   || '',
+        bloodGroup:      textFormData.bloodGroup      || '',
+        address:         textFormData.address         || '',
+        nomineeName:     textFormData.nomineeName     || '',
+        nomineePhone:    textFormData.nomineePhone    || '',
+        bankName:        textFormData.bankName        || '',
+        branchName:      textFormData.branchName      || '',
+        accountNumber:   textFormData.accountNumber   || '',
+        ifscCode:        textFormData.ifscCode        || '',
+        branchCode:      textFormData.branchCode      || '',
+        upiId:           textFormData.upiId           || '',
+        employeeType:    textFormData.employeeType    || '',
+        salary:          textFormData.salary          || '',
+        designation:     textFormData.designation     || '',
+        joiningDate:     textFormData.joiningDate     || '',
+        workLocation:    textFormData.workLocation    || '',
+        loginPassword:   loginPassword,
+        dept:            textFormData.designation     || '',
+        city:            textFormData.workLocation    || '',
+        work_location:   textFormData.workLocation    || '',
+        password:        loginPassword
+    };
+
+    const mongoResp = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mongoPayload)
+    });
+
+    if (mongoResp.ok) {
+        console.log('✅ Saved to MongoDB Atlas!');
+    } else {
+        console.warn('MongoDB save failed:', await mongoResp.text());
+    }
+} catch(mongoErr) {
+    console.warn('MongoDB error (offline?):', mongoErr.message);
+}
+// ── End MongoDB Save ──
 
                 // Excel log
                 let existingData = [];
                 const existingFile = localStorage.getItem('mevrickEmployeeRegistrations');
                 if (existingFile) {
                     try {
-                        const wb2 = XLSX.read(existingFile, { type:'string' });
+                        // const wb2 = XLSX.read(existingFile, { type:'string' });
+
+                        const wb2 = XLSX.read(existingFile, { type:'base64' });
                         existingData = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]]);
                     } catch(ex) {}
                 }
@@ -717,7 +768,9 @@
                 const ws = XLSX.utils.json_to_sheet(existingData);
                 const wbk = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wbk, ws, 'Employees');
-                localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wbk, { bookType:'xlsx', type:'string' }));
+                // localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wbk, { bookType:'xlsx', type:'string' }));
+
+                localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wbk, { bookType:'xlsx', type:'base64' }));
 
                 // ── Success message with credentials ──
                 successMsg.innerHTML = `

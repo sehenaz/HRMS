@@ -168,39 +168,108 @@
       el.className = 'status-msg show ' + type;
     }
 
-    function doLogin() {
-      const empId    = document.getElementById('empId').value.trim().toUpperCase();
-      const password = document.getElementById('password').value;
-      if (!empId || !password) { showMsg('⚠️ Please enter Employee ID and password.', 'warning'); return; }
+    // function doLogin() {
+    //   const empId    = document.getElementById('empId').value.trim().toUpperCase();
+    //   const password = document.getElementById('password').value;
+    //   if (!empId || !password) { showMsg('⚠️ Please enter Employee ID and password.', 'warning'); return; }
 
-      const photo = localStorage.getItem('mev_capturedPhoto');
-      if (!photo) { showMsg('❌ No photo found. Please capture your photo first.', 'error'); return; }
+    //   const photo = localStorage.getItem('mev_capturedPhoto');
+    //   if (!photo) { showMsg('❌ No photo found. Please capture your photo first.', 'error'); return; }
 
-      const captureAt = localStorage.getItem('mev_captureAt');
-      if (captureAt && (Date.now() - new Date(captureAt).getTime()) / 60000 > 30) {
-        showMsg('❌ Photo expired. Please recapture on camera page.', 'error'); return;
+    //   const captureAt = localStorage.getItem('mev_captureAt');
+    //   if (captureAt && (Date.now() - new Date(captureAt).getTime()) / 60000 > 30) {
+    //     showMsg('❌ Photo expired. Please recapture on camera page.', 'error'); return;
+    //   }
+
+    //   // ✅ Check admin-managed DB first, then defaults
+    //   const EMPLOYEES = getEmployees();
+    //   const emp = EMPLOYEES[empId];
+    //   if (!emp) { showMsg('❌ Employee ID not found. Contact admin.', 'error'); return; }
+    //   if (password !== emp.password) { showMsg('❌ Incorrect password.', 'error'); return; }
+
+    //   localStorage.setItem('mev_session', JSON.stringify({
+    //     type: 'employee',
+    //     id: emp.id,
+    //     name: emp.name,
+    //     dept: emp.dept || '',
+    //     city: emp.city || '',
+    //     salary: emp.salary || '',
+    //     loginAt: new Date().toISOString()
+    //   }));
+
+    //   showMsg('✅ Login successful! Redirecting...', 'success');
+    //   setTimeout(() => window.location.href = 'AttendanceTracker.html', 900);
+    // }
+    ////////////////////////////////////////////////////////////////////
+
+async function doLogin() {
+  const empId    = document.getElementById('empId').value.trim().toUpperCase();
+  const password = document.getElementById('password').value;
+  if (!empId || !password) { showMsg('⚠️ Please enter Employee ID and password.', 'warning'); return; }
+
+  const photo = localStorage.getItem('mev_capturedPhoto');
+  if (!photo) { showMsg('❌ No photo found. Please capture your photo first.', 'error'); return; }
+
+  const captureAt = localStorage.getItem('mev_captureAt');
+  if (captureAt && (Date.now() - new Date(captureAt).getTime()) / 60000 > 30) {
+    showMsg('❌ Photo expired. Please recapture on camera page.', 'error'); return;
+  }
+
+  showMsg('⏳ Verifying credentials...', 'warning');
+
+  // ✅ Step 1: MongoDB se check karo
+  try {
+    const resp = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: empId, password })
+    });
+
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.success && data.employee) {
+        const emp = data.employee;
+        localStorage.setItem('mev_session', JSON.stringify({
+          type:    'employee',
+          id:      emp.emp_id,
+          name:    emp.employee_name,
+          dept:    emp.dept || emp.designation || '',
+          city:    emp.city || emp.work_location || '',
+          salary:  emp.salary || '',
+          loginAt: new Date().toISOString()
+        }));
+        showMsg('✅ Login successful! Redirecting...', 'success');
+        setTimeout(() => window.location.href = 'AttendanceTracker.html', 900);
+        return;
       }
-
-      // ✅ Check admin-managed DB first, then defaults
-      const EMPLOYEES = getEmployees();
-      const emp = EMPLOYEES[empId];
-      if (!emp) { showMsg('❌ Employee ID not found. Contact admin.', 'error'); return; }
-      if (password !== emp.password) { showMsg('❌ Incorrect password.', 'error'); return; }
-
-      localStorage.setItem('mev_session', JSON.stringify({
-        type: 'employee',
-        id: emp.id,
-        name: emp.name,
-        dept: emp.dept || '',
-        city: emp.city || '',
-        salary: emp.salary || '',
-        loginAt: new Date().toISOString()
-      }));
-
-      showMsg('✅ Login successful! Redirecting...', 'success');
-      setTimeout(() => window.location.href = 'AttendanceTracker.html', 900);
+    } else if (resp.status === 401) {
+      showMsg('❌ Incorrect ID or password.', 'error');
+      return;
     }
+  } catch(e) {
+    console.warn('MongoDB login failed, trying local:', e.message);
+  }
 
+  // ✅ Step 2: LocalStorage fallback (offline mode)
+  const EMPLOYEES = getEmployees();
+  const emp = EMPLOYEES[empId];
+  if (!emp) { showMsg('❌ Employee ID not found. Contact admin.', 'error'); return; }
+  if (password !== emp.password) { showMsg('❌ Incorrect password.', 'error'); return; }
+
+  localStorage.setItem('mev_session', JSON.stringify({
+    type:    'employee',
+    id:      emp.id,
+    name:    emp.name,
+    dept:    emp.dept || '',
+    city:    emp.city || '',
+    salary:  emp.salary || '',
+    loginAt: new Date().toISOString()
+  }));
+
+  showMsg('✅ Login successful! Redirecting...', 'success');
+  setTimeout(() => window.location.href = 'AttendanceTracker.html', 900);
+}
+/////////////////////////////////////////
     document.addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
   </script>
 </body>

@@ -213,7 +213,7 @@
     async function loadData() {
       let backendData = [];
       try {
-        const resp = await fetch('http://127.0.0.1:3000/api/employees');
+        const resp = await fetch('/api/employees');
         if (resp.ok) {
           backendData = await resp.json();
           document.getElementById('serverStatus').textContent = '✓ Server Online';
@@ -221,7 +221,7 @@
           document.getElementById('serverStatus').style.color = '#2e7d32';
         }
       } catch (e) {
-        document.getElementById('serverStatus').textContent = '✕ Server Offline (Port 3000)';
+        document.getElementById('serverStatus').textContent = '✕ Server Offline';
       }
 
       let localData = [];
@@ -315,7 +315,7 @@
         return `<a class="doc-btn" href="${val}" target="_blank">📄 View Document</a>`;
       }
       if (val && typeof val === 'string' && val.startsWith('/uploads/')) {
-        return `<a class="doc-btn" href="http://127.0.0.1:3000${val}" target="_blank">📄 View Document</a>`;
+        return `<a class="doc-btn" href="${val}" target="_blank">📄 View Document</a>`;
       }
       return `<span class="doc-na">N/A</span>`;
     }
@@ -478,7 +478,7 @@
       if (!confirm(`Delete employee ${empId}? This cannot be undone.`)) return;
 
       try {
-        await fetch(`http://127.0.0.1:3000/api/employees/${encodeURIComponent(empId)}`, { method: 'DELETE' });
+        await fetch(`/api/employees/${encodeURIComponent(empId)}`, { method: 'DELETE' });
       } catch (e) {}
 
       try {

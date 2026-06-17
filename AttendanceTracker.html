@@ -576,9 +576,16 @@
     let attChart = null;
 
     async function initAnalytics() {
+  if (!document.getElementById('monthDays') ||
+      !document.getElementById('salaryPayout') ||
+      !document.getElementById('workDaysCount') ||
+      !document.getElementById('absentDaysCount') ||
+      !document.getElementById('salaryDetails') ||
+      !document.getElementById('attendanceChart')) return;
       const records = getRecords();
       const now = new Date();
       const totalMonthDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+      // document.getElementById('monthDays').textContent = totalMonthDays;
       document.getElementById('monthDays').textContent = totalMonthDays;
 
       const thisMonthRecs = records.filter(r => r.date && r.date.endsWith(String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear()));
@@ -616,10 +623,10 @@
       } catch (e) {}
 
       const dailyRate = monthlySalary / totalMonthDays;
-      document.getElementById('salaryPayout').textContent = '₹' + Math.round(payableDays * dailyRate).toLocaleString('en-IN');
-      document.getElementById('workDaysCount').textContent = payableDays;
-      document.getElementById('absentDaysCount').textContent = absentDays.toFixed(1);
-      document.getElementById('salaryDetails').innerHTML = `Base Salary: <strong>₹${monthlySalary.toLocaleString('en-IN')}</strong><br>Paid Days (YTD): <strong>${payableDays}</strong> / ${now.getDate()}<br>Sundays (Paid): <strong>${holidays}</strong> | Sandwiches (Unpaid): <strong style="color:red;">${sandwiches}</strong><br><small>(Formula: Paid Days × Daily Rate of Current Month)</small>`;
+      if(document.getElementById('salaryPayout')) document.getElementById('salaryPayout').textContent = '₹' + Math.round(payableDays * dailyRate).toLocaleString('en-IN');
+      if(document.getElementById('workDaysCount')) document.getElementById('workDaysCount').textContent = payableDays;
+     if(document.getElementById('absentDaysCount')) document.getElementById('absentDaysCount').textContent= absentDays.toFixed(1);
+      if(document.getElementById('salaryDetails')) document.getElementById('salaryDetails').innerHTML = `Base Salary: <strong>₹${monthlySalary.toLocaleString('en-IN')}</strong><br>Paid Days (YTD): <strong>${payableDays}</strong> / ${now.getDate()}<br>Sundays (Paid): <strong>${holidays}</strong> | Sandwiches (Unpaid): <strong style="color:red;">${sandwiches}</strong><br><small>(Formula: Paid Days × Daily Rate of Current Month)</small>`;
 
       const ctx = document.getElementById('attendanceChart').getContext('2d');
       if (attChart) attChart.destroy();
@@ -636,7 +643,7 @@
     //   return await response.json();
     // }
     async function getRecordsFromBackend() {
-      const response = await fetch(`http://localhost:3000/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
+      const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
       if (!response.ok) throw new Error('Failed');
       return await response.json();
     }
@@ -676,7 +683,7 @@
           tasks:           record.tasks || [],
           note:            record.note  || ''
         };
-        const resp = await fetch('http://localhost:3000/api/attendance', {
+        const resp = await fetch('/api/attendance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
