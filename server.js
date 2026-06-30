@@ -337,6 +337,7 @@ app.post('/api/admin-login', async (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({
+    
     status: 'ok',
     time: new Date().toISOString(),
     db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
