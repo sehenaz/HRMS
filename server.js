@@ -526,6 +526,23 @@ const Employee   = mongoose.model('Employee',   employeeSchema);
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 const Leave      = mongoose.model('Leave',      leaveSchema);
 
+
+//////////////////////////////////////////////
+// ── ADMIN SCHEMA (Normal Admin created by Super Admin) ──
+const adminSchema = new mongoose.Schema({
+  admin_id:          { type: String, required: true, unique: true },
+  password:          { type: String, required: true },
+  employee_id:       String,
+  employee_name:     String,
+  assigned_employees: [String],   // array of emp_ids under this admin
+  created_at:        { type: Date, default: Date.now }
+});
+
+const Admin = mongoose.model('Admin', adminSchema);
+
+
+////////////////////////////////////////////
+
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -742,6 +759,71 @@ app.get('/api/stats', async (req, res) => {
     });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+
+////////////////////////////////////////////////
+// ════════════════════════════════════════════════════════
+//  NORMAL ADMIN ROUTES (created by Super Admin)
+// ════════════════════════════════════════════════════════
+
+// Get all normal admins
+app.get('/api/admins', async (req, res) => {
+  try {
+    const admins = await Admin.find().sort({ created_at: -1 });
+    res.json(admins);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Create a new normal admin
+app.post('/api/admins', async (req, res) => {
+  try {
+    const { admin_id, password, employee_id, employee_name, assigned_employees } = req.body;
+
+    if (!admin_id || !password || !employee_id) {
+      return res.status(400).json({ error: 'admin_id, password and employee_id are required' });
+    }
+
+    const existing = await Admin.findOne({ admin_id });
+    if (existing) {
+      return res.status(409).json({ error: 'This Admin ID already exists' });
+    }
+
+    const admin = new Admin({
+      admin_id,
+      password,
+      employee_id,
+      employee_name: employee_name || '',
+      assigned_employees: assigned_employees || []
+    });
+
+    await admin.save();
+    res.json({ success: true, admin });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Delete a normal admin
+app.delete('/api/admins/:adminId', async (req, res) => {
+  try {
+    await Admin.deleteOne({ admin_id: req.params.adminId });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Normal Admin login check
+app.post('/api/admin-login', async (req, res) => {
+  try {
+    const { admin_id, password } = req.body;
+    const admin = await Admin.findOne({ admin_id, password });
+    if (admin) {
+      res.json({ success: true, admin });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid Admin ID or Password' });
+    }
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+///////////////////////////////////////////////////
+
 
 app.get('/api/health', (req, res) => {
   res.redirect('/index.html');
