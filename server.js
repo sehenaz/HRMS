@@ -744,6 +744,8 @@ app.get('/api/stats', async (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
+  res.redirect('/index.html');
+
   res.json({ status: 'ok', time: new Date().toISOString(), db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
