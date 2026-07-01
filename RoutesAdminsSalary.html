@@ -1,0 +1,164 @@
+/**
+ * routes-admins-salary.js
+ * ─────────────────────────────────────────────────────────────
+ * MEVTENCIA — MongoDB routes for:
+ *    1) Admins (created by Super Admin, scoped to assigned employees)
+ *    2) Salary History (per-employee salary entries)
+ *
+ * This is a drop-in Express Router that follows the exact same
+ * pattern your existing /api/attendance, /api/employees and
+ * /api/leaves endpoints already use (native MongoDB driver,
+ * a `db` handle passed in, simple JSON in/out).
+ *
+ * ── HOW TO WIRE THIS INTO YOUR EXISTING server.js ──────────────
+ *
+ *   const adminsAndSalaryRoutes = require('./routes-admins-salary');
+ *   app.use('/api', adminsAndSalaryRoutes(db));
+ *
+ * `db` must be the same MongoDB Db instance you already pass to
+ * your other route files (the one returned by
+ * `client.db('your_db_name')`). If your project instead defines
+ * all routes directly inside server.js, just copy the
+ * `router.get/post/delete(...)` blocks below into server.js and
+ * replace `db` with whatever variable already holds your MongoDB
+ * connection there.
+ *
+ * ── COLLECTIONS CREATED ─────────────────────────────────────────
+ *   admins  { id, password, employeeName, assignedEmpIds: [...] }
+ *   salary  { emp_id, empName, date, amount, note, addedBy, createdAt }
+ * ────────────────────────────────────────────────────────────── */
+
+const express = require('express');
+
+module.exports = function (db) {
+  const router = express.Router();
+
+  const admins = () => db.collection('admins');
+  const salary = () => db.collection('salary');
+
+  /* ═══════════════════════════════════════════════
+     ADMINS  (Super Admin → creates scoped Admins)
+  ═══════════════════════════════════════════════ */
+
+  // GET /api/admins  → list every admin (id, password, employeeName, assignedEmpIds)
+  router.get('/admins', async (req, res) => {
+    try {
+      const list = await admins().find({}).toArray();
+      const clean = list.map(a => ({
+        id: a.id,
+        password: a.password,
+        employeeName: a.employeeName,
+        assignedEmpIds: a.assignedEmpIds || []
+      }));
+      res.json(clean);
+    } catch (e) {
+      console.error('GET /api/admins failed:', e);
+      res.status(500).json({ error: 'Failed to fetch admins' });
+    }
+  });
+
+  // POST /api/admins  → create or update (upsert by `id`)
+  // body: { id, password, employeeName, assignedEmpIds: [] }
+  router.post('/admins', async (req, res) => {
+    try {
+      const { id, password, employeeName, assignedEmpIds } = req.body;
+      if (!id || !password || !employeeName) {
+        return res.status(400).json({ error: 'id, password and employeeName are required' });
+      }
+      await admins().updateOne(
+        { id },
+        { $set: {
+            id,
+            password,
+            employeeName,
+            assignedEmpIds: Array.isArray(assignedEmpIds) ? assignedEmpIds : [],
+            updatedAt: new Date()
+          },
+          $setOnInsert: { createdAt: new Date() }
+        },
+        { upsert: true }
+      );
+      res.json({ success: true, id });
+    } catch (e) {
+      console.error('POST /api/admins failed:', e);
+      res.status(500).json({ error: 'Failed to save admin' });
+    }
+  });
+
+  // DELETE /api/admins/:id  → remove an admin login
+  router.delete('/admins/:id', async (req, res) => {
+    try {
+      await admins().deleteOne({ id: req.params.id });
+      res.json({ success: true });
+    } catch (e) {
+      console.error('DELETE /api/admins/:id failed:', e);
+      res.status(500).json({ error: 'Failed to delete admin' });
+    }
+  });
+
+  /* ═══════════════════════════════════════════════
+     SALARY HISTORY  (per employee, added by any admin
+     who has that employee in scope)
+  ═══════════════════════════════════════════════ */
+
+  // GET /api/salary            → every salary entry (all employees)
+  // GET /api/salary?emp_id=XYZ → entries for one employee only
+  router.get('/salary', async (req, res) => {
+    try {
+      const filter = req.query.emp_id ? { emp_id: req.query.emp_id } : {};
+      const list = await salary().find(filter).sort({ date: 1 }).toArray();
+      const clean = list.map(s => ({
+        _id: s._id,
+        emp_id: s.emp_id,
+        empName: s.empName,
+        date: s.date,
+        amount: s.amount,
+        note: s.note || '',
+        addedBy: s.addedBy || ''
+      }));
+      res.json(clean);
+    } catch (e) {
+      console.error('GET /api/salary failed:', e);
+      res.status(500).json({ error: 'Failed to fetch salary history' });
+    }
+  });
+
+  // POST /api/salary  → add one salary entry
+  // body: { emp_id, empName, date, amount, note, addedBy }
+  router.post('/salary', async (req, res) => {
+    try {
+      const { emp_id, empName, date, amount, note, addedBy } = req.body;
+      if (!emp_id || !date || !amount) {
+        return res.status(400).json({ error: 'emp_id, date and amount are required' });
+      }
+      const doc = {
+        emp_id,
+        empName: empName || '',
+        date,
+        amount: parseFloat(amount),
+        note: note || '',
+        addedBy: addedBy || '',
+        createdAt: new Date()
+      };
+      const result = await salary().insertOne(doc);
+      res.json({ success: true, _id: result.insertedId, ...doc });
+    } catch (e) {
+      console.error('POST /api/salary failed:', e);
+      res.status(500).json({ error: 'Failed to save salary entry' });
+    }
+  });
+
+  // DELETE /api/salary/:id  → remove one salary entry
+  router.delete('/salary/:id', async (req, res) => {
+    try {
+      const { ObjectId } = require('mongodb');
+      await salary().deleteOne({ _id: new ObjectId(req.params.id) });
+      res.json({ success: true });
+    } catch (e) {
+      console.error('DELETE /api/salary/:id failed:', e);
+      res.status(500).json({ error: 'Failed to delete salary entry' });
+    }
+  });
+
+  return router;
+};

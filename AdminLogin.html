@@ -135,10 +135,12 @@
         <button class="login-btn" onclick="doAdminLogin()">🔐 Secure Login</button>
         <div class="msg error" id="msgErr"></div>
         <div class="msg success" id="msgOk"></div>
-<!-- 
+
+        <!--
         <div class="hint-box">
-          <strong>Default credentials:</strong> Admin ID: <strong>admin</strong> · Password: <strong>mevrick2026</strong>
-        </div> -->
+          <strong>Default super admin:</strong> Admin ID: <strong>admin</strong> · Password: <strong>admin@2026</strong>
+        </div>
+        -->
       </div>
     </div>
   </div>
@@ -146,43 +148,75 @@
   <footer>© 2026 MEVTENCIA · Mevrick Solution Pvt. Ltd. · Admin Access</footer>
 
   <script>
-    const ADMIN = { id: 'admin', password: 'admin@2026' };
+    // ── SUPER ADMIN (hardcoded, full unrestricted access) ──
+    const SUPER_ADMIN = { id: 'admin', password: 'admin@2026' };
 
     function showMsg(id, msg) {
       const el = document.getElementById(id); el.textContent = msg; el.classList.add('show');
     }
     function hideMsg(id) { const el = document.getElementById(id); el.classList.remove('show'); el.textContent = ''; }
 
-    function doAdminLogin() {
+    // Pulls the latest scoped-admin accounts from MongoDB (created by the
+    // Super Admin via "Manage Admins") and merges them into localStorage,
+    // so an admin can log in from any device, not just the one they were
+    // created on.
+    async function syncAdminsFromServer() {
+      try {
+        const resp = await fetch('/api/admins');
+        if (!resp.ok) return;
+        const serverList = await resp.json();
+        const localList  = JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
+        const merged = [...serverList];
+        localList.forEach(la => {
+          if (!merged.find(sa => sa.id === la.id)) merged.push(la);
+        });
+        localStorage.setItem('mev_normalAdmins', JSON.stringify(merged));
+      } catch (e) {
+        console.warn('Admin sync failed (offline?):', e.message);
+      }
+    }
+
+    async function doAdminLogin() {
       hideMsg('msgErr'); hideMsg('msgOk');
       const id = document.getElementById('adminId').value.trim();
       const pw = document.getElementById('password').value;
       if (!id || !pw) { showMsg('msgErr', '⚠️ Please fill in all fields.'); return; }
-      
-      // Check hardcoded admin
-      let isValid = (id === ADMIN.id && pw === ADMIN.password);
-      let adminName = 'Administrator';
-      
-      // Check dynamic admins
-      if (!isValid) {
-        const dynamicAdmins = JSON.parse(localStorage.getItem('mev_normalAdmins') || "[]");
-        const found = dynamicAdmins.find(a => a.id === id && a.password === pw);
-        if (found) {
-          isValid = true;
-          adminName = found.employeeName;
-        }
+
+      // 1) Check hardcoded Super Admin — sees every employee, unrestricted
+      if (id === SUPER_ADMIN.id && pw === SUPER_ADMIN.password) {
+        localStorage.setItem('mev_adminSession', JSON.stringify({
+          type: 'superadmin',
+          id,
+          name: 'Super Admin',
+          assignedEmpIds: null,   // null = no restriction
+          loginAt: new Date().toISOString()
+        }));
+        showMsg('msgOk', '✅ Super Admin login successful! Redirecting...');
+        setTimeout(() => window.location.href = 'AdminDashboard.html', 800);
+        return;
       }
 
-      if (!isValid) { showMsg('msgErr', '❌ Invalid Admin ID or Password.'); return; }
-      
-      localStorage.setItem('mev_adminSession', JSON.stringify({ 
-        type: 'admin', 
-        id, 
-        name: adminName,
-        loginAt: new Date().toISOString() 
-      }));
-      showMsg('msgOk', '✅ Login successful! Redirecting...');
-      setTimeout(() => window.location.href = 'AdminDashboard.html', 800);
+      // 2) Pull the freshest admin list from MongoDB, then check scoped admins
+      //    created by the Super Admin via "Manage Admins".
+      //    Each entry: { id, password, employeeName, assignedEmpIds: [] }
+      await syncAdminsFromServer();
+      const dynamicAdmins = JSON.parse(localStorage.getItem('mev_normalAdmins') || "[]");
+      const found = dynamicAdmins.find(a => a.id === id && a.password === pw);
+
+      if (found) {
+        localStorage.setItem('mev_adminSession', JSON.stringify({
+          type: 'admin',
+          id,
+          name: found.employeeName,
+          assignedEmpIds: Array.isArray(found.assignedEmpIds) ? found.assignedEmpIds : [],
+          loginAt: new Date().toISOString()
+        }));
+        showMsg('msgOk', `✅ Welcome, ${found.employeeName}! Redirecting...`);
+        setTimeout(() => window.location.href = 'AdminDashboard.html', 800);
+        return;
+      }
+
+      showMsg('msgErr', '❌ Invalid Admin ID or Password.');
     }
 
     document.addEventListener('keypress', e => { if (e.key === 'Enter') doAdminLogin(); });

@@ -550,12 +550,13 @@
         style="height:60px;width:60px;object-fit:contain;background:white;border-radius:50%;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
       <a class="logo" href="index.html">MEVTENCIA</a>
     </div>
-    <ul class="nav-links">
+    <ul class="nav-links" id="navLinks">
       <li><a href="index.html">Home</a></li>
-      <!-- <li><a href="EmployeeHistory.html">Employee Database</a></li>
+      <li id="navEmpDb"><a href="EmployeeHistory.html">Employee Database</a></li>
       <!-- <li><a href="AddEmployee.html">Edit Employee</a></li> -->
-      <!-- <li><a href="EmployeeHistory.html">Registration</a></li>
-      <li><a href="#" onclick="openCredModal()" style="background:rgba(255,200,0,0.18);">🔑 Credentials</a></li>  -->
+      <li id="navReg"><a href="EmployeeHistory.html">Registration</a></li>
+      <li id="navCred"><a href="#" onclick="openCredModal()" style="background:rgba(255,200,0,0.18);">🔑 Credentials</a></li>
+      <li id="navManageAdmins"><a href="#" onclick="openAdminMgrModal()" style="background:rgba(139,92,246,0.25);">🛠️ Manage Admins</a></li>
       <li><a href="#dailySheetSection" onclick="openDailySheet()">📸 Daily Sheet</a></li>
       <li><a href="index.html" onclick="adminLogout()">Logout</a></li>
     </ul>
@@ -565,17 +566,17 @@
 
     <div class="header-card">
       <div>
-        <h2>Admin Dashboard — Attendance Monitoring</h2>
-        <p>Real-time Pan India Monitoring · View all employee logs · Mevrick Solution Pvt. Ltd.</p>
+        <h2 id="dashTitle">Admin Dashboard — Attendance Monitoring</h2>
+        <p id="dashSubtitle">Real-time Pan India Monitoring · View all employee logs · Mevrick Solution Pvt. Ltd.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <!-- <a href="AddEmployee.html"
           style="background:#4caf50;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">+
           Edit Employee</a> -->
-          <a href="EmployeeHistory.html"
+          <a href="EmployeeHistory.html" id="hdrEmpDbBtn"
   style="background:#4caf50;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">👥
   Employee Database</a>
-        <a href="EmployeeHistory.html"
+        <a href="EmployeeHistory.html" id="hdrRegBtn"
           style="background:#3f51b5;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">👥
           Registration</a>
         <a class="logout-btn" href="index.html" onclick="adminLogout()">Logout</a>
@@ -666,10 +667,11 @@
             <th>Work Hours</th>
             <th>Location</th>
             <th>Status</th>
+            <th>Salary</th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="9" style="text-align:center;padding:40px;color:#aaa;">Loading records...</td></tr>
+          <tr><td colspan="10" style="text-align:center;padding:40px;color:#aaa;">Loading records...</td></tr>
         </tbody>
       </table>
     </div>
@@ -697,9 +699,54 @@
     let lastFilteredData = [];
     let lastAllData = [];
 
+    // ── ROLE / SCOPE STATE ───────────────────────────────────
+    // currentSession.type: 'superadmin' (sees everyone) or 'admin' (scoped to assignedEmpIds)
+    let currentSession = null;
+    let scopedEmpIds = null; // null = no restriction (superadmin), array = restricted (admin)
+
+    function loadSession() {
+      currentSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+      if (!currentSession) return;
+      if (currentSession.type === 'admin') {
+        scopedEmpIds = Array.isArray(currentSession.assignedEmpIds) ? currentSession.assignedEmpIds : [];
+      } else {
+        scopedEmpIds = null; // superadmin — unrestricted
+      }
+      applyRoleUI();
+    }
+
+    function applyRoleUI() {
+      const isSuper = !currentSession || currentSession.type === 'superadmin';
+      // Only superadmin manages other admins, bulk registration & the full employee database page.
+      // Credentials modal stays visible for scoped admins too — it auto-filters to their
+      // assigned employees and lets them edit (not add/delete) those records.
+      ['navManageAdmins','navReg','navEmpDb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isSuper ? '' : 'none';
+      });
+      ['hdrRegBtn','hdrEmpDbBtn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isSuper ? '' : 'none';
+      });
+      const credLink = document.getElementById('navCred');
+      if (credLink) credLink.querySelector('a').innerHTML = isSuper ? '🔑 Credentials' : '🔑 My Employees';
+      if (!isSuper) {
+        document.getElementById('dashTitle').textContent = `Admin Dashboard — ${currentSession.name || currentSession.id}`;
+        document.getElementById('dashSubtitle').textContent =
+          `Scoped view · ${(scopedEmpIds||[]).length} employee(s) assigned · you can view & edit their attendance, leave and salary · Mevrick Solution Pvt. Ltd.`;
+      }
+    }
+
+    function filterByScope(records) {
+      if (!scopedEmpIds) return records; // superadmin sees all
+      const allowed = new Set(scopedEmpIds);
+      return records.filter(r => allowed.has(r.emp_id));
+    }
+
     // ── INIT ───────────────────────────────────────────────
     window.onload = function () {
       if (!localStorage.getItem('mev_adminSession')) { window.location.href = 'AdminLogin.html'; return; }
+      loadSession();
       renderRecords();
       setInterval(renderRecords, 30000);
     };
@@ -714,22 +761,23 @@
     // }
 
     async function getAllRecords() {
+      let merged;
       try {
         const response = await fetch('/api/attendance');
         if (response.ok) {
           const serverData = await response.json();
           const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
-          const merged = [...serverData];
+          merged = [...serverData];
           localData.forEach(lr => {
             const exists = merged.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
             if (!exists) merged.push(lr);
           });
-          return merged;
         }
       } catch (e) {
         console.warn('Server offline:', e.message);
       }
-      return JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+      if (!merged) merged = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+      return filterByScope(merged);
     }
 
     function parseDate(dateStr) {
@@ -871,6 +919,12 @@
             View Map</a>`:''}
         </td>
         <td>${getBadge(r.attendance_type)}${sandwichBadge}</td>
+        <td>
+          <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
+            style="padding:5px 10px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
+            💰 Salary
+          </button>
+        </td>
       </tr>`;
     }
 
@@ -878,7 +932,7 @@
     function buildMiniTable(rows, sandwichKeys) {
       const thead = `<thead><tr>
         <th>Photo</th><th>Employee</th><th>City</th><th>Date</th>
-        <th>Clock In</th><th>Clock Out</th><th>Work Hours</th><th>Location</th><th>Status</th>
+        <th>Clock In</th><th>Clock Out</th><th>Work Hours</th><th>Location</th><th>Status</th><th>Salary</th>
       </tr></thead>`;
       const tbody = rows.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
       return `<div style="overflow-x:auto;"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
@@ -947,7 +1001,7 @@
 
         const tbody = document.getElementById('tableBody');
         if (!filtered.length) {
-          tbody.innerHTML = `<tr><td colspan="9" class="empty-row">${all.length?'No records match your filters.':'No attendance records yet.'}</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="10" class="empty-row">${all.length?'No records match your filters.':'No attendance records yet.'}</td></tr>`;
         } else {
           tbody.innerHTML = filtered.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
         }
@@ -1045,14 +1099,21 @@
               📍 ${r.location||'Unknown location'}
               ${r.lat&&r.lng?`<br/><a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" style="margin-top:8px;font-size:12px">View Exact Location on Map</a>`:''}
             </div>
+            <div style="margin-top:10px;">
+              <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
+                style="width:100%;padding:8px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+                💰 Salary History
+              </button>
+            </div>
           </div>`;
         }).join('');
       }
     }
 
     // ── EXPORT TO EXCEL (.xlsx) ────────────────────────────
-    function exportToExcel() {
+    async function exportToExcel() {
       if (!lastFilteredData.length) { showToast('⚠️ No records to export!', '#e53935'); return; }
+      await salarySyncAllFromServer();
 
       const { sandwichKeys } = detectSandwichLeaves(lastAllData);
 
@@ -1181,11 +1242,30 @@
         ws3[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'2E7D32' }}, alignment:{ horizontal:'center' } };
       }
 
+      // ── Sheet 4: Salary History (scoped to visible employees) ─
+      const salDB = salaryGetDB();
+      const visibleEmpIds = new Set(Object.values(byEmp).map(e=>e.id).filter(Boolean));
+      const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
+      Object.entries(salDB).forEach(([empId, entries]) => {
+        if (visibleEmpIds.size && !visibleEmpIds.has(empId)) return;
+        (entries||[]).forEach(e => {
+          salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
+        });
+      });
+      const ws4 = XLSX.utils.aoa_to_sheet(salRows);
+      ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
+      for (let C = 0; C <= 5; C++) {
+        const ca = XLSX.utils.encode_cell({ r:0, c:C });
+        if (!ws4[ca]) continue;
+        ws4[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'1D6F42' }}, alignment:{ horizontal:'center' } };
+      }
+
       // ── Build Workbook ────────────────────────────────────
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, '📋 All Records');
       XLSX.utils.book_append_sheet(wb, ws2, '📅 Daily Summary');
       XLSX.utils.book_append_sheet(wb, ws3, '👤 Employee Summary');
+      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
 
       // Add metadata
       wb.Props = {
@@ -1226,9 +1306,9 @@
     }
   </script>
   <!-- ═══════════════════════════════════════════════════════════
-       DAILY ATTENDANCE SHEET  —  NEW SECTION (added, not modified)
-       Shows every employee's daily attendance with camera photo,
-       leave status, clock times, location. Excel export included.
+       DAILY ATTENDANCE SHEET  —  Shows every (scoped) employee's
+       daily attendance with camera photo, leave status, clock
+       times, location, and salary. Excel export included.
   ═══════════════════════════════════════════════════════════ -->
   <style>
     /* ── Daily Sheet Section ── */
@@ -1819,7 +1899,7 @@
 
   <script>
     /* ══════════════════════════════════════════════════════
-       DAILY ATTENDANCE SHEET — New JavaScript
+       DAILY ATTENDANCE SHEET — JavaScript
        (all variables/functions prefixed with ds_ to avoid
         any collision with existing dashboard code)
     ══════════════════════════════════════════════════════ */
@@ -1831,30 +1911,21 @@
     const DS_DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const DS_MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-    // function openDailySheet() {
-    //   document.getElementById('dailySheetSection').classList.add('ds-open');
-    //   document.body.style.overflow = 'hidden';
-    //   if (!ds_currentDate) dsGoToday(); else dsRender();
-    // }
-    //////////////////////////////////////
     async function openDailySheet() {
-  // Load leaves from MongoDB
-  try {
-    const resp = await fetch('/api/leaves');
-    if (resp.ok) {
-      const serverLeaves = await resp.json();
-      ds_leaveStore = { ...serverLeaves, ...ds_leaveStore };
-      localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
+      // Load leaves from MongoDB
+      try {
+        const resp = await fetch('/api/leaves');
+        if (resp.ok) {
+          const serverLeaves = await resp.json();
+          ds_leaveStore = { ...serverLeaves, ...ds_leaveStore };
+          localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
+        }
+      } catch(e) { console.warn('Leave fetch failed:', e); }
+
+      document.getElementById('dailySheetSection').classList.add('ds-open');
+      document.body.style.overflow = 'hidden';
+      if (!ds_currentDate) dsGoToday(); else dsRender();
     }
-  } catch(e) { console.warn('Leave fetch failed:', e); }
-
-  document.getElementById('dailySheetSection').classList.add('ds-open');
-  document.body.style.overflow = 'hidden';
-  if (!ds_currentDate) dsGoToday(); else dsRender();
-}
-
-
-
 
     function closeDailySheet() {
       document.getElementById('dailySheetSection').classList.remove('ds-open');
@@ -1877,6 +1948,24 @@
       dsRender();
     }
 
+    // Union of employees this session is allowed to see.
+    // Superadmin: every employee in credentials DB + every employee seen in records.
+    // Scoped admin: only their assignedEmpIds.
+    function dsGetScopedEmployeeMap(allRecords) {
+      const map = {};
+      const credDB = credGetDB();
+      Object.values(credDB).forEach(e => {
+        if (scopedEmpIds && !scopedEmpIds.includes(e.id)) return;
+        map[e.id] = { name: e.name, id: e.id, dept: e.dept, city: e.city };
+      });
+      allRecords.forEach(r => {
+        const key = r.emp_id || r.emp_name || 'unknown';
+        if (scopedEmpIds && r.emp_id && !scopedEmpIds.includes(r.emp_id)) return;
+        if (!map[key]) map[key] = { name: r.emp_name, id: r.emp_id, dept: r.dept, city: r.city };
+      });
+      return map;
+    }
+
     async function dsRender() {
       const picked = document.getElementById('dsDatePicker').value;
       if (picked) ds_currentDate = picked;
@@ -1889,7 +1978,7 @@
       document.getElementById('dsDateBig').textContent = dBig;
       document.getElementById('dsDateDay').textContent = dDay + (d.getDay()===0?' 🏖️ Weekend':'');
 
-      const all    = await getAllRecords();           // reuse existing function
+      const all    = await getAllRecords();           // already scope-filtered
       const search = document.getElementById('dsSearch').value.toLowerCase();
       const sfilt  = document.getElementById('dsStatusFilter').value;
 
@@ -1902,12 +1991,8 @@
         }
       });
 
-      // All known employees (union of all records)
-      const allEmps = {};
-      all.forEach(r => {
-        const key = r.emp_id || r.emp_name || 'unknown';
-        if (!allEmps[key]) allEmps[key] = { name: r.emp_name, id: r.emp_id, dept: r.dept, city: r.city };
-      });
+      // All known (scoped) employees
+      const allEmps = dsGetScopedEmployeeMap(all);
 
       // { sandwichKeys } for this date context
       const { sandwichKeys } = detectSandwichLeaves(all);  // reuse existing
@@ -1975,7 +2060,7 @@
         grid.innerHTML = `<div class="ds-empty" style="grid-column:1/-1">
           <div class="ds-empty-icon">📭</div>
           <h3>No employees found</h3>
-          <p>No records match your search or filters.</p>
+          <p>${scopedEmpIds ? 'No employees are currently assigned to your admin account.' : 'No records match your search or filters.'}</p>
         </div>`;
         return;
       }
@@ -2078,6 +2163,10 @@
                 style="padding:6px 12px;background:#e8d5ff;color:#5b21b6;border:1px solid #c4b5fd;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
                 🗓️ Mark Leave
               </button>
+              <button onclick="openSalaryModal('${emp.id||''}','${(emp.name||'').replace(/'/g,"\\'")}')"
+                style="padding:6px 12px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
+                💰 Salary History
+              </button>
               ${rec?.lat&&rec?.lng?`<a href="https://www.google.com/maps?q=${rec.lat},${rec.lng}" target="_blank"
                 style="padding:6px 12px;background:#e8eef5;color:#3f51b5;border:1px solid #c5cae9;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;">
                 📍 Live Location</a>`:''}
@@ -2110,69 +2199,51 @@
       document.getElementById('dsLeaveModal').classList.remove('open');
       ds_leaveTarget = null;
     }
-////////////////////////////////////////////////////
-    // function dsSaveLeave() {
-    //   if (!ds_leaveTarget) return;
-    //   const date   = document.getElementById('dsLeaveDate').value   || ds_currentDate;
-    //   const type   = document.getElementById('dsLeaveType').value;
-    //   const reason = document.getElementById('dsLeaveReason').value.trim();
-    //   const storeKey = `${ds_leaveTarget}|${date}`;
-    //   const nameEl   = document.getElementById('dsLeaveEmpName').textContent;
-    //   const idEl     = document.getElementById('dsLeaveEmpId').textContent;
-    //   ds_leaveStore[storeKey] = { type, reason, empName: nameEl, empId: idEl, date };
-    //   localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
-    //   dsCloseLeaveModal();
-    //   dsRender();
-    //   showToast(`✅ Leave marked: ${nameEl} — ${type}`, '#5b21b6');
-    // }
 
     async function dsSaveLeave() {
-  if (!ds_leaveTarget) return;
-  const date    = document.getElementById('dsLeaveDate').value   || ds_currentDate;
-  const type    = document.getElementById('dsLeaveType').value;
-  const reason  = document.getElementById('dsLeaveReason').value.trim();
-  const storeKey = `${ds_leaveTarget}|${date}`;
-  const nameEl   = document.getElementById('dsLeaveEmpName').textContent;
-  const idEl     = document.getElementById('dsLeaveEmpId').textContent;
+      if (!ds_leaveTarget) return;
+      const date    = document.getElementById('dsLeaveDate').value   || ds_currentDate;
+      const type    = document.getElementById('dsLeaveType').value;
+      const reason  = document.getElementById('dsLeaveReason').value.trim();
+      const storeKey = `${ds_leaveTarget}|${date}`;
+      const nameEl   = document.getElementById('dsLeaveEmpName').textContent;
+      const idEl     = document.getElementById('dsLeaveEmpId').textContent;
 
-  const leaveData = { type, reason, empName: nameEl, empId: idEl, date };
+      const leaveData = { type, reason, empName: nameEl, empId: idEl, date };
 
-  // Local save
-  ds_leaveStore[storeKey] = leaveData;
-  localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
+      // Local save
+      ds_leaveStore[storeKey] = leaveData;
+      localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
 
-  // MongoDB save
-  try {
-    await fetch('/api/leaves', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: storeKey, data: leaveData })
-    });
-    console.log('✅ Leave saved to MongoDB!');
-  } catch(e) {
-    console.warn('Leave MongoDB sync failed:', e.message);
-  }
+      // MongoDB save
+      try {
+        await fetch('/api/leaves', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: storeKey, data: leaveData })
+        });
+        console.log('✅ Leave saved to MongoDB!');
+      } catch(e) {
+        console.warn('Leave MongoDB sync failed:', e.message);
+      }
 
-  dsCloseLeaveModal();
-  dsRender();
-  showToast(`✅ Leave marked: ${nameEl} — ${type}`, '#5b21b6');
-}
+      dsCloseLeaveModal();
+      dsRender();
+      showToast(`✅ Leave marked: ${nameEl} — ${type}`, '#5b21b6');
+    }
 
     // ── EXCEL EXPORT (Daily Sheet) ───────────────────────
     async function dsExportExcel() {
       if (!ds_currentDate) { showToast('⚠️ Please select a date first', '#e53935'); return; }
+      await salarySyncAllFromServer();
 
-      const all       = await getAllRecords();
+      const all       = await getAllRecords(); // already scoped
       const { sandwichKeys } = detectSandwichLeaves(all);
       const d         = new Date(ds_currentDate + 'T00:00:00');
       const dateLabel = `${d.getDate()} ${DS_MONTH[d.getMonth()]} ${d.getFullYear()} (${DS_DAYS[d.getDay()]})`;
 
-      // Build employee map
-      const allEmps = {};
-      all.forEach(r => {
-        const key = r.emp_id || r.emp_name || 'unknown';
-        if (!allEmps[key]) allEmps[key] = { name: r.emp_name, id: r.emp_id, dept: r.dept, city: r.city };
-      });
+      // Build employee map (scoped)
+      const allEmps = dsGetScopedEmployeeMap(all);
 
       // Records for this date
       const todayRecs = {};
@@ -2254,27 +2325,30 @@
         ['Metric', 'Count', 'Percentage'],
         ['Total Employees',    entries.length, '100%'],
         ['Present',           entries.filter(e=>e.status==='Present'||e.status==='In Progress').length,
-         ((entries.filter(e=>e.status==='Present'||e.status==='In Progress').length/entries.length)*100).toFixed(1)+'%'],
+         entries.length ? ((entries.filter(e=>e.status==='Present'||e.status==='In Progress').length/entries.length)*100).toFixed(1)+'%' : '0%'],
         ['Absent',            entries.filter(e=>e.status==='Absent').length,
-         ((entries.filter(e=>e.status==='Absent').length/entries.length)*100).toFixed(1)+'%'],
+         entries.length ? ((entries.filter(e=>e.status==='Absent').length/entries.length)*100).toFixed(1)+'%' : '0%'],
         ['Half Day',          entries.filter(e=>e.status==='Half Day').length,
-         ((entries.filter(e=>e.status==='Half Day').length/entries.length)*100).toFixed(1)+'%'],
+         entries.length ? ((entries.filter(e=>e.status==='Half Day').length/entries.length)*100).toFixed(1)+'%' : '0%'],
         ['On Leave',          entries.filter(e=>e.status==='On Leave').length,
-         ((entries.filter(e=>e.status==='On Leave').length/entries.length)*100).toFixed(1)+'%'],
+         entries.length ? ((entries.filter(e=>e.status==='On Leave').length/entries.length)*100).toFixed(1)+'%' : '0%'],
         ['Sandwich Leave',    entries.filter(e=>e.isSw).length,
-         ((entries.filter(e=>e.isSw).length/entries.length)*100).toFixed(1)+'%'],
+         entries.length ? ((entries.filter(e=>e.isSw).length/entries.length)*100).toFixed(1)+'%' : '0%'],
       ];
 
       const ws2 = XLSX.utils.aoa_to_sheet(sumRows);
       ws2['!cols'] = [{wch:22},{wch:12},{wch:14}];
       ws2['A1'].s = { font:{bold:true,sz:14,color:{rgb:'1A237E'}} };
 
-      // ── Sheet 3: Leave Register ──────────────────────────
+      // ── Sheet 3: Leave Register (scoped) ──────────────────
+      const scopedIds = new Set(Object.keys(allEmps));
       const leaveRows = [['Employee Name','Employee ID','Department','City','Date','Leave Type','Reason']];
       Object.entries(ds_leaveStore).forEach(([k, v]) => {
+        const empKey = k.split('|')[0];
+        if (scopedEmpIds && !scopedIds.has(empKey)) return;
         leaveRows.push([v.empName||'',v.empId||'',
-          allEmps[k.split('|')[0]]?.dept||'',
-          allEmps[k.split('|')[0]]?.city||'',
+          allEmps[empKey]?.dept||'',
+          allEmps[empKey]?.city||'',
           v.date||'',v.type||'',v.reason||'']);
       });
 
@@ -2286,11 +2360,29 @@
         ws3[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'5B21B6'}}, alignment:{horizontal:'center'} };
       }
 
+      // ── Sheet 4: Salary History (scoped) ──────────────────
+      const salDB = salaryGetDB();
+      const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
+      Object.entries(salDB).forEach(([empId, entriesArr]) => {
+        if (scopedEmpIds && !scopedIds.has(empId)) return;
+        (entriesArr||[]).forEach(e => {
+          salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
+        });
+      });
+      const ws4 = XLSX.utils.aoa_to_sheet(salRows);
+      ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
+      for (let C = 0; C < 6; C++) {
+        const ca = XLSX.utils.encode_cell({r:0,c:C});
+        if (!ws4[ca]) continue;
+        ws4[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1D6F42'}}, alignment:{horizontal:'center'} };
+      }
+
       // ── Workbook ─────────────────────────────────────────
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, '📋 Daily Attendance');
       XLSX.utils.book_append_sheet(wb, ws2, '📊 Summary');
       XLSX.utils.book_append_sheet(wb, ws3, '🗓️ Leave Register');
+      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
 
       wb.Props = { Title:`MEVTENCIA Daily Sheet — ${dateLabel}`, Author:'Mevrick Solution Pvt. Ltd.' };
 
@@ -2299,6 +2391,7 @@
       showToast(`✅ Excel downloaded: ${fileName}`, '#1d6f42');
     }
   </script>
+
   <style>
   /* Employee Credentials Modal */
   .cred-overlay {
@@ -2310,7 +2403,7 @@
     padding: 16px;
   }
   .cred-overlay.open { display: flex; }
- 
+
   .cred-box {
     background: white;
     border-radius: 22px;
@@ -2321,7 +2414,7 @@
     animation: credPop 0.25s cubic-bezier(0.34,1.56,0.64,1);
   }
   @keyframes credPop { from { transform: scale(0.93) translateY(20px); opacity:0; } to { transform: scale(1) translateY(0); opacity:1; } }
- 
+
   .cred-header {
     background: linear-gradient(135deg, #1a237e, #3f51b5);
     padding: 22px 24px;
@@ -2335,9 +2428,9 @@
     color: white; width: 34px; height: 34px; border-radius: 50%;
     cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
   }
- 
+
   .cred-body { padding: 22px 24px; }
- 
+
   /* Add form */
   .cred-add-form {
     background: #f8faff;
@@ -2347,10 +2440,10 @@
     margin-bottom: 20px;
   }
   .cred-add-form h3 { color: #1a237e; font-size: 13px; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
- 
+
   .cred-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   @media(max-width:500px) { .cred-fields { grid-template-columns: 1fr; } }
- 
+
   .cred-field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
   .cred-field input {
     width: 100%; padding: 10px 12px;
@@ -2359,9 +2452,9 @@
     outline: none; transition: border-color 0.2s; background: white;
   }
   .cred-field input:focus { border-color: #3f51b5; }
- 
+
   .cred-dept-city { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
- 
+
   .cred-add-btn {
     width: 100%; padding: 11px;
     background: linear-gradient(135deg, #1a237e, #3f51b5);
@@ -2370,7 +2463,7 @@
     transition: all 0.2s; font-family: 'Segoe UI', sans-serif;
   }
   .cred-add-btn:hover { box-shadow: 0 5px 18px rgba(63,81,181,0.4); transform: translateY(-1px); }
- 
+
   /* Employee list */
   .cred-list-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -2378,7 +2471,7 @@
   }
   .cred-list-header h3 { color: #334155; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
   .cred-count { background: #e0e7ff; color: #3f51b5; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
- 
+
   .cred-search {
     width: 100%; padding: 9px 14px;
     border: 2px solid #e2e8f0; border-radius: 10px;
@@ -2386,9 +2479,9 @@
     outline: none; margin-bottom: 12px; transition: border-color 0.2s;
   }
   .cred-search:focus { border-color: #3f51b5; }
- 
+
   .cred-emp-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
- 
+
   .cred-emp-row {
     background: #f8faff;
     border: 1.5px solid #e0e7ff;
@@ -2398,19 +2491,19 @@
     transition: border-color 0.2s;
   }
   .cred-emp-row:hover { border-color: #3f51b5; }
- 
+
   .cred-emp-avatar {
     width: 40px; height: 40px; border-radius: 50%;
     background: linear-gradient(135deg, #3f51b5, #1a237e);
     display: flex; align-items: center; justify-content: center;
     color: white; font-weight: 800; font-size: 15px; flex-shrink: 0;
   }
- 
+
   .cred-emp-info { flex: 1; min-width: 0; }
   .cred-emp-name { font-weight: 700; color: #1e293b; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .cred-emp-id   { font-size: 11px; color: #64748b; font-family: monospace; margin-top: 1px; }
   .cred-emp-meta { font-size: 11px; color: #94a3b8; margin-top: 1px; }
- 
+
   .cred-pw-display {
     font-family: monospace; font-size: 12px;
     background: #e0e7ff; color: #1a237e;
@@ -2418,9 +2511,9 @@
     cursor: pointer; user-select: all;
     white-space: nowrap; flex-shrink: 0;
   }
- 
+
   .cred-actions { display: flex; gap: 6px; flex-shrink: 0; }
- 
+
   .cred-edit-btn, .cred-del-btn {
     width: 30px; height: 30px; border-radius: 8px;
     border: none; cursor: pointer; font-size: 14px;
@@ -2431,9 +2524,9 @@
   .cred-edit-btn:hover { background: #0369a1; color: white; }
   .cred-del-btn  { background: #fee2e2; color: #dc2626; }
   .cred-del-btn:hover  { background: #dc2626; color: white; }
- 
+
   .cred-empty { text-align: center; padding: 30px; color: #94a3b8; font-size: 13px; }
- 
+
   /* Edit inline */
   .cred-editing { background: #fffbeb; border-color: #f59e0b; }
   .cred-edit-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
@@ -2449,22 +2542,100 @@
     border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
     cursor: pointer; font-family: 'Segoe UI', sans-serif;
   }
+
+  /* Manage Admins modal (reuses cred-* styling) */
+  .adm-role-hint { font-size: 11px; color: #64748b; margin-top: -6px; margin-bottom: 12px; }
+  .adm-emp-picker {
+    max-height: 180px; overflow-y: auto;
+    border: 2px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; background: white;
+  }
+  .adm-emp-picker label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; color: #334155; font-weight: 500; cursor: pointer;
+    text-transform: none; letter-spacing: normal;
+  }
+  .adm-emp-picker input[type="checkbox"] { width: 15px; height: 15px; accent-color: #3f51b5; cursor: pointer; }
+  .adm-assigned-chip {
+    display: inline-block; background: #ede9fe; color: #5b21b6;
+    padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; margin: 2px 3px 0 0;
+  }
+
+  /* Salary History Modal */
+  .sal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.7);
+    z-index: 550;
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .sal-overlay.open { display: flex; }
+  .sal-box {
+    background: white; border-radius: 20px;
+    width: 100%; max-width: 500px; max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+  }
+  .sal-header {
+    background: linear-gradient(135deg, #1d6f42, #2e9160);
+    padding: 20px 22px; border-radius: 20px 20px 0 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .sal-header h2 { color: white; font-size: 16px; font-weight: 800; }
+  .sal-header p  { color: rgba(255,255,255,0.8); font-size: 11px; margin-top: 3px; font-family: monospace; }
+  .sal-close {
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+    color: white; width: 30px; height: 30px; border-radius: 50%;
+    cursor: pointer; font-size: 14px; flex-shrink: 0;
+  }
+  .sal-body { padding: 20px 22px; }
+  .sal-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .sal-add-row input, .sal-body textarea {
+    width: 100%; padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 9px;
+    font-size: 13px; font-family: 'Segoe UI', sans-serif; outline: none; transition: border-color 0.2s;
+  }
+  .sal-add-row input:focus, .sal-body textarea:focus { border-color: #1d6f42; }
+  .sal-add-btn {
+    width: 100%; padding: 10px; background: #1d6f42; color: white; border: none;
+    border-radius: 9px; font-weight: 700; font-size: 13px; cursor: pointer; margin-top: 4px;
+  }
+  .sal-add-btn:hover { background: #145232; }
+  .sal-total {
+    background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 12px;
+    padding: 12px 16px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center;
+  }
+  .sal-total .lbl { font-size: 12px; color: #065f46; font-weight: 700; }
+  .sal-total .amt { font-size: 20px; color: #047857; font-weight: 800; }
+  .sal-list { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
+  .sal-entry {
+    background: #f8faff; border: 1.5px solid #e0e7ff; border-radius: 10px;
+    padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .sal-entry .se-left { min-width: 0; }
+  .sal-entry .se-amt { font-weight: 800; color: #1d6f42; font-size: 14px; }
+  .sal-entry .se-date { font-size: 11px; color: #888; font-family: monospace; }
+  .sal-entry .se-note { font-size: 11px; color: #666; margin-top: 2px; }
+  .sal-del-btn {
+    width: 26px; height: 26px; border-radius: 7px; border: none; background: #fee2e2; color: #dc2626;
+    cursor: pointer; font-size: 12px; flex-shrink: 0;
+  }
+  .sal-del-btn:hover { background: #dc2626; color: white; }
+  .sal-empty { text-align: center; padding: 20px; color: #94a3b8; font-size: 13px; }
 </style>
- 
+
 <!-- Credentials Modal -->
 <div class="cred-overlay" id="credOverlay">
   <div class="cred-box">
     <div class="cred-header">
-      <div>
+      <div id="credHeaderText">
         <h2>🔑 Employee Credentials Manager</h2>
         <p>Add, edit or remove employee login credentials</p>
       </div>
       <button class="cred-close" onclick="closeCredModal()">✕</button>
     </div>
     <div class="cred-body">
- 
-      <!-- Add New Employee Form -->
-      <div class="cred-add-form">
+
+      <!-- Add New Employee Form (Super Admin only) -->
+      <div class="cred-add-form" id="credAddFormBox">
         <h3>➕ Add New Employee</h3>
         <div class="cred-fields">
           <div class="cred-field">
@@ -2494,7 +2665,7 @@
         </div>
         <button class="cred-add-btn" onclick="credAdd()">✓ Add Employee</button>
       </div>
- 
+
       <!-- Employee List -->
       <div class="cred-list-header">
         <h3>👥 Registered Employees</h3>
@@ -2504,20 +2675,99 @@
       <div class="cred-emp-list" id="credEmpList">
         <div class="cred-empty">No employees added yet.</div>
       </div>
- 
+
     </div>
   </div>
 </div>
- 
+
+<!-- Manage Admins Modal (superadmin only) -->
+<div class="cred-overlay" id="adminMgrOverlay">
+  <div class="cred-box">
+    <div class="cred-header" style="background:linear-gradient(135deg,#5b21b6,#7c3aed);">
+      <div>
+        <h2>🛠️ Manage Admins</h2>
+        <p>Create scoped admin logins & assign which employees each one can see</p>
+      </div>
+      <button class="cred-close" onclick="closeAdminMgrModal()">✕</button>
+    </div>
+    <div class="cred-body">
+
+      <div class="cred-add-form">
+        <h3 id="admFormTitle">➕ Create New Admin</h3>
+        <input type="hidden" id="admEditingId" value="" />
+        <div class="cred-fields">
+          <div class="cred-field">
+            <label>Admin Display Name</label>
+            <input type="text" id="admName" placeholder="e.g. Kolkata Branch Admin" />
+          </div>
+          <div class="cred-field">
+            <label>Admin Login ID</label>
+            <input type="text" id="admId" placeholder="e.g. admin_kolkata" />
+          </div>
+        </div>
+        <div class="cred-fields" style="grid-template-columns:1fr;">
+          <div class="cred-field">
+            <label>Admin Password</label>
+            <input type="text" id="admPw" placeholder="e.g. Kolkata@2026" />
+          </div>
+        </div>
+        <div class="adm-role-hint">This admin will only see attendance, daily sheet & salary history for the employees checked below.</div>
+        <div class="cred-field" style="margin-bottom:10px;">
+          <label>Assign Employees</label>
+          <input class="cred-search" id="admEmpSearch" placeholder="🔍 Filter employee list..." oninput="admRenderEmpPicker()" style="margin-bottom:8px;" />
+          <div class="adm-emp-picker" id="admEmpPicker"></div>
+        </div>
+        <button class="cred-add-btn" style="background:linear-gradient(135deg,#5b21b6,#7c3aed);" onclick="admSaveAdmin()">✓ Save Admin</button>
+        <button class="cred-add-btn" id="admCancelEditBtn" style="display:none;background:#94a3b8;margin-top:6px;" onclick="admCancelEdit()">Cancel Edit</button>
+      </div>
+
+      <div class="cred-list-header">
+        <h3>🗂️ Existing Admins</h3>
+        <span class="cred-count" id="admCount">0 admins</span>
+      </div>
+      <div class="cred-emp-list" id="admList">
+        <div class="cred-empty">No admins created yet.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Salary History Modal -->
+<div class="sal-overlay" id="salOverlay">
+  <div class="sal-box">
+    <div class="sal-header">
+      <div>
+        <h2 id="salEmpName">Salary History</h2>
+        <p id="salEmpId"></p>
+      </div>
+      <button class="sal-close" onclick="closeSalaryModal()">✕</button>
+    </div>
+    <div class="sal-body">
+      <div class="sal-add-row">
+        <input type="date" id="salDate" />
+        <input type="number" id="salAmount" placeholder="Amount (₹)" />
+      </div>
+      <textarea id="salNote" rows="2" placeholder="Note (e.g. June salary, advance, bonus)..."></textarea>
+      <button class="sal-add-btn" onclick="salaryAddEntry()">✓ Add Salary Entry</button>
+
+      <div class="sal-total">
+        <span class="lbl">Total Paid</span>
+        <span class="amt" id="salTotal">₹0</span>
+      </div>
+
+      <div class="sal-list" id="salList"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ══════════════════════════════════════════════════════
    EMPLOYEE CREDENTIALS MANAGER
    Storage: localStorage key 'mev_employeeDB'
    Format: { "EMP_ID": { id, name, password, dept, city, salary } }
-   EmployeeProfile.html will read this same key.
 ══════════════════════════════════════════════════════ */
- 
-// Default employees already in EmployeeProfile.html — load them first
+
 const CRED_DEFAULTS = {
   "MEV/336/2025": { id:"MEV/336/2025", name:"Sehenaz Khatun",   password:"MEVRICK1707", dept:"", city:"" },
   "MEV/340/2026": { id:"MEV/340/2026", name:"Ishika Nayak",     password:"MEVRICK1707", dept:"", city:"" },
@@ -2533,109 +2783,94 @@ const CRED_DEFAULTS = {
   "MEV/288/2024": { id:"MEV/288/2024", name:"Madhumita Das",    password:"MEVRICK1707", dept:"", city:"" },
   "MEV/262/2024": { id:"MEV/262/2024", name:"Subhojit Gosh",    password:"MEVRICK1707", dept:"", city:"" },
 };
- 
+
 function credGetDB() {
   const stored = localStorage.getItem('mev_employeeDB');
   if (!stored) {
-    // First time — seed with defaults
     localStorage.setItem('mev_employeeDB', JSON.stringify(CRED_DEFAULTS));
     return { ...CRED_DEFAULTS };
   }
   return JSON.parse(stored);
 }
- 
+
 function credSaveDB(db) {
   localStorage.setItem('mev_employeeDB', JSON.stringify(db));
 }
-////////////////////////////////////
- // MongoDB mein bhi save karo
-fetch('/api/employees', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-   emp_id:        empId || id || '',
-    employee_name: name,
-    password:      pw,
-    dept:          dept,
-    city:          city,
-    salary:        salary,
-    work_location: city,
-    employee_type: 'Full Time'
-  })
-}).then(() => console.log('✅ Employee saved to MongoDB'))
-  .catch(e => console.warn('MongoDB save failed:', e));
-  /////////////////////////////////////////////
+
+function credSyncToServer(id, name, pw, dept, city, salary) {
+  fetch('/api/employees', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      emp_id: id || '',
+      employee_name: name,
+      password: pw,
+      dept: dept,
+      city: city,
+      salary: salary,
+      work_location: city,
+      employee_type: 'Full Time'
+    })
+  }).then(() => console.log('✅ Employee saved to MongoDB'))
+    .catch(e => console.warn('MongoDB save failed:', e));
+}
+
 function openCredModal() {
-  // Seed defaults if empty
   credGetDB();
+  const addForm = document.getElementById('credAddFormBox');
+  const header  = document.getElementById('credHeaderText');
+  if (scopedEmpIds) {
+    if (addForm) addForm.style.display = 'none';   // scoped admins edit only, can't create new employees
+    if (header)  header.innerHTML = '<h2>👥 My Employees</h2><p>View & edit details for your assigned employees</p>';
+  } else {
+    if (addForm) addForm.style.display = '';
+    if (header)  header.innerHTML = '<h2>🔑 Employee Credentials Manager</h2><p>Add, edit or remove employee login credentials</p>';
+  }
   credRenderList();
   document.getElementById('credOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
- 
+
 function closeCredModal() {
   document.getElementById('credOverlay').classList.remove('open');
   document.body.style.overflow = '';
 }
- 
-// Close on outside click
+
 document.getElementById('credOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeCredModal();
 });
- 
+
 function credAdd() {
+  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can add new employees.', '#e53935'); return; }
   const name   = document.getElementById('credName').value.trim();
   const id     = document.getElementById('credId').value.trim().toUpperCase();
   const pw     = document.getElementById('credPw').value.trim();
   const dept   = document.getElementById('credDept').value.trim();
   const city   = document.getElementById('credCity').value.trim();
   const salary = document.getElementById('credSalary').value.trim();
- 
+
   if (!name || !id || !pw) {
     showToast('⚠️ Name, ID aur Password required hai!', '#e53935');
     return;
   }
- 
+
   const db = credGetDB();
   if (db[id]) {
     showToast('⚠️ Ye Employee ID already exist karta hai!', '#f59e0b');
     return;
   }
- 
-  // db[id] = { id, name, password: pw, dept, city, salary };
-  // credSaveDB(db);
- 
-  // // Clear form
-  // ['credName','credId','credPw','credDept','credCity','credSalary'].forEach(f => document.getElementById(f).value = '');
- /////////////////////////////////////////
- db[id] = { id, name, password: pw, dept, city, salary };
+
+  db[id] = { id, name, password: pw, dept, city, salary };
   credSaveDB(db);
+  credSyncToServer(id, name, pw, dept, city, salary);
 
-  // MongoDB mein bhi save karo
-  fetch('/api/employees', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      emp_id:        id,
-      employee_name: name,
-      password:      pw,
-      dept:          dept,
-      city:          city,
-      salary:        salary,
-      work_location: city,
-      employee_type: 'Full Time'
-    })
-  }).then(() => console.log('✅ Employee saved to MongoDB'))
-    .catch(e => console.warn('MongoDB save failed:', e));
-
-  // Clear form
   ['credName','credId','credPw','credDept','credCity','credSalary'].forEach(f => document.getElementById(f).value = '');
-  ////////////////////////////////////////////////////////////
   credRenderList();
   showToast(`✅ ${name} add ho gaya!`, '#10b981');
 }
- 
+
 function credDelete(id) {
+  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can remove employees.', '#e53935'); return; }
   if (!confirm(`"${id}" ko delete karna chahte ho?`)) return;
   const db = credGetDB();
   delete db[id];
@@ -2643,22 +2878,24 @@ function credDelete(id) {
   credRenderList();
   showToast('🗑️ Employee removed.', '#64748b');
 }
- 
+
 let credEditingId = null;
- 
+
 function credStartEdit(id) {
+  if (scopedEmpIds && !scopedEmpIds.includes(id)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
   credEditingId = id;
   credRenderList();
 }
- 
+
 function credSaveEdit(id) {
+  if (scopedEmpIds && !scopedEmpIds.includes(id)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
   const newName = document.getElementById(`cedit-name-${id}`).value.trim();
   const newPw   = document.getElementById(`cedit-pw-${id}`).value.trim();
   const newDept = document.getElementById(`cedit-dept-${id}`).value.trim();
   const newCity = document.getElementById(`cedit-city-${id}`).value.trim();
- 
+
   if (!newName || !newPw) { showToast('⚠️ Name aur Password required!', '#e53935'); return; }
- 
+
   const db = credGetDB();
   db[id].name     = newName;
   db[id].password = newPw;
@@ -2669,32 +2906,44 @@ function credSaveEdit(id) {
   credRenderList();
   showToast(`✅ ${newName} updated!`, '#10b981');
 }
- 
+
 function credRenderList() {
   const db     = credGetDB();
   const search = (document.getElementById('credSearch')?.value || '').toLowerCase();
   const list   = document.getElementById('credEmpList');
   const count  = document.getElementById('credCount');
- 
+
   let entries = Object.values(db);
+
+  // Scoped admin only ever sees their own assigned employees here
+  if (scopedEmpIds) {
+    const allowed = new Set(scopedEmpIds);
+    entries = entries.filter(e => allowed.has(e.id));
+  }
+
   if (search) {
     entries = entries.filter(e =>
       (e.name||'').toLowerCase().includes(search) ||
       (e.id||'').toLowerCase().includes(search)
     );
   }
- 
-  count.textContent = `${Object.keys(db).length} employees`;
- 
+
+  count.textContent = scopedEmpIds
+    ? `${entries.length} of ${(scopedEmpIds||[]).length} assigned`
+    : `${Object.keys(db).length} employees`;
+
   if (!entries.length) {
-    list.innerHTML = '<div class="cred-empty">Koi employee nahi mila.</div>';
+    list.innerHTML = scopedEmpIds
+      ? '<div class="cred-empty">No assigned employees have a credential record yet.</div>'
+      : '<div class="cred-empty">Koi employee nahi mila.</div>';
     return;
   }
- 
+
   list.innerHTML = entries.map(emp => {
     const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const isEditing = credEditingId === emp.id;
- 
+    const delBtn = scopedEmpIds ? '' : `<button class="cred-del-btn" onclick="credDelete('${emp.id}')" title="Delete">🗑️</button>`;
+
     if (isEditing) {
       return `
       <div class="cred-emp-row cred-editing">
@@ -2712,7 +2961,7 @@ function credRenderList() {
         <button class="cred-del-btn" onclick="credEditingId=null;credRenderList()">✕</button>
       </div>`;
     }
- 
+
     return `
     <div class="cred-emp-row">
       <div class="cred-emp-avatar">${initials}</div>
@@ -2726,8 +2975,385 @@ function credRenderList() {
       </div>
       <div class="cred-actions">
         <button class="cred-edit-btn" onclick="credStartEdit('${emp.id}')" title="Edit">✏️</button>
-        <button class="cred-del-btn"  onclick="credDelete('${emp.id}')"   title="Delete">🗑️</button>
+        ${delBtn}
       </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   MANAGE ADMINS (Super Admin only)
+   Storage: localStorage key 'mev_normalAdmins'
+   Format: [ { id, password, employeeName, assignedEmpIds: [] } ]
+   AdminLogin.html reads this same key to authenticate
+   scoped admins and build their session.
+══════════════════════════════════════════════════════ */
+
+function admGetList() {
+  return JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
+}
+
+function admSaveList(list) {
+  localStorage.setItem('mev_normalAdmins', JSON.stringify(list));
+}
+
+// Pulls the latest admins from MongoDB and merges them into the local
+// cache (server copy wins for anything already synced; anything only
+// present locally — e.g. created while offline — is kept too).
+async function admSyncFromServer() {
+  try {
+    const resp = await fetch('/api/admins');
+    if (!resp.ok) return;
+    const serverList = await resp.json();
+    const localList  = admGetList();
+    const merged = [...serverList];
+    localList.forEach(la => {
+      if (!merged.find(sa => sa.id === la.id)) merged.push(la);
+    });
+    admSaveList(merged);
+  } catch (e) {
+    console.warn('Admin sync failed (offline?):', e.message);
+  }
+}
+
+function admPushToServer(adm) {
+  fetch('/api/admins', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(adm)
+  }).then(() => console.log('✅ Admin saved to MongoDB'))
+    .catch(e => console.warn('Admin MongoDB sync failed:', e.message));
+}
+
+function admDeleteFromServer(id) {
+  fetch(`/api/admins/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    .then(() => console.log('✅ Admin deleted from MongoDB'))
+    .catch(e => console.warn('Admin MongoDB delete failed:', e.message));
+}
+
+async function openAdminMgrModal() {
+  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can manage admins.', '#e53935'); return; }
+  admCancelEdit();
+  document.getElementById('adminMgrOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  admRenderEmpPicker();
+  admRenderList();
+  await admSyncFromServer();
+  admRenderList(); // re-render once the freshest server data has merged in
+}
+
+function closeAdminMgrModal() {
+  document.getElementById('adminMgrOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('adminMgrOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeAdminMgrModal();
+});
+
+function admRenderEmpPicker(preselected) {
+  const db = credGetDB();
+  const search = (document.getElementById('admEmpSearch')?.value || '').toLowerCase();
+  const picker = document.getElementById('admEmpPicker');
+  const pre = preselected || admGetCheckedIds(true) || [];
+
+  let entries = Object.values(db);
+  if (search) {
+    entries = entries.filter(e => (e.name||'').toLowerCase().includes(search) || (e.id||'').toLowerCase().includes(search));
+  }
+
+  if (!entries.length) { picker.innerHTML = '<div class="cred-empty">No employees registered yet.</div>'; return; }
+
+  picker.innerHTML = entries.map(e => `
+    <label>
+      <input type="checkbox" class="adm-emp-check" value="${e.id}" ${pre.includes(e.id)?'checked':''}/>
+      <span>${e.name||'—'} <span style="color:#94a3b8;font-family:monospace;">(${e.id})</span></span>
+    </label>
+  `).join('');
+}
+
+function admGetCheckedIds(silent) {
+  const boxes = document.querySelectorAll('.adm-emp-check');
+  if (!boxes.length && !silent) return [];
+  return Array.from(boxes).filter(b=>b.checked).map(b=>b.value);
+}
+
+function admSaveAdmin() {
+  const editingId = document.getElementById('admEditingId').value;
+  const name = document.getElementById('admName').value.trim();
+  const id   = document.getElementById('admId').value.trim();
+  const pw   = document.getElementById('admPw').value.trim();
+  const assignedEmpIds = Array.from(document.querySelectorAll('.adm-emp-check')).filter(b=>b.checked).map(b=>b.value);
+
+  if (!name || !id || !pw) { showToast('⚠️ Name, ID and Password are required!', '#e53935'); return; }
+
+  let list = admGetList();
+
+  if (editingId) {
+    const idx = list.findIndex(a => a.id === editingId);
+    if (idx === -1) { showToast('⚠️ Admin not found.', '#e53935'); return; }
+    // If ID changed, ensure no clash with another admin, and remove the old server doc
+    if (id !== editingId && list.some(a => a.id === id)) {
+      showToast('⚠️ That Admin ID is already used.', '#f59e0b'); return;
+    }
+    if (id !== editingId) admDeleteFromServer(editingId);
+    list[idx] = { id, password: pw, employeeName: name, assignedEmpIds };
+  } else {
+    if (list.some(a => a.id === id)) { showToast('⚠️ That Admin ID is already used.', '#f59e0b'); return; }
+    list.push({ id, password: pw, employeeName: name, assignedEmpIds });
+  }
+
+  admSaveList(list);
+  admPushToServer({ id, password: pw, employeeName: name, assignedEmpIds });
+  admCancelEdit();
+  admRenderList();
+  showToast(`✅ Admin "${name}" saved with ${assignedEmpIds.length} employee(s) assigned.`, '#7c3aed');
+}
+
+function admStartEdit(id) {
+  const list = admGetList();
+  const adm  = list.find(a => a.id === id);
+  if (!adm) return;
+  document.getElementById('admFormTitle').textContent = `✏️ Editing Admin: ${adm.employeeName}`;
+  document.getElementById('admEditingId').value = adm.id;
+  document.getElementById('admName').value = adm.employeeName;
+  const idField = document.getElementById('admId');
+  idField.value = adm.id;
+  idField.readOnly = true;
+  idField.style.background = '#f1f5f9';
+  document.getElementById('admPw').value   = adm.password;
+  document.getElementById('admCancelEditBtn').style.display = '';
+  admRenderEmpPicker(adm.assignedEmpIds || []);
+  document.querySelector('.cred-body').scrollTop = 0;
+}
+
+function admCancelEdit() {
+  document.getElementById('admFormTitle').textContent = '➕ Create New Admin';
+  document.getElementById('admEditingId').value = '';
+  document.getElementById('admName').value = '';
+  const idField = document.getElementById('admId');
+  idField.value = '';
+  idField.readOnly = false;
+  idField.style.background = '';
+  document.getElementById('admPw').value = '';
+  document.getElementById('admCancelEditBtn').style.display = 'none';
+  admRenderEmpPicker([]);
+}
+
+function admDelete(id) {
+  if (!confirm(`Delete admin "${id}"? They will no longer be able to log in.`)) return;
+  let list = admGetList();
+  list = list.filter(a => a.id !== id);
+  admSaveList(list);
+  admDeleteFromServer(id);
+  admRenderList();
+  showToast('🗑️ Admin removed.', '#64748b');
+}
+
+function admRenderList() {
+  const list  = admGetList();
+  const box   = document.getElementById('admList');
+  const count = document.getElementById('admCount');
+  count.textContent = `${list.length} admin${list.length!==1?'s':''}`;
+
+  if (!list.length) { box.innerHTML = '<div class="cred-empty">No admins created yet.</div>'; return; }
+
+  const empDB = credGetDB();
+  box.innerHTML = list.map(a => {
+    const initials = (a.employeeName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const chips = (a.assignedEmpIds||[]).map(eid => {
+      const nm = empDB[eid]?.name || eid;
+      return `<span class="adm-assigned-chip">${nm}</span>`;
+    }).join('') || '<span style="color:#94a3b8;font-size:11px;">No employees assigned yet</span>';
+    return `
+    <div class="cred-emp-row" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="cred-emp-avatar" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);">${initials}</div>
+        <div class="cred-emp-info">
+          <div class="cred-emp-name">${a.employeeName||'—'}</div>
+          <div class="cred-emp-id">Login ID: ${a.id}</div>
+        </div>
+        <div class="cred-pw-display" title="Click to copy" onclick="navigator.clipboard.writeText('${a.password||''}');showToast('📋 Password copied!','#3f51b5')">
+          🔑 ${a.password||'—'}
+        </div>
+        <div class="cred-actions">
+          <button class="cred-edit-btn" onclick="admStartEdit('${a.id}')" title="Edit">✏️</button>
+          <button class="cred-del-btn"  onclick="admDelete('${a.id}')"   title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;">${chips}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   SALARY HISTORY
+   Storage: localStorage key 'mev_salaryHistory'
+   Format: { "EMP_ID": [ { date, amount, note, empName, addedBy } ] }
+══════════════════════════════════════════════════════ */
+
+function salaryGetDB() {
+  return JSON.parse(localStorage.getItem('mev_salaryHistory') || '{}');
+}
+
+function salarySaveDB(db) {
+  localStorage.setItem('mev_salaryHistory', JSON.stringify(db));
+}
+
+// Pulls salary entries for ONE employee from MongoDB and merges them
+// into the local cache (used right before opening the modal, so it's fast).
+async function salarySyncEmployeeFromServer(empId) {
+  try {
+    const resp = await fetch(`/api/salary?emp_id=${encodeURIComponent(empId)}`);
+    if (!resp.ok) return;
+    const serverEntries = await resp.json();
+    const db = salaryGetDB();
+    const localEntries = db[empId] || [];
+    // Server is the source of truth for anything with a _id; keep any
+    // purely-local (offline-created, no _id yet) entries too.
+    const offlineOnly = localEntries.filter(e => !e._id);
+    db[empId] = [...serverEntries, ...offlineOnly];
+    salarySaveDB(db);
+  } catch (e) {
+    console.warn('Salary sync failed (offline?):', e.message);
+  }
+}
+
+// Pulls EVERY salary entry from MongoDB — used before bulk Excel exports
+// so the report reflects entries added from other devices/admins too.
+async function salarySyncAllFromServer() {
+  try {
+    const resp = await fetch('/api/salary');
+    if (!resp.ok) return;
+    const serverEntries = await resp.json();
+    const db = {};
+    serverEntries.forEach(e => {
+      if (!db[e.emp_id]) db[e.emp_id] = [];
+      db[e.emp_id].push(e);
+    });
+    // Keep any purely-local (offline, no _id) entries per employee
+    const localDb = salaryGetDB();
+    Object.keys(localDb).forEach(empId => {
+      const offlineOnly = (localDb[empId] || []).filter(e => !e._id);
+      if (offlineOnly.length) db[empId] = [...(db[empId] || []), ...offlineOnly];
+    });
+    salarySaveDB(db);
+  } catch (e) {
+    console.warn('Bulk salary sync failed (offline?):', e.message);
+  }
+}
+
+let salaryTargetId = null;
+let salaryTargetName = null;
+
+async function openSalaryModal(empId, empName) {
+  if (!empId) { showToast('⚠️ This record has no Employee ID to attach salary to.', '#e53935'); return; }
+  if (scopedEmpIds && !scopedEmpIds.includes(empId)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
+  salaryTargetId = empId;
+  salaryTargetName = empName || empId;
+  document.getElementById('salEmpName').textContent = `💰 ${salaryTargetName}`;
+  document.getElementById('salEmpId').textContent = empId;
+  document.getElementById('salDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('salAmount').value = '';
+  document.getElementById('salNote').value = '';
+  document.getElementById('salOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  salaryRenderList();
+  await salarySyncEmployeeFromServer(empId);
+  if (salaryTargetId === empId) salaryRenderList(); // re-render with freshest server data
+}
+
+function closeSalaryModal() {
+  document.getElementById('salOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  salaryTargetId = null;
+}
+
+document.getElementById('salOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSalaryModal();
+});
+
+function salaryAddEntry() {
+  if (!salaryTargetId) return;
+  const date   = document.getElementById('salDate').value;
+  const amount = parseFloat(document.getElementById('salAmount').value);
+  const note   = document.getElementById('salNote').value.trim();
+
+  if (!date || !amount || amount <= 0) { showToast('⚠️ Please enter a valid date and amount.', '#e53935'); return; }
+
+  const addedBy = (currentSession && (currentSession.name || currentSession.id)) || 'admin';
+  const entry = { emp_id: salaryTargetId, date, amount, note, empName: salaryTargetName, addedBy };
+
+  // Save locally right away so the UI feels instant
+  const db = salaryGetDB();
+  if (!db[salaryTargetId]) db[salaryTargetId] = [];
+  db[salaryTargetId].push({ ...entry });
+  db[salaryTargetId].sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  salarySaveDB(db);
+
+  document.getElementById('salAmount').value = '';
+  document.getElementById('salNote').value = '';
+  salaryRenderList();
+  showToast(`✅ ₹${amount} entry added for ${salaryTargetName}`, '#1d6f42');
+
+  // Then persist to MongoDB and attach the real _id once it comes back,
+  // so the entry can be deleted server-side too.
+  fetch('/api/salary', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry)
+  })
+    .then(r => r.ok ? r.json() : null)
+    .then(saved => {
+      if (!saved || !saved._id) return;
+      const db2 = salaryGetDB();
+      const arr = db2[salaryTargetId] || [];
+      const match = arr.find(e => !e._id && e.date === date && e.amount === amount && e.note === note);
+      if (match) match._id = saved._id;
+      salarySaveDB(db2);
+      if (salaryTargetId) salaryRenderList();
+      console.log('✅ Salary entry saved to MongoDB');
+    })
+    .catch(e => console.warn('Salary MongoDB save failed:', e.message));
+}
+
+function salaryDeleteEntry(idx) {
+  if (!salaryTargetId) return;
+  const db = salaryGetDB();
+  if (!db[salaryTargetId]) return;
+  const entry = db[salaryTargetId][idx];
+  db[salaryTargetId].splice(idx, 1);
+  salarySaveDB(db);
+  salaryRenderList();
+
+  if (entry && entry._id) {
+    fetch(`/api/salary/${entry._id}`, { method: 'DELETE' })
+      .then(() => console.log('✅ Salary entry deleted from MongoDB'))
+      .catch(e => console.warn('Salary MongoDB delete failed:', e.message));
+  }
+}
+
+function salaryRenderList() {
+  const db = salaryGetDB();
+  const entries = (db[salaryTargetId] || []).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const total = entries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  document.getElementById('salTotal').textContent = `₹${total.toLocaleString('en-IN')}`;
+
+  const list = document.getElementById('salList');
+  if (!entries.length) { list.innerHTML = '<div class="sal-empty">No salary entries recorded yet.</div>'; return; }
+
+  // map back to original (unsorted) index for delete
+  const original = db[salaryTargetId] || [];
+  list.innerHTML = entries.map(e => {
+    const origIdx = original.indexOf(e);
+    return `
+    <div class="sal-entry">
+      <div class="se-left">
+        <div class="se-amt">₹${(parseFloat(e.amount)||0).toLocaleString('en-IN')}</div>
+        <div class="se-date">${e.date||''}${e.addedBy?' · by '+e.addedBy:''}</div>
+        ${e.note?`<div class="se-note">${e.note}</div>`:''}
+      </div>
+      <button class="sal-del-btn" onclick="salaryDeleteEntry(${origIdx})" title="Delete">✕</button>
     </div>`;
   }).join('');
 }
