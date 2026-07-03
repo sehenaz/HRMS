@@ -552,11 +552,11 @@
     </div>
     <ul class="nav-links" id="navLinks">
       <li><a href="index.html">Home</a></li>
-      <li id="navEmpDb"><a href="EmployeeHistory.html">Employee Database</a></li>
+      <!-- <li id="navEmpDb"><a href="EmployeeHistory.html">Employee Database</a></li> -->
       <!-- <li><a href="AddEmployee.html">Edit Employee</a></li> -->
-      <li id="navReg"><a href="EmployeeHistory.html">Registration</a></li>
+      <!-- <li id="navReg"><a href="EmployeeHistory.html">Registration</a></li>
       <li id="navCred"><a href="#" onclick="openCredModal()" style="background:rgba(255,200,0,0.18);">🔑 Credentials</a></li>
-      <li id="navManageAdmins"><a href="#" onclick="openAdminMgrModal()" style="background:rgba(139,92,246,0.25);">🛠️ Manage Admins</a></li>
+      <li id="navManageAdmins"><a href="#" onclick="openAdminMgrModal()" style="background:rgba(139,92,246,0.25);">🛠️ Manage Admins</a></li> -->
       <li><a href="#dailySheetSection" onclick="openDailySheet()">📸 Daily Sheet</a></li>
       <li><a href="index.html" onclick="adminLogout()">Logout</a></li>
     </ul>
@@ -603,7 +603,7 @@
       </div>
       <div class="stat-card sandwich-stat" onclick="scrollToSandwichPanel()" title="Click to view sandwich cases">
         <div class="num amber" id="statSandwich">0</div>
-        <div class="lbl">🥪 Sandwich Leaves</div>
+        <div class="lbl">Sandwich Leaves</div>
       </div>
     </div>
 
@@ -611,7 +611,7 @@
     <div class="sandwich-panel" id="sandwichPanel">
       <div class="sandwich-panel-header">
         <div>
-          <div class="sandwich-panel-title">🥪 Sandwich Leave Alert</div>
+          <div class="sandwich-panel-title">Sandwich Leave Alert</div>
           <div class="sandwich-panel-sub">
             These employees took leave on a working day adjacent to a weekend — extending their break.
           </div>
@@ -714,6 +714,7 @@
       }
       applyRoleUI();
     }
+
 
     function applyRoleUI() {
       const isSuper = !currentSession || currentSession.type === 'superadmin';
@@ -922,7 +923,7 @@
         <td>
           <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
             style="padding:5px 10px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
-            💰 Salary
+            Salary
           </button>
         </td>
       </tr>`;
@@ -957,7 +958,7 @@
             <div class="sc-left">
               <div class="sc-name">${c.empName}</div>
               <div class="sc-id">${c.empId}</div>
-              <span class="sc-tag">🥪 Sandwich Leave</span>
+              <span class="sc-tag"> Sandwich Leave</span>
             </div>
             <div class="sc-right">
               <div class="sc-absent">Absent: ${c.absentLabels.join(', ')}</div>
@@ -1096,13 +1097,13 @@
             </div>
             ${swBadge}
             <div class="mob-loc">
-              📍 ${r.location||'Unknown location'}
+              ${r.location||'Unknown location'}
               ${r.lat&&r.lng?`<br/><a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" style="margin-top:8px;font-size:12px">View Exact Location on Map</a>`:''}
             </div>
             <div style="margin-top:10px;">
               <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
                 style="width:100%;padding:8px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
-                💰 Salary History
+                 Salary History
               </button>
             </div>
           </div>`;
@@ -1262,10 +1263,10 @@
 
       // ── Build Workbook ────────────────────────────────────
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws1, '📋 All Records');
-      XLSX.utils.book_append_sheet(wb, ws2, '📅 Daily Summary');
-      XLSX.utils.book_append_sheet(wb, ws3, '👤 Employee Summary');
-      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+      XLSX.utils.book_append_sheet(wb, ws1, 'All Records');
+      XLSX.utils.book_append_sheet(wb, ws2, 'Daily Summary');
+      XLSX.utils.book_append_sheet(wb, ws3, 'Employee Summary');
+      XLSX.utils.book_append_sheet(wb, ws4, ' Salary History');
 
       // Add metadata
       wb.Props = {
@@ -1819,7 +1820,7 @@
   <div id="dailySheetSection">
     <div class="ds-navbar">
       <div class="ds-navbar-title">
-        <span>📸</span> Daily Attendance Sheet — Mevrick Solution Pvt. Ltd.
+        <span></span> Daily Attendance Sheet — Mevrick Solution Pvt. Ltd.
       </div>
       <button class="ds-close-btn" onclick="closeDailySheet()">✕ Close</button>
     </div>
@@ -1833,8 +1834,8 @@
           <button class="ds-nav-btn" onclick="dsChangeDate(1)"  title="Next Day">▶</button>
         </div>
         <input type="date" id="dsDatePicker" onchange="dsRender()" />
-        <button class="ds-today-btn" onclick="dsGoToday()">📅 Today</button>
-        <input type="text" id="dsSearch" placeholder="🔍 Search employee name / ID..." oninput="dsRender()" />
+        <button class="ds-today-btn" onclick="dsGoToday()"> Today</button>
+        <input type="text" id="dsSearch" placeholder="Search employee name / ID..." oninput="dsRender()" />
         <select id="dsStatusFilter" onchange="dsRender()"
           style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none;background:white;font-family:'Segoe UI',sans-serif;">
           <option value="">All Status</option>
@@ -2048,17 +2049,17 @@
       const nHalf    = cards.filter(c=>c.status==='half').length;
 
       document.getElementById('dsDateStats').innerHTML = `
-        <span class="ds-stat-pill dsp-total">👥 ${tot} Total</span>
-        <span class="ds-stat-pill dsp-present">✅ ${nPresent} Present</span>
-        <span class="ds-stat-pill dsp-absent">❌ ${nAbsent} Absent</span>
-        <span class="ds-stat-pill dsp-leave">🗓️ ${nLeave} On Leave</span>
+        <span class="ds-stat-pill dsp-total"> ${tot} Total</span>
+        <span class="ds-stat-pill dsp-present"> ${nPresent} Present</span>
+        <span class="ds-stat-pill dsp-absent">${nAbsent} Absent</span>
+        <span class="ds-stat-pill dsp-leave">${nLeave} On Leave</span>
         <span class="ds-stat-pill dsp-half">½ ${nHalf} Half Day</span>
       `;
 
       const grid = document.getElementById('dsGrid');
       if (!cards.length) {
         grid.innerHTML = `<div class="ds-empty" style="grid-column:1/-1">
-          <div class="ds-empty-icon">📭</div>
+          <div class="ds-empty-icon"></div>
           <h3>No employees found</h3>
           <p>${scopedEmpIds ? 'No employees are currently assigned to your admin account.' : 'No records match your search or filters.'}</p>
         </div>`;
@@ -2105,7 +2106,7 @@
         /* ── Location ── */
         const locHTML = rec?.location ? `
           <div class="ds-location">
-            <div class="ds-loc-text">📍 ${rec.location}</div>
+            <div class="ds-loc-text"> ${rec.location}</div>
             ${rec.lat&&rec.lng
               ? `<a class="ds-map-link" href="https://www.google.com/maps?q=${rec.lat},${rec.lng}" target="_blank">Map ↗</a>`
               : ''}
@@ -2113,7 +2114,7 @@
 
         /* ── Leave info ── */
         const leaveHTML = leaveInfo
-          ? `<div class="ds-leave-tag">🗓️ ${leaveInfo.type}</div>
+          ? `<div class="ds-leave-tag">${leaveInfo.type}</div>
              ${leaveInfo.reason?`<div style="font-size:11px;color:#888;margin-top:4px;">Reason: ${leaveInfo.reason}</div>`:''}`
           : '';
 
@@ -2161,15 +2162,15 @@
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
               <button onclick="dsOpenLeaveModal('${key}','${(emp.name||'').replace(/'/g,"\\'")}','${emp.id||''}')"
                 style="padding:6px 12px;background:#e8d5ff;color:#5b21b6;border:1px solid #c4b5fd;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
-                🗓️ Mark Leave
+                 Mark Leave
               </button>
               <button onclick="openSalaryModal('${emp.id||''}','${(emp.name||'').replace(/'/g,"\\'")}')"
                 style="padding:6px 12px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
-                💰 Salary History
+                Salary History
               </button>
               ${rec?.lat&&rec?.lng?`<a href="https://www.google.com/maps?q=${rec.lat},${rec.lng}" target="_blank"
                 style="padding:6px 12px;background:#e8eef5;color:#3f51b5;border:1px solid #c5cae9;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;">
-                📍 Live Location</a>`:''}
+                 Live Location</a>`:''}
             </div>
           </div>
         </div>`;
@@ -2379,10 +2380,10 @@
 
       // ── Workbook ─────────────────────────────────────────
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws1, '📋 Daily Attendance');
-      XLSX.utils.book_append_sheet(wb, ws2, '📊 Summary');
-      XLSX.utils.book_append_sheet(wb, ws3, '🗓️ Leave Register');
-      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+      XLSX.utils.book_append_sheet(wb, ws1, ' Daily Attendance');
+      XLSX.utils.book_append_sheet(wb, ws2, ' Summary');
+      XLSX.utils.book_append_sheet(wb, ws3, ' Leave Register');
+      XLSX.utils.book_append_sheet(wb, ws4, ' Salary History');
 
       wb.Props = { Title:`MEVTENCIA Daily Sheet — ${dateLabel}`, Author:'Mevrick Solution Pvt. Ltd.' };
 
@@ -2627,7 +2628,7 @@
   <div class="cred-box">
     <div class="cred-header">
       <div id="credHeaderText">
-        <h2>🔑 Employee Credentials Manager</h2>
+        <h2> Employee Credentials Manager</h2>
         <p>Add, edit or remove employee login credentials</p>
       </div>
       <button class="cred-close" onclick="closeCredModal()">✕</button>
@@ -2636,7 +2637,7 @@
 
       <!-- Add New Employee Form (Super Admin only) -->
       <div class="cred-add-form" id="credAddFormBox">
-        <h3>➕ Add New Employee</h3>
+        <h3> Add New Employee</h3>
         <div class="cred-fields">
           <div class="cred-field">
             <label>Employee Name</label>
@@ -2668,7 +2669,7 @@
 
       <!-- Employee List -->
       <div class="cred-list-header">
-        <h3>👥 Registered Employees</h3>
+        <h3> Registered Employees</h3>
         <span class="cred-count" id="credCount">0 employees</span>
       </div>
       <input class="cred-search" id="credSearch" placeholder="🔍 Search by name or ID..." oninput="credRenderList()" />
@@ -2685,7 +2686,7 @@
   <div class="cred-box">
     <div class="cred-header" style="background:linear-gradient(135deg,#5b21b6,#7c3aed);">
       <div>
-        <h2>🛠️ Manage Admins</h2>
+        <h2> Manage Admins</h2>
         <p>Create scoped admin logins & assign which employees each one can see</p>
       </div>
       <button class="cred-close" onclick="closeAdminMgrModal()">✕</button>
@@ -2693,7 +2694,7 @@
     <div class="cred-body">
 
       <div class="cred-add-form">
-        <h3 id="admFormTitle">➕ Create New Admin</h3>
+        <h3 id="admFormTitle"> Create New Admin</h3>
         <input type="hidden" id="admEditingId" value="" />
         <div class="cred-fields">
           <div class="cred-field">
@@ -2722,7 +2723,7 @@
       </div>
 
       <div class="cred-list-header">
-        <h3>🗂️ Existing Admins</h3>
+        <h3> Existing Admins</h3>
         <span class="cred-count" id="admCount">0 admins</span>
       </div>
       <div class="cred-emp-list" id="admList">
@@ -2821,10 +2822,10 @@ function openCredModal() {
   const header  = document.getElementById('credHeaderText');
   if (scopedEmpIds) {
     if (addForm) addForm.style.display = 'none';   // scoped admins edit only, can't create new employees
-    if (header)  header.innerHTML = '<h2>👥 My Employees</h2><p>View & edit details for your assigned employees</p>';
+    if (header)  header.innerHTML = '<h2>My Employees</h2><p>View & edit details for your assigned employees</p>';
   } else {
     if (addForm) addForm.style.display = '';
-    if (header)  header.innerHTML = '<h2>🔑 Employee Credentials Manager</h2><p>Add, edit or remove employee login credentials</p>';
+    if (header)  header.innerHTML = '<h2> Employee Credentials Manager</h2><p>Add, edit or remove employee login credentials</p>';
   }
   credRenderList();
   document.getElementById('credOverlay').classList.add('open');
@@ -2876,7 +2877,7 @@ function credDelete(id) {
   delete db[id];
   credSaveDB(db);
   credRenderList();
-  showToast('🗑️ Employee removed.', '#64748b');
+  showToast(' Employee removed.', '#64748b');
 }
 
 let credEditingId = null;
@@ -2971,7 +2972,7 @@ function credRenderList() {
         <div class="cred-emp-meta">${[emp.dept, emp.city].filter(Boolean).join(' · ') || 'No dept/city'}</div>
       </div>
       <div class="cred-pw-display" title="Click to copy" onclick="navigator.clipboard.writeText('${emp.password||''}');showToast('📋 Password copied!','#3f51b5')">
-        🔑 ${emp.password||'—'}
+         ${emp.password||'—'}
       </div>
       <div class="cred-actions">
         <button class="cred-edit-btn" onclick="credStartEdit('${emp.id}')" title="Edit">✏️</button>
@@ -2981,13 +2982,13 @@ function credRenderList() {
   }).join('');
 }
 
-/* ══════════════════════════════════════════════════════
-   MANAGE ADMINS (Super Admin only)
-   Storage: localStorage key 'mev_normalAdmins'
-   Format: [ { id, password, employeeName, assignedEmpIds: [] } ]
-   AdminLogin.html reads this same key to authenticate
-   scoped admins and build their session.
-══════════════════════════════════════════════════════ */
+// /* ══════════════════════════════════════════════════════
+//    MANAGE ADMINS (Super Admin only)
+//    Storage: localStorage key 'mev_normalAdmins'
+//    Format: [ { id, password, employeeName, assignedEmpIds: [] } ]
+//    AdminLogin.html reads this same key to authenticate
+//    scoped admins and build their session.
+// ══════════════════════════════════════════════════════ */
 
 function admGetList() {
   return JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
