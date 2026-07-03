@@ -746,7 +746,7 @@
 
     // ── INIT ───────────────────────────────────────────────
     window.onload = function () {
-      if (!localStorage.getItem('mev_adminSession')) { window.location.href = 'AdminLogin.html'; return; }
+      // if (!localStorage.getItem('mev_adminSession')) { window.location.href = 'AdminLogin.html'; return; }
       loadSession();
       renderRecords();
       setInterval(renderRecords, 30000);
