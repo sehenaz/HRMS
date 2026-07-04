@@ -1072,23 +1072,55 @@
 
       <!-- Create Admin Form -->
       <div class="create-admin-card">
-        <h3>➕ Create New Admin</h3>
+        <h3>➕ Assign Admin Role to Employee</h3>
         <div class="create-admin-form">
-          <div class="form-group">
-            <label>Admin Name</label>
-            <input type="text" id="newAdminName" placeholder="e.g. Rajesh Kumar" />
-            
-          </div>
-          <div class="form-group">
-            <label>Admin ID (Login)</label>
-            <input type="text" id="newAdminId" placeholder="e.g. admin_rajesh" />
-          </div>
-          <div class="form-group">
-            <label>Password</label>
-            <input type="text" id="newAdminPw" placeholder="Enter password" />
-          </div>
+
+          <!-- Employee Dropdown -->
           <div class="form-group" style="grid-column: span 3;">
-            <label>Assign Employees (select from below)</label>
+            <label>👤 Select Employee (Their existing ID & Password will be used)</label>
+            <select id="adminEmpDropdown" onchange="onEmpSelected()" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;">
+              <option value="">-- Select Employee --</option>
+            </select>
+          </div>
+
+          <!-- Selected Employee Info -->
+          <div id="selectedEmpInfo" style="grid-column:span 3;display:none;background:#f8fafc;border:2px solid #e2e8f0;border-radius:10px;padding:15px;">
+            <div style="display:flex;align-items:center;gap:15px;">
+              <div id="empAvatar" style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#3f51b5,#673ab7);display:flex;align-items:center;justify-content:center;color:white;font-size:1.3rem;font-weight:800;flex-shrink:0;">?</div>
+              <div>
+                <div id="empInfoName" style="font-weight:700;font-size:1rem;color:#1e293b;">—</div>
+                <div id="empInfoId" style="font-size:0.82rem;color:#64748b;font-family:monospace;">—</div>
+                <div id="empInfoDept" style="font-size:0.82rem;color:#94a3b8;">—</div>
+              </div>
+              <div style="margin-left:auto;text-align:right;">
+                <div style="font-size:0.75rem;color:#94a3b8;">Login Credentials</div>
+                <div id="empInfoLogin" style="font-size:0.85rem;font-weight:700;color:#3f51b5;font-family:monospace;">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permissions -->
+          <div class="form-group" style="grid-column: span 3;">
+            <label>🔐 Permissions — What can this Admin access?</label>
+            <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:8px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e8f5e9;padding:10px 18px;border-radius:10px;border:2px solid #a5d6a7;">
+                <input type="checkbox" id="permAttendance" checked style="width:18px;height:18px;accent-color:#2e7d32;" />
+                <span style="font-weight:600;color:#2e7d32;">📋 Attendance</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e3f2fd;padding:10px 18px;border-radius:10px;border:2px solid #90caf9;">
+                <input type="checkbox" id="permLeave" style="width:18px;height:18px;accent-color:#1565c0;" />
+                <span style="font-weight:600;color:#1565c0;">📅 Leave</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff3e0;padding:10px 18px;border-radius:10px;border:2px solid #ffcc80;">
+                <input type="checkbox" id="permSalary" style="width:18px;height:18px;accent-color:#e65100;" />
+                <span style="font-weight:600;color:#e65100;">💰 Salary</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Assign Employees -->
+          <div class="form-group" style="grid-column: span 3;">
+            <label>👥 Assign Employees Under This Admin</label>
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
               <input type="text" id="adminEmpSearch" placeholder="🔍 Search employees..." oninput="renderEmployeePicker()" style="flex:1;min-width:200px;" />
               <span style="font-size:12px;color:#888;" id="selectedCount">0 selected</span>
@@ -1098,8 +1130,9 @@
             </div>
             <div class="assigned-employees-list" id="selectedEmployeesList"></div>
           </div>
+
           <button class="btn-create-admin" onclick="createAdmin()" style="grid-column: span 3;">
-            ✨ Create Admin Portal
+            ✨ Assign Admin Role
           </button>
         </div>
       </div>
@@ -1562,57 +1595,102 @@
       list.innerHTML = html;
     }
 
+    // ── EMPLOYEE DROPDOWN FUNCTIONS ────────────────────────
+    let allEmployeesData = [];
+
+    async function populateEmpDropdown() {
+      try {
+        const res = await fetch(`${SERVER_URL}/api/employees`);
+        allEmployeesData = await res.json();
+        const sel = document.getElementById('adminEmpDropdown');
+        sel.innerHTML = '<option value="">-- Select Employee --</option>';
+        allEmployeesData.forEach(emp => {
+          const opt = document.createElement('option');
+          opt.value = emp.emp_id;
+          opt.textContent = `${emp.employee_name || emp.emp_id} (${emp.emp_id})`;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.warn('Could not load employees:', e);
+      }
+    }
+
+    function onEmpSelected() {
+      const empId = document.getElementById('adminEmpDropdown').value;
+      const emp = allEmployeesData.find(e => e.emp_id === empId);
+      const infoBox = document.getElementById('selectedEmpInfo');
+
+      if (!emp) {
+        infoBox.style.display = 'none';
+        return;
+      }
+
+      infoBox.style.display = 'block';
+      const initials = (emp.employee_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      document.getElementById('empAvatar').textContent = initials;
+      document.getElementById('empInfoName').textContent = emp.employee_name || '—';
+      document.getElementById('empInfoId').textContent = `ID: ${emp.emp_id}`;
+      document.getElementById('empInfoDept').textContent = `${emp.dept || ''} · ${emp.city || ''}`;
+      document.getElementById('empInfoLogin').textContent = `ID: ${emp.emp_id} | PW: ${emp.password || 'MEVRICK1707'}`;
+    }
+
     async function createAdmin() {
-      const name = document.getElementById('newAdminName').value.trim();
-      const id = document.getElementById('newAdminId').value.trim();
-      const pw = document.getElementById('newAdminPw').value.trim();
+      const empId = document.getElementById('adminEmpDropdown').value;
+      const emp = allEmployeesData.find(e => e.emp_id === empId);
+
+      if (!emp) {
+        showToast('⚠️ Please select an employee.', '#f59e0b');
+        return;
+      }
 
       if (selectedEmployeeIds.size === 0) {
-        showToast('⚠️ Please select at least one employee.', '#f59e0b');
-        return;
-      }
-      if (!name || !id || !pw) {
-        showToast('⚠️ Please fill all fields.', '#f59e0b');
+        showToast('⚠️ Please assign at least one employee under this admin.', '#f59e0b');
         return;
       }
 
+      const permissions = {
+        attendance: document.getElementById('permAttendance').checked,
+        leave:      document.getElementById('permLeave').checked,
+        salary:     document.getElementById('permSalary').checked,
+      };
+
       const assignedEmpIds = Array.from(selectedEmployeeIds);
+      const adminId   = emp.emp_id;
+      const adminPw   = emp.password || 'MEVRICK1707';
+      const adminName = emp.employee_name || empId;
 
       try {
         const res = await fetch(`${SERVER_URL}/api/admins`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            admin_id: id,
-            password: pw,
-            employee_id: assignedEmpIds[0],
-            employee_name: name,
-            assigned_employees: assignedEmpIds
+            admin_id:           adminId,
+            password:           adminPw,
+            employee_id:        adminId,
+            employee_name:      adminName,
+            assigned_employees: assignedEmpIds,
+            permissions:        permissions
           })
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          showToast(data.error || 'Failed to create admin.', '#e53935');
+          showToast(data.error || 'Failed to assign admin role.', '#e53935');
           return;
         }
 
-        // Also save to localStorage
-        let list = getAdmins();
-        list.push({ id, password: pw, employeeName: name, assignedEmpIds });
-        saveAdmins(list);
-
-        showToast(`✅ Admin "${name}" created with ${assignedEmpIds.length} employees!`, '#10b981');
+        showToast(`✅ "${adminName}" is now an Admin with ${assignedEmpIds.length} employee(s)!`, '#10b981');
 
         // Clear form
-        document.getElementById('newAdminName').value = '';
-        document.getElementById('newAdminId').value = '';
-        document.getElementById('newAdminPw').value = '';
+        document.getElementById('adminEmpDropdown').value = '';
+        document.getElementById('selectedEmpInfo').style.display = 'none';
+        document.getElementById('permAttendance').checked = true;
+        document.getElementById('permLeave').checked = false;
+        document.getElementById('permSalary').checked = false;
         selectedEmployeeIds.clear();
         updateSelectedDisplay();
         renderEmployeePicker();
-
         loadAdminsTab();
       } catch (e) {
         showToast('Server error: ' + e.message, '#e53935');
@@ -1659,35 +1737,165 @@
       }
 
       grid.innerHTML = admins.map(admin => {
-        const initials = (admin.employeeName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-        const assignedEmps = (admin.assignedEmpIds || []).map(id => empDB[id]?.name || id);
-        const empTags = assignedEmps.length ?
-          assignedEmps.map(name => `<span class="emp-tag">${name}</span>`).join('') :
-          '<span class="emp-tag-empty">No employees assigned</span>';
+        const adminEmp = allEmployeesData.find(e => e.emp_id === (admin.employee_id || admin.admin_id));
+        const initials = (admin.employee_name || admin.employeeName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const assignedEmpIds = admin.assigned_employees || admin.assignedEmpIds || [];
+        const assignedEmps = assignedEmpIds.map(id => {
+          const emp = allEmployeesData.find(e => e.emp_id === id);
+          return { id, name: emp?.employee_name || empDB[id]?.name || id };
+        });
+
+        const empTags = assignedEmps.length
+          ? assignedEmps.map(e => `
+              <span class="emp-tag" onclick="showEmpProfile('${e.id}')"
+                style="cursor:pointer;" title="View ${e.name}'s profile">
+                👤 ${e.name}
+              </span>`).join('')
+          : '<span class="emp-tag-empty">No employees assigned</span>';
+
+        // Permissions
+        const perms = admin.permissions || { attendance: true, leave: false, salary: false };
+        const permBadges = [
+          perms.attendance ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">📋 Attendance</span>' : '',
+          perms.leave      ? '<span style="background:#e3f2fd;color:#1565c0;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">📅 Leave</span>' : '',
+          perms.salary     ? '<span style="background:#fff3e0;color:#e65100;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">💰 Salary</span>' : '',
+        ].filter(Boolean).join(' ');
+
+        // Admin profile info
+        const dept     = adminEmp?.dept || '—';
+        const city     = adminEmp?.city || '—';
+        const email    = adminEmp?.employee_email || '—';
+        const phone    = adminEmp?.phone_number || '—';
+        const loginId  = admin.admin_id || admin.id;
+        const loginPw  = admin.password || adminEmp?.password || 'MEVRICK1707';
 
         return `
-          <div class="admin-card">
+          <div class="admin-card" onclick="toggleAdminProfile('${loginId}')" style="cursor:pointer;">
             <div class="admin-card-header">
               <div class="admin-avatar">${initials}</div>
               <div class="admin-info">
-                <h4>${admin.employeeName || '—'}</h4>
-                <div class="admin-id">Login ID: ${admin.id}</div>
+                <h4>${admin.employee_name || admin.employeeName || '—'}</h4>
+                <div class="admin-id">${dept} · ${city}</div>
+              </div>
+              <span style="margin-left:auto;font-size:1.2rem;">▼</span>
+            </div>
+
+            <!-- Profile (hidden by default, click to expand) -->
+            <div id="profile_${loginId}" style="display:none;border-top:1px solid #f1f5f9;margin-top:12px;padding-top:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+                <div><span style="color:#94a3b8;">📧 Email:</span> ${email}</div>
+                <div><span style="color:#94a3b8;">📱 Phone:</span> ${phone}</div>
+                <div><span style="color:#94a3b8;">🏢 Dept:</span> ${dept}</div>
+                <div><span style="color:#94a3b8;">📍 City:</span> ${city}</div>
+              </div>
+              <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:8px;font-family:monospace;font-size:13px;">
+                <span style="color:#94a3b8;">Login ID:</span> <strong>${loginId}</strong> &nbsp;|&nbsp;
+                <span style="color:#94a3b8;">Password:</span>
+                <span style="cursor:pointer;color:#3f51b5;font-weight:700;"
+                  onclick="event.stopPropagation();navigator.clipboard.writeText('${loginPw}');showToast('📋 Password copied!','#3f51b5')">
+                  ${loginPw} 📋
+                </span>
               </div>
             </div>
-            <div class="admin-stats">
+
+            <div class="admin-stats" style="margin-top:10px;">
               <span>👥 ${assignedEmps.length} employees</span>
-              <span>🔑 <span style="font-family:monospace;cursor:pointer;" onclick="navigator.clipboard.writeText('${admin.password || ''}'); showToast('📋 Password copied!','#3f51b5')">${admin.password || '—'}</span></span>
+              <div style="display:flex;gap:5px;flex-wrap:wrap;">${permBadges || '<span style="color:#94a3b8;font-size:11px;">No permissions</span>'}</div>
             </div>
-            <div class="admin-employees">${empTags}</div>
-            <div class="admin-actions">
-              <button class="btn-delete" onclick="deleteAdmin('${admin.id}')">🗑️ Delete</button>
+            <div class="admin-employees" style="margin-top:8px;">${empTags}</div>
+            <div class="admin-actions" onclick="event.stopPropagation()">
+              <button class="btn-delete" onclick="deleteAdmin('${loginId}')">🗑️ Remove Admin</button>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    // ========== INIT ==========
+    // ── TOGGLE ADMIN PROFILE ────────────────────────────────
+    function toggleAdminProfile(adminId) {
+      const el = document.getElementById(`profile_${adminId}`);
+      if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+      }
+    }
+
+    // ── SHOW EMPLOYEE PROFILE MODAL ─────────────────────────
+    function showEmpProfile(empId) {
+      event.stopPropagation();
+      const emp = allEmployeesData.find(e => e.emp_id === empId);
+      if (!emp) { showToast('Employee not found', '#e53935'); return; }
+
+      const initials = (emp.employee_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+      // Create modal
+      let modal = document.getElementById('empProfileModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'empProfileModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.onclick = function(e) { if (e.target === this) this.remove(); };
+        document.body.appendChild(modal);
+      }
+
+      modal.innerHTML = `
+        <div style="background:white;border-radius:20px;padding:30px;max-width:450px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h3 style="color:#1e293b;font-size:1.1rem;">👤 Employee Profile</h3>
+            <button onclick="document.getElementById('empProfileModal').remove()"
+              style="background:#f1f5f9;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;">✕</button>
+          </div>
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#3f51b5,#673ab7);display:flex;align-items:center;justify-content:center;color:white;font-size:1.8rem;font-weight:800;margin:0 auto 10px;">
+              ${initials}
+            </div>
+            <div style="font-size:1.2rem;font-weight:800;color:#1e293b;">${emp.employee_name || '—'}</div>
+            <div style="color:#94a3b8;font-size:0.85rem;">${emp.designation || ''} · ${emp.dept || ''}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:0.9rem;">
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">Employee ID</div>
+              <div style="font-weight:700;font-family:monospace;">${emp.emp_id}</div>
+            </div>
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">Password</div>
+              <div style="font-weight:700;font-family:monospace;">${emp.password || 'MEVRICK1707'}</div>
+            </div>
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">📧 Email</div>
+              <div style="font-weight:600;">${emp.employee_email || '—'}</div>
+            </div>
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">📱 Phone</div>
+              <div style="font-weight:600;">${emp.phone_number || '—'}</div>
+            </div>
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">🏢 Department</div>
+              <div style="font-weight:600;">${emp.dept || '—'}</div>
+            </div>
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">📍 City</div>
+              <div style="font-weight:600;">${emp.city || '—'}</div>
+            </div>
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">💼 Type</div>
+              <div style="font-weight:600;">${emp.employee_type || 'Full Time'}</div>
+            </div>
+            <div style="background:#f8fafc;padding:10px;border-radius:8px;">
+              <div style="color:#94a3b8;font-size:0.75rem;margin-bottom:3px;">📅 Joining</div>
+              <div style="font-weight:600;">${emp.joining_date || '—'}</div>
+            </div>
+          </div>
+          <button onclick="document.getElementById('empProfileModal').remove()"
+            style="width:100%;margin-top:20px;padding:12px;background:linear-gradient(135deg,#3f51b5,#673ab7);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+            Close
+          </button>
+        </div>
+      `;
+      modal.style.display = 'flex';
+    }
+
+    // ── INIT ──────────────────────────────────────────────
+    populateEmpDropdown();
     renderRecords();
     setInterval(renderRecords, 30000);
     loadAdminsTab();
