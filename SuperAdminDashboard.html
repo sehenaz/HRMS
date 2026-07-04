@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#673ab7" />
   <title>MEVTENCIA — Super Admin Dashboard</title>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -14,23 +16,25 @@
     }
 
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #f0f2f5;
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
       min-height: 100vh;
-      color: #1a1a1a;
+      overflow-x: hidden;
     }
 
     .navbar {
       background: #673ab7;
       color: white;
-      padding: 15px 25px;
+      padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
       position: sticky;
       top: 0;
       z-index: 100;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .logo-area {
@@ -40,289 +44,816 @@
     }
 
     .logo-area img {
-      height: 50px;
-      width: 50px;
+      height: 45px;
+      width: 45px;
       object-fit: contain;
-      background: transparent;
+      background: white;
       border-radius: 50%;
-      padding: 0px;
+      padding: 4px;
     }
 
     .nav-title {
       font-weight: 800;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
     }
 
-    .logout-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      color: white;
-      padding: 6px 15px;
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-actions .btn {
+      padding: 6px 14px;
       border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
+      border: none;
+      transition: all 0.2s;
+      display: inline-block;
     }
 
-    .link.button {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.4);
+    .btn-outline-light {
+      background: rgba(255, 255, 255, 0.15);
       color: white;
-      padding: 6px 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      text-decoration: none;
-      font-size: 0.9rem;
-      transition: background 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.3);
     }
 
-    .link.button:hover {
+    .btn-outline-light:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-outline-light.active {
       background: rgba(255, 255, 255, 0.3);
+      border-color: white;
     }
 
-    .main-container {
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 0 20px;
+    .btn-danger-outline {
+      background: rgba(244, 67, 54, 0.15);
+      color: white;
+      border: 1px solid rgba(244, 67, 54, 0.4);
     }
 
+    .btn-danger-outline:hover {
+      background: rgba(244, 67, 54, 0.3);
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 20px auto 50px;
+      padding: 0 18px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      background: white;
+      padding: 6px;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: transparent;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .tab-btn.active {
+      background: #673ab7;
+      color: white;
+      box-shadow: 0 2px 10px rgba(103, 58, 183, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Welcome Card */
     .welcome-card {
       background: white;
-      padding: 25px;
+      padding: 22px 25px;
       border-radius: 15px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-      margin-bottom: 25px;
+      margin-bottom: 22px;
       border-left: 5px solid #673ab7;
     }
 
     .welcome-card h2 {
       color: #673ab7;
       margin-bottom: 5px;
+      font-size: 20px;
     }
 
     .welcome-card p {
       color: #666;
-      font-size: 0.95rem;
+      font-size: 14px;
+      line-height: 1.6;
     }
 
-    .grid {
+    /* Stats Row */
+    .stats-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 25px;
-    }
-
-    @media (max-width: 800px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .section-card {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-    }
-
-    .section-title {
-      font-size: 1.1rem;
-      font-weight: 700;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
       margin-bottom: 20px;
-      color: #333;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    .stat-card .num {
+      font-size: 28px;
+      font-weight: bold;
+      color: #673ab7;
+      margin-bottom: 4px;
+    }
+
+    .stat-card .num.green {
+      color: #4caf50;
+    }
+    .stat-card .num.orange {
+      color: #ff9800;
+    }
+    .stat-card .num.blue {
+      color: #2196f3;
+    }
+    .stat-card .num.amber {
+      color: #f59e0b;
+    }
+    .stat-card .num.red {
+      color: #f44336;
+    }
+
+    .stat-card .lbl {
+      color: #888;
+      font-size: 11px;
+    }
+
+    /* Sandwich Panel */
+    .sandwich-panel {
+      background: white;
+      border-radius: 14px;
+      padding: 18px 22px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+      border-left: 5px solid #f59e0b;
+      display: none;
+    }
+
+    .sandwich-panel.visible {
+      display: block;
+    }
+
+    .sandwich-panel-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
-    .section-title-left {
+    .sandwich-panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #92400e;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .section-title svg {
-      width: 20px;
-      height: 20px;
-      fill: #673ab7;
-    }
-
-    .select-all-btn {
-      background: #f0f2f5;
-      color: #4a5568;
-      border: 1px solid #e2e8f0;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .select-all-btn:hover {
-      background: #e2e8f0;
-    }
-
-    .employee-list {
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #edf2f7;
-      border-radius: 10px;
-    }
-
-    .employee-item {
-      padding: 12px 15px;
-      border-bottom: 1px solid #f7fafc;
-      display: flex;
-      align-items: center;
-      transition: background 0.2s;
-    }
-
-    .employee-item:last-child {
-      border-bottom: none;
-    }
-
-    .employee-item:hover {
-      background: #f9fafb;
-    }
-
-    .emp-checkbox {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-      flex-shrink: 0;
-      accent-color: #673ab7;
-    }
-
-    .emp-info {
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-
-    .emp-name {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .emp-id {
-      font-size: 0.8rem;
-      color: #718096;
-    }
-
-    .admin-form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-group label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #4a5568;
-    }
-
-    .form-control {
-      padding: 10px 12px;
-      border: 2px solid #e2e8f0;
+    .sandwich-toggle-btn {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+      padding: 5px 14px;
       border-radius: 8px;
-      font-size: 0.95rem;
-      outline: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
-    .form-control:focus {
+    .sandwich-list {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .sandwich-list.open {
+      display: flex;
+    }
+
+    .sandwich-case-card {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sc-left .sc-name {
+      font-weight: 700;
+      color: #333;
+      font-size: 13px;
+    }
+    .sc-left .sc-id {
+      font-size: 10px;
+      color: #888;
+      font-family: monospace;
+    }
+    .sc-right {
+      text-align: right;
+    }
+    .sc-absent {
+      font-size: 11px;
+      color: #b45309;
+      font-weight: 600;
+    }
+    .sc-range {
+      font-size: 10px;
+      color: #aaa;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      background: white;
+      padding: 14px 18px;
+      border-radius: 14px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      align-items: center;
+    }
+
+    .filters input,
+    .filters select {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Segoe UI', sans-serif;
+      background: white;
+      min-width: 120px;
+    }
+
+    .filters input:focus,
+    .filters select:focus {
       border-color: #673ab7;
     }
 
-    .form-control[readonly] {
-      background: #f7fafc;
-      cursor: not-allowed;
+    .filters input {
+      flex: 1;
+      min-width: 180px;
     }
 
-    .create-btn {
-      background: linear-gradient(135deg, #673ab7, #512da8);
+    .filter-btn {
+      padding: 8px 14px;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #555;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+      border-color: #673ab7;
+      color: #673ab7;
+    }
+
+    .btn-excel {
+      padding: 8px 16px;
+      background: #1d6f42;
       color: white;
       border: none;
-      padding: 12px;
-      border-radius: 10px;
+      border-radius: 8px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
-      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s;
     }
 
-    .create-btn:hover {
-      opacity: 0.9;
+    .btn-excel:hover {
+      background: #145232;
       transform: translateY(-1px);
     }
 
-    .admin-list {
-      margin-top: 25px;
+    .btn-excel .icon {
+      background: white;
+      color: #1d6f42;
+      border-radius: 3px;
+      width: 16px;
+      height: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    /* Table */
+    .table-container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      overflow-x: auto;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .table-header h3 {
+      color: #673ab7;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .record-count {
+      color: #888;
+      font-size: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    th {
+      background: #673ab7;
+      color: white;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e0e7ff;
+      font-size: 12px;
+      vertical-align: middle;
+    }
+
+    tr:hover {
+      background: #f5f7fa;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr.row-sandwich {
+      background: #fffbeb !important;
+    }
+    tr.row-sandwich:hover {
+      background: #fef3c7 !important;
+    }
+
+    .emp-photo {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #e0e7ff;
+      cursor: pointer;
+    }
+
+    .emp-photo-placeholder {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #e8eef5;
+      border: 2px solid #e0e7ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .emp-photo-placeholder svg {
+      width: 16px;
+      height: 16px;
+      fill: #aaa;
+    }
+
+    .emp-name {
+      font-weight: 700;
+      color: #333;
+      font-size: 13px;
+    }
+    .emp-id {
+      font-size: 10px;
+      color: #888;
+      font-family: monospace;
+    }
+    .emp-dept {
+      font-size: 10px;
+      color: #888;
+    }
+
+    .time-val {
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .loc-val {
+      font-size: 10px;
+      color: #777;
+      max-width: 200px;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: #673ab7;
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    .map-link:hover {
+      text-decoration: underline;
+    }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 10px;
+      display: inline-block;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .badge-fullday {
+      background: #d4edda;
+      color: #155724;
+    }
+    .badge-halfday {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .badge-working {
+      background: #cce5ff;
+      color: #004085;
+    }
+    .badge-absent {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .badge-leave {
+      background: #e8d5ff;
+      color: #5b21b6;
+    }
+
+    .badge-sandwich {
+      background: #fde68a;
+      color: #92400e;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 9px;
+      display: inline-block;
+      margin-top: 4px;
+      border: 1px solid #f59e0b;
+      white-space: nowrap;
+    }
+
+    .empty-row td {
+      text-align: center;
+      padding: 40px 20px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    /* Admin Cards List */
+    .admins-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
     }
 
     .admin-card {
       background: #f8fafc;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border-radius: 12px;
+      padding: 18px;
       border: 1px solid #e2e8f0;
+      transition: all 0.2s;
     }
 
-    .admin-info-main {
+    .admin-card:hover {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .admin-card-header {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
     }
 
-    .admin-id-label {
+    .admin-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-weight: 700;
-      color: #2d3748;
+      font-size: 1rem;
+      color: white;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
     }
 
-    .admin-emp-ref {
+    .admin-info h4 {
+      font-size: 0.95rem;
+      color: #1e293b;
+    }
+
+    .admin-info .admin-id {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-family: monospace;
+    }
+
+    .admin-stats {
+      display: flex;
+      gap: 15px;
       font-size: 0.8rem;
-      color: #718096;
+      color: #64748b;
+      margin: 8px 0;
     }
 
-    .delete-btn {
-      color: #e53e3e;
-      background: none;
+    .admin-stats span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .admin-employees {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .emp-tag {
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 0.7rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .emp-tag-empty {
+      color: #94a3b8;
+      font-size: 0.7rem;
+      font-style: italic;
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .admin-actions button {
+      padding: 4px 12px;
       border: none;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 1.2rem;
-      padding: 5px;
+      transition: all 0.2s;
+    }
+
+    .btn-edit {
+      background: #e2e8f0;
+      color: #475569;
+    }
+    .btn-edit:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-delete {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    .btn-delete:hover {
+      background: #fecaca;
     }
 
     .empty-state {
       text-align: center;
-      padding: 30px;
+      padding: 40px 20px;
       color: #a0aec0;
-      font-style: italic;
+      grid-column: 1 / -1;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
+    .empty-state svg {
+      width: 60px;
+      height: 60px;
+      fill: #e2e8f0;
+      margin-bottom: 10px;
+    }
+
+    /* Create Admin Card */
+    .create-admin-card {
+      background: white;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+
+    .create-admin-card h3 {
+      color: #673ab7;
+      font-size: 16px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .create-admin-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      align-items: end;
+    }
+
+    .create-admin-form .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .create-admin-form .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .create-admin-form .form-group input {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .create-admin-form .form-group input:focus {
+      border-color: #673ab7;
+    }
+
+    .create-admin-form .form-group select {
+      padding: 8px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      background: white;
+    }
+
+    .create-admin-form .form-group select:focus {
+      border-color: #673ab7;
+    }
+
+    .btn-create-admin {
+      padding: 9px 20px;
+      background: linear-gradient(135deg, #673ab7, #512da8);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-create-admin:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .assigned-employees-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+    }
+
+    .assigned-employee-chip {
+      background: #ede9fe;
+      color: #5b21b6;
+      font-size: 11px;
+      padding: 2px 10px;
       border-radius: 999px;
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      font-weight: 800;
-      margin-top: 4px;
+      font-weight: 500;
     }
 
-    .badge-admin {
-      background: #fed7d7;
-      color: #9b2c2c;
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
 
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-img {
+      max-width: 300px;
+      width: 100%;
+      border-radius: 16px;
+      border: 3px solid white;
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 30px;
@@ -346,433 +877,48 @@
       transform: translateY(0);
     }
 
-    /* ========== ADMIN MANAGER MODAL STYLES ========== */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      padding: 20px;
+    .toast.error {
+      background: #e53935;
     }
-
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-content {
-      background: #ffffff;
-      border-radius: 20px;
-      max-width: 820px;
-      width: 100%;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
-      transform: scale(0.95);
-      transition: transform 0.3s ease;
-    }
-
-    .modal-overlay.open .modal-content {
-      transform: scale(1);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 25px;
-      border-bottom: 2px solid #f1f5f9;
-      flex-shrink: 0;
-    }
-
-    .modal-header h2 {
-      font-size: 1.3rem;
-      color: #1e293b;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .modal-header h2 svg {
-      width: 24px;
-      height: 24px;
-      fill: #673ab7;
-    }
-
-    .modal-close {
-      background: #f1f5f9;
-      border: none;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      font-size: 1.2rem;
-      cursor: pointer;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
-    }
-
-    .modal-close:hover {
-      background: #e2e8f0;
-    }
-
-    .modal-body {
-      padding: 25px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .modal-body::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .modal-body::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 10px;
-    }
-
-    .modal-footer {
-      padding: 15px 25px;
-      border-top: 2px solid #f1f5f9;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .modal-footer .btn {
-      padding: 10px 24px;
-      border-radius: 10px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 0.9rem;
-    }
-
-    .modal-footer .btn-primary {
-      background: linear-gradient(135deg, #673ab7, #512da8);
-      color: white;
-    }
-
-    .modal-footer .btn-primary:hover {
-      opacity: 0.9;
-    }
-
-    .modal-footer .btn-secondary {
-      background: #f1f5f9;
-      color: #475569;
-    }
-
-    .modal-footer .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-
-    .adm-form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    @media (max-width: 600px) {
-      .adm-form-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .adm-form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .adm-form-group label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #475569;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .adm-form-group input {
-      padding: 9px 12px;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .adm-form-group input:focus {
-      border-color: #673ab7;
-    }
-
-    .adm-form-group input[readonly] {
-      background: #f1f5f9;
-      cursor: not-allowed;
-    }
-
-    .adm-employee-picker {
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px;
-      max-height: 150px;
-      overflow-y: auto;
-      margin-bottom: 15px;
-    }
-
-    .adm-employee-picker label {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .adm-employee-picker label:hover {
-      background: #f8fafc;
-    }
-
-    .adm-employee-picker input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: #673ab7;
-    }
-
-    .adm-employee-picker .adm-empty {
-      color: #94a3b8;
-      text-align: center;
-      padding: 20px;
-      font-style: italic;
-    }
-
-    .adm-search-box {
-      width: 100%;
-      padding: 8px 12px;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      outline: none;
-      margin-bottom: 10px;
-    }
-
-    .adm-search-box:focus {
-      border-color: #673ab7;
-    }
-
-    .adm-list-container {
-      margin-top: 20px;
-      border-top: 2px solid #f1f5f9;
-      padding-top: 15px;
-    }
-
-    .adm-list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .adm-list-header h4 {
-      font-size: 0.95rem;
-      color: #334155;
-    }
-
-    .adm-list-header span {
-      font-size: 0.8rem;
-      color: #94a3b8;
-    }
-
-    .adm-list-items {
-      max-height: 250px;
-      overflow-y: auto;
-    }
-
-    .adm-list-items::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    .adm-list-items::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 10px;
-    }
-
-    .adm-row {
-      background: #f8fafc;
-      border-radius: 10px;
-      padding: 12px 15px;
-      margin-bottom: 8px;
-      border: 1px solid #e2e8f0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .adm-row-top {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .adm-avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.8rem;
-      color: white;
-      flex-shrink: 0;
-      background: linear-gradient(135deg, #7c3aed, #5b21b6);
-    }
-
-    .adm-info {
-      flex: 1;
-      min-width: 120px;
-    }
-
-    .adm-info .name {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #1e293b;
-    }
-
-    .adm-info .id {
-      font-size: 0.75rem;
-      color: #94a3b8;
-      font-family: monospace;
-    }
-
-    .adm-pw-copy {
-      background: #f1f5f9;
-      padding: 4px 12px;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      font-family: monospace;
-      cursor: pointer;
-      transition: background 0.2s;
-      color: #475569;
-    }
-
-    .adm-pw-copy:hover {
-      background: #e2e8f0;
-    }
-
-    .adm-actions {
-      display: flex;
-      gap: 6px;
-    }
-
-    .adm-actions button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      transition: background 0.2s;
-    }
-
-    .adm-actions .edit-btn:hover {
-      background: #e2e8f0;
-    }
-
-    .adm-actions .del-btn:hover {
-      background: #fee2e2;
-      color: #dc2626;
-    }
-
-    .adm-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      padding-left: 48px;
-    }
-
-    .adm-chip {
-      background: #ede9fe;
-      color: #5b21b6;
-      font-size: 0.7rem;
-      padding: 2px 10px;
-      border-radius: 999px;
-      font-weight: 500;
-    }
-
-    .adm-chip-empty {
-      color: #94a3b8;
-      font-size: 0.7rem;
-      font-style: italic;
-    }
-
-    .adm-cancel-btn {
-      background: #f1f5f9;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      cursor: pointer;
-      color: #64748b;
-      font-weight: 600;
-      display: none;
-    }
-
-    .adm-cancel-btn:hover {
-      background: #e2e8f0;
+    .toast.success {
+      background: #1d6f42;
     }
 
     /* Responsive */
-    @media (max-width: 600px) {
-      .modal-content {
-        max-height: 95vh;
-        border-radius: 12px;
-      }
-
-      .modal-header {
-        padding: 15px 18px;
-      }
-
-      .modal-body {
-        padding: 18px;
-      }
-
-      .adm-row-top {
-        flex-wrap: wrap;
-      }
-
-      .adm-chips {
-        padding-left: 0;
-      }
-
+    @media (max-width: 768px) {
       .navbar {
-        flex-wrap: wrap;
-        gap: 10px;
+        flex-direction: column;
+        align-items: stretch;
       }
-
-      .logo-area img {
-        height: 36px;
-        width: 36px;
+      .nav-actions {
+        justify-content: center;
       }
-
-      .nav-title {
-        font-size: 0.95rem;
+      .tabs {
+        justify-content: center;
+      }
+      .tab-btn {
+        font-size: 12px;
+        padding: 8px 14px;
+      }
+      .create-admin-form {
+        grid-template-columns: 1fr;
+      }
+      .admins-grid {
+        grid-template-columns: 1fr;
+      }
+      .filters {
+        flex-direction: column;
+      }
+      .filters input,
+      .filters select {
+        width: 100%;
+      }
+      .filter-btn {
+        width: 100%;
+        text-align: center;
+      }
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
       }
     }
   </style>
@@ -784,133 +930,199 @@
       <img src="assets/logo.png" alt="Logo" />
       <span class="nav-title">MEVTENCIA — Super Admin</span>
     </div>
-    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-      <span id="superName" style="font-weight: 600; font-size: 0.9rem;">Admin</span>
-      <a href="#" class="link button" onclick="openAdminMgrModal()">Manage Admin</a>
-      <a href="AdminDashboard.html" class="logout-btn" style="background:rgba(255,255,255,0.15);">Admin Dashboard</a>
-      <a href="index.html" class="logout-btn" onclick="logout()">Logout</a>
+    <div class="nav-actions">
+      <span id="superName" style="font-weight:600;font-size:0.9rem;">Admin</span>
+      <a href="index.html" class="btn btn-danger-outline" onclick="logout()">Logout</a>
     </div>
   </nav>
 
-  <div class="main-container">
+  <div class="container">
+    <!-- Welcome -->
     <div class="welcome-card">
       <h2 id="welcomeText">Welcome, Super Admin</h2>
-      <p>Manage access control and designate administrators for the organization.</p>
+      <p>
+        From here you can monitor attendance of all employees and manage admin accounts.
+        Each admin will only see the employees you assign to them.
+      </p>
     </div>
-<!-- 
-    <div class="grid">
-      <!-- Left: Employee List (Multi-Select) -->
-      <!-- <div class="section-card">
-        <div class="section-title">
-          <div class="section-title-left">
-            <svg viewBox="0 0 24 24">
-              <path
-                d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-            </svg>
-            Select Employees (Create Admin)
-          </div>
-          <button class="select-all-btn" onclick="toggleSelectAll()" id="selectAllBtn">Select All</button>
-        </div>
-        <div class="employee-list" id="empList"></div>
-      </div> --> 
 
-      <!-- Right: Create Form & Current Admins -->
-      <!-- <div class="section-card">
-        <div class="section-title">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-          </svg>
-          Designate Normal Admin
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('attendance')">
+        📊 Attendance Dashboard
+      </button>
+      <button class="tab-btn" onclick="switchTab('admins')">
+        👤 Manage Admins
+      </button>
+    </div>
+
+    <!-- ========== TAB 1: ATTENDANCE DASHBOARD ========== -->
+    <div class="tab-content active" id="tabAttendance">
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num" id="statTotal">0</div>
+          <div class="lbl">Total Records</div>
         </div>
-        <div class="admin-form">
+        <div class="stat-card">
+          <div class="num green" id="statFull">0</div>
+          <div class="lbl">Full Day</div>
+        </div>
+        <div class="stat-card">
+          <div class="num orange" id="statHalf">0</div>
+          <div class="lbl">Half Day</div>
+        </div>
+        <div class="stat-card">
+          <div class="num blue" id="statLive">0</div>
+          <div class="lbl">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="num amber" id="statSandwich">0</div>
+          <div class="lbl">🥪 Sandwich Leaves</div>
+        </div>
+        <div class="stat-card">
+          <div class="num red" id="statAbsent">0</div>
+          <div class="lbl">Absent Today</div>
+        </div>
+      </div>
+
+      <!-- Sandwich Alert Panel -->
+      <div class="sandwich-panel" id="sandwichPanel">
+        <div class="sandwich-panel-header">
+          <div>
+            <div class="sandwich-panel-title">🥪 Sandwich Leave Alert</div>
+            <div style="font-size:11px;color:#b45309;margin-top:2px;">
+              Employees who took leave on a working day adjacent to a weekend
+            </div>
+          </div>
+          <button class="sandwich-toggle-btn" onclick="toggleSandwichList()">▼ Show Details</button>
+        </div>
+        <div class="sandwich-list" id="sandwichList"></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <input type="text" id="searchFilter" placeholder="🔍 Search by Name, ID, City, Dept..." oninput="renderRecords()" />
+        <input type="date" id="dateFilter" onchange="renderRecords()" />
+        <select id="typeFilter" onchange="renderRecords()">
+          <option value="">All Types</option>
+          <option value="Full Day">Full Day</option>
+          <option value="Half Day">Half Day</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Absent">Absent</option>
+        </select>
+        <button class="filter-btn" onclick="clearFilters()">✕ Clear</button>
+        <button class="filter-btn" onclick="renderRecords()">⟳ Refresh</button>
+        <button class="btn-excel" onclick="exportToExcel()">
+          <span class="icon">X</span> Export Excel
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Attendance Records</h3>
+          <span class="record-count" id="recordCount">— records</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Employee</th>
+              <th>City</th>
+              <th>Date</th>
+              <th>Clock In</th>
+              <th>Clock Out</th>
+              <th>Work Hours</th>
+              <th>Location</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="9" style="text-align:center;padding:40px;color:#aaa;">Loading records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mobile Cards -->
+      <div class="mobile-list" id="mobileList"></div>
+    </div>
+
+    <!-- ========== TAB 2: MANAGE ADMINS ========== -->
+    <div class="tab-content" id="tabAdmins">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num" id="totalAdmins">0</div>
+          <div class="lbl">Total Admins</div>
+        </div>
+        <div class="stat-card">
+          <div class="num green" id="totalEmployees">0</div>
+          <div class="lbl">Total Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="num blue" id="totalAssigned">0</div>
+          <div class="lbl">Total Assignments</div>
+        </div>
+        <div class="stat-card">
+          <div class="num orange" id="unassigned">0</div>
+          <div class="lbl">Unassigned Employees</div>
+        </div>
+      </div>
+
+      <!-- Create Admin Form -->
+      <div class="create-admin-card">
+        <h3>➕ Create New Admin</h3>
+        <div class="create-admin-form">
           <div class="form-group">
-            <label>Selected Employees</label>
-            <input type="text" class="form-control" id="selectedEmpName" readonly
-              placeholder="Check employees from left list..." />
+            <label>Admin Name</label>
+            <input type="text" id="newAdminName" placeholder="e.g. Rajesh Kumar" />
           </div>
           <div class="form-group">
-            <label>Admin ID (Login ID)</label>
-            <input type="text" class="form-control" id="newAdminId" placeholder="e.g. admin_rajesh" />
+            <label>Admin ID (Login)</label>
+            <input type="text" id="newAdminId" placeholder="e.g. admin_rajesh" />
           </div>
           <div class="form-group">
             <label>Password</label>
-            <input type="password" class="form-control" id="newAdminPw" placeholder="••••••••" />
+            <input type="text" id="newAdminPw" placeholder="Enter password" />
           </div>
-          <button class="create-btn" onclick="createAdmin()">✨ Create Admin Portal</button>
-        </div> 
+          <div class="form-group" style="grid-column: span 3;">
+            <label>Assign Employees (select from below)</label>
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <input type="text" id="adminEmpSearch" placeholder="🔍 Search employees..." oninput="renderEmployeePicker()" style="flex:1;min-width:200px;" />
+              <span style="font-size:12px;color:#888;" id="selectedCount">0 selected</span>
+            </div>
+            <div id="employeePicker" style="border:2px solid #e0e0e0;border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;margin-top:5px;">
+              <div class="empty-state" style="padding:20px;">Loading employees...</div>
+            </div>
+            <div class="assigned-employees-list" id="selectedEmployeesList"></div>
+          </div>
+          <button class="btn-create-admin" onclick="createAdmin()" style="grid-column: span 3;">
+            ✨ Create Admin Portal
+          </button>
+        </div>
+      </div>
 
-        <div class="admin-list" id="adminList">
-          <div class="section-title" style="margin-top: 20px; font-size: 0.9rem;">
-            Existing Normal Admins
-          </div>
-          <div id="adminsContainer"></div>
+      <!-- Admins List -->
+      <div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <h3 style="color:#333;font-size:16px;">📋 All Admins</h3>
+          <span style="color:#888;font-size:13px;" id="adminCount">0 admins</span>
+        </div>
+        <div class="admins-grid" id="adminsGrid">
+          <div class="empty-state">No admins created yet.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ========== ADMIN MANAGER MODAL ========== -->
-  <div class="modal-overlay" id="adminMgrOverlay">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>
-          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-          Manage Admins
-        </h2>
-        <button class="modal-close" onclick="closeAdminMgrModal()">✕</button>
-      </div>
-      <div class="modal-body">
-        <!-- Admin Form -->
-        <div style="margin-bottom:20px;">
-          <h4 id="admFormTitle" style="font-size:0.95rem; color:#334155; margin-bottom:12px;">➕ Create New Admin</h4>
-          <div class="adm-form-grid">
-            <div class="adm-form-group">
-              <label>Admin Name</label>
-              <input type="text" id="admName" placeholder="Full name" />
-            </div>
-            <div class="adm-form-group">
-              <label>Admin ID (Login)</label>
-              <input type="text" id="admId" placeholder="admin_username" />
-            </div>
-            <div class="adm-form-group" style="grid-column: span 2;">
-              <label>Password</label>
-              <input type="text" id="admPw" placeholder="Enter password" />
-            </div>
-          </div>
-
-          <div style="display:flex; gap:10px; align-items:center; margin-bottom:8px;">
-            <label style="font-size:0.8rem; font-weight:600; color:#475569;">Assign Employees:</label>
-            <button class="adm-cancel-btn" id="admCancelEditBtn" onclick="admCancelEdit()">✕ Cancel Edit</button>
-          </div>
-
-          <input type="text" class="adm-search-box" id="admEmpSearch" placeholder="🔍 Search employees..." oninput="admRenderEmpPicker()" />
-
-          <div class="adm-employee-picker" id="admEmpPicker">
-            <div class="adm-empty">Loading employees...</div>
-          </div>
-
-          <input type="hidden" id="admEditingId" value="" />
-        </div>
-
-        <!-- Admin List -->
-        <div class="adm-list-container">
-          <div class="adm-list-header">
-            <h4>📋 All Admins</h4>
-            <span id="admCount">0 admins</span>
-          </div>
-          <div class="adm-list-items" id="admList">
-            <div class="adm-empty">No admins created yet.</div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeAdminMgrModal()">Close</button>
-        <button class="btn btn-primary" onclick="admSaveAdmin()">💾 Save Admin</button>
-      </div>
-    </div>
+  <!-- Photo Modal -->
+  <div class="modal-overlay" id="photoModal" onclick="closeModal()">
+    <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    <img class="modal-img" id="modalImg" alt="Employee Photo" />
   </div>
 
+  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <script>
@@ -929,283 +1141,376 @@
       localStorage.removeItem('mev_superSession');
     }
 
-    // ========== TOAST ==========
     function showToast(msg, bg = '#2d3748') {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.style.background = bg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3000);
+      setTimeout(() => t.classList.remove('show'), 3500);
     }
 
-    // ========== EMPLOYEE DB HELPER ==========
-    function credGetDB() {
+    // ========== TAB SWITCHING ==========
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+      if (tab === 'attendance') {
+        document.getElementById('tabAttendance').classList.add('active');
+        document.querySelector('.tab-btn:first-child').classList.add('active');
+      } else {
+        document.getElementById('tabAdmins').classList.add('active');
+        document.querySelector('.tab-btn:last-child').classList.add('active');
+        loadAdminsTab();
+      }
+    }
+
+    // ========== ATTENDANCE FUNCTIONS ==========
+    let lastFilteredData = [];
+    let lastAllData = [];
+
+    function parseDate(dateStr) {
+      if (!dateStr) return '';
+      if (dateStr.includes('/')) {
+        const p = dateStr.split('/');
+        return `${p[2]}-${p[1]}-${p[0]}`;
+      }
+      return dateStr;
+    }
+
+    function formatDateLabel(isoDate) {
+      if (!isoDate) return '—';
+      const d = new Date(isoDate + 'T00:00:00');
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      return `${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })} · ${days[d.getDay()]}`;
+    }
+
+    function getBadge(type) {
+      if (!type || type === 'In Progress') return '<span class="status-badge badge-working">● In Progress</span>';
+      if (type === 'Full Day') return '<span class="status-badge badge-fullday">✓ Full Day</span>';
+      if (type === 'Absent') return '<span class="status-badge badge-absent">✗ Absent</span>';
+      if (type === 'On Leave') return '<span class="status-badge badge-leave">📅 On Leave</span>';
+      if (type.includes('Half')) return '<span class="status-badge badge-halfday">½ Half Day</span>';
+      return `<span class="status-badge badge-working">${type}</span>`;
+    }
+
+    async function getAllRecords() {
       try {
-        return JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
-      } catch { return {}; }
+        const response = await fetch('/api/attendance');
+        if (response.ok) {
+          const serverData = await response.json();
+          const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+          const merged = [...serverData];
+          localData.forEach(lr => {
+            const exists = merged.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
+            if (!exists) merged.push(lr);
+          });
+          return merged;
+        }
+      } catch (e) {
+        console.warn('Server offline:', e.message);
+      }
+      return JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
     }
 
-    // ========== MAIN DATA LOAD ==========
+    function detectSandwichLeaves(allRecords) {
+      const byEmp = {};
+      allRecords.forEach(r => {
+        const key = r.emp_id || r.emp_name || 'unknown';
+        if (!byEmp[key]) byEmp[key] = { name: r.emp_name, id: r.emp_id, dates: new Set() };
+        const d = parseDate(r.date);
+        if (d) byEmp[key].dates.add(d);
+      });
+
+      const sandwichKeys = new Set();
+      const sandwichCases = [];
+
+      for (const [empKey, emp] of Object.entries(byEmp)) {
+        const sortedDates = Array.from(emp.dates).sort();
+        if (sortedDates.length < 2) continue;
+
+        for (let i = 0; i < sortedDates.length - 1; i++) {
+          const d1 = new Date(sortedDates[i]);
+          const d2 = new Date(sortedDates[i + 1]);
+          const diffDays = Math.round((d2 - d1) / 86400000);
+          if (diffDays <= 1) continue;
+
+          const gapDays = [];
+          for (let j = 1; j < diffDays; j++) {
+            const g = new Date(d1);
+            g.setDate(g.getDate() + j);
+            const dow = g.getDay();
+            gapDays.push({ date: g, isWeekend: dow === 0 });
+          }
+
+          const hasWeekendInGap = gapDays.some(g => g.isWeekend);
+          const absentWorkingDays = gapDays.filter(g => !g.isWeekend);
+          if (!hasWeekendInGap || absentWorkingDays.length === 0) continue;
+
+          const trulySandwiched = absentWorkingDays.filter(({ date }) => {
+            const prev = new Date(date);
+            prev.setDate(prev.getDate() - 1);
+            const next = new Date(date);
+            next.setDate(next.getDate() + 1);
+            const prevDow = prev.getDay(),
+              nextDow = next.getDay();
+            return prevDow === 0 || nextDow === 0;
+          });
+          if (trulySandwiched.length === 0) continue;
+
+          sandwichKeys.add(`${empKey}|${sortedDates[i]}`);
+          sandwichKeys.add(`${empKey}|${sortedDates[i + 1]}`);
+
+          const absentLabels = trulySandwiched.map(({ date }) => {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return `${days[date.getDay()]} ${date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+          });
+
+          sandwichCases.push({
+            empName: emp.name || 'Unknown',
+            empId: emp.id || '',
+            from: sortedDates[i],
+            to: sortedDates[i + 1],
+            absentLabels
+          });
+        }
+      }
+      return { sandwichKeys, sandwichCases };
+    }
+
+    function sandwichKey(r) {
+      const empKey = r.emp_id || r.emp_name || 'unknown';
+      return `${empKey}|${parseDate(r.date)}`;
+    }
+
+    function toggleSandwichList() {
+      const list = document.getElementById('sandwichList');
+      const btn = document.querySelector('.sandwich-toggle-btn');
+      const open = list.classList.toggle('open');
+      btn.textContent = open ? '▲ Hide Details' : '▼ Show Details';
+    }
+
+    function photoEl(r) {
+      return r.photo ?
+        `<img class="emp-photo" src="${r.photo}" alt="" onclick="openModal('${r.photo.replace(/'/g, "\\'")}')"/>` :
+        `<div class="emp-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`;
+    }
+
+    function buildRow(r, isSandwich) {
+      const sandwichBadge = isSandwich ? `<div><span class="badge-sandwich">🥪 Sandwich Leave</span></div>` : '';
+      return `<tr class="${isSandwich ? 'row-sandwich' : ''}">
+        <td>${photoEl(r)}</td>
+        <td>
+          <div class="emp-name">${r.emp_name || '—'}</div>
+          <div class="emp-id">${r.emp_id || ''}</div>
+          <div class="emp-dept">${r.dept || ''}</div>
+        </td>
+        <td>${r.city || '—'}</td>
+        <td>${r.date || '—'}</td>
+        <td class="time-val">${r.clock_in || '—'}</td>
+        <td class="time-val">${r.clock_out || '<span style="color:#ccc">—</span>'}</td>
+        <td class="time-val">${r.work_hours || '<span style="color:#ccc">—</span>'}</td>
+        <td>
+          <div class="loc-val" title="${r.location || ''}">${r.location || 'Unknown'}</div>
+          ${r.lat && r.lng ? `<a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank">📍 View Map</a>` : ''}
+        </td>
+        <td>${getBadge(r.attendance_type)}${sandwichBadge}</td>
+      </tr>`;
+    }
+
+    async function renderRecords() {
+      const all = await getAllRecords();
+      lastAllData = all;
+
+      const { sandwichKeys, sandwichCases } = detectSandwichLeaves(all);
+
+      // Sandwich panel
+      const panel = document.getElementById('sandwichPanel');
+      const list = document.getElementById('sandwichList');
+      document.getElementById('statSandwich').textContent = sandwichCases.length;
+
+      if (sandwichCases.length > 0) {
+        panel.classList.add('visible');
+        list.innerHTML = sandwichCases.map(c => `
+          <div class="sandwich-case-card">
+            <div class="sc-left">
+              <div class="sc-name">${c.empName}</div>
+              <div class="sc-id">${c.empId}</div>
+            </div>
+            <div class="sc-right">
+              <div class="sc-absent">Absent: ${c.absentLabels.join(', ')}</div>
+              <div class="sc-range">Between ${c.from} → ${c.to}</div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        panel.classList.remove('visible');
+        list.innerHTML = '';
+      }
+
+      // Filters
+      const search = document.getElementById('searchFilter').value.toLowerCase();
+      const dateVal = document.getElementById('dateFilter').value;
+      const typeVal = document.getElementById('typeFilter').value;
+
+      let filtered = all.filter(r => {
+        const matchS = !search || [r.emp_name, r.emp_id, r.city, r.dept, r.location].some(v => (v || '').toLowerCase().includes(search));
+        const matchD = !dateVal || parseDate(r.date) === dateVal;
+        const matchT = !typeVal || (r.attendance_type || 'In Progress').includes(typeVal);
+        return matchS && matchD && matchT;
+      });
+
+      filtered.sort((a, b) => parseDate(b.date).localeCompare(parseDate(a.date)));
+      lastFilteredData = filtered;
+
+      // Stats
+      document.getElementById('statTotal').textContent = all.length;
+      document.getElementById('statFull').textContent = all.filter(r => r.attendance_type === 'Full Day').length;
+      document.getElementById('statHalf').textContent = all.filter(r => (r.attendance_type || '').includes('Half')).length;
+      document.getElementById('statLive').textContent = all.filter(r => !r.clock_out || r.attendance_type === 'In Progress').length;
+      document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
+
+      const tbody = document.getElementById('tableBody');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="9" class="empty-row">${all.length ? 'No records match your filters.' : 'No attendance records yet.'}</td></tr>`;
+      } else {
+        tbody.innerHTML = filtered.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
+      }
+    }
+
+    function clearFilters() {
+      document.getElementById('searchFilter').value = '';
+      document.getElementById('dateFilter').value = '';
+      document.getElementById('typeFilter').value = '';
+      renderRecords();
+    }
+
+    function openModal(src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('photoModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('photoModal').classList.remove('show');
+    }
+
+    function exportToExcel() {
+      if (!lastFilteredData.length) {
+        showToast('⚠️ No records to export!', '#e53935');
+        return;
+      }
+
+      const { sandwichKeys } = detectSandwichLeaves(lastAllData);
+
+      const rows = [
+        ['Employee Name', 'Employee ID', 'Department', 'City', 'Date', 'Day', 'Clock In', 'Clock Out', 'Work Hours', 'Location', 'Status', 'Sandwich Leave']
+      ];
+
+      lastFilteredData.forEach(r => {
+        const isoDate = parseDate(r.date);
+        const dayName = isoDate ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(isoDate + 'T00:00:00').getDay()] : '';
+        const isSw = sandwichKeys.has(sandwichKey(r));
+        rows.push([
+          r.emp_name || '',
+          r.emp_id || '',
+          r.dept || '',
+          r.city || '',
+          r.date || '',
+          dayName,
+          r.clock_in || '',
+          r.clock_out || '',
+          r.work_hours || '',
+          r.location || '',
+          r.attendance_type || 'In Progress',
+          isSw ? 'Yes' : 'No'
+        ]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = [22, 15, 18, 15, 12, 12, 10, 10, 12, 40, 14, 16].map(w => ({ wch: w }));
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Attendance Records');
+
+      const fileName = `MEVTENCIA_Attendance_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      showToast(`✅ Excel downloaded: ${fileName}`, '#1d6f42');
+    }
+
+    // ========== ADMIN MANAGEMENT FUNCTIONS ==========
     let selectedEmployeeIds = new Set();
     let allEmployeesCache = [];
 
-    async function loadData() {
-      let employees = [];
-      let admins = [];
-
+    function getEmployeeDB() {
       try {
-        const empRes = await fetch(`${SERVER_URL}/api/employees`);
-        employees = await empRes.json();
-        // Update local employee DB for modal picker
-        const db = {};
-        employees.forEach(e => { db[e.emp_id] = { id: e.emp_id, name: e.employee_name || 'Unknown' }; });
-        localStorage.setItem('mev_employeeDB', JSON.stringify(db));
-      } catch (e) {
-        console.warn('Could not load employees:', e);
-        showToast('⚠️ Could not connect to server', '#e53935');
-      }
-
-      try {
-        const adminRes = await fetch(`${SERVER_URL}/api/admins`);
-        admins = await adminRes.json();
-      } catch (e) {
-        console.warn('Could not load admins:', e);
-      }
-
-      allEmployeesCache = employees;
-      renderEmployeeList(employees, admins);
-      renderAdmins(admins);
-    }
-
-    function renderEmployeeList(employees, admins) {
-      const empListEl = document.getElementById('empList');
-      empListEl.innerHTML = '';
-
-      if (!employees.length) {
-        empListEl.innerHTML = '<div class="empty-state">No employees found. Register employees first.</div>';
-        return;
-      }
-
-      employees.forEach(emp => {
-        const empId = emp.emp_id;
-        const empName = emp.employee_name || 'Unknown';
-        const existingAdmin = admins.find(a =>
-          (a.assigned_employees || []).includes(empId)
-        );
-
-        const div = document.createElement('div');
-        div.className = 'employee-item';
-        div.innerHTML = `
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;">
-            <input type="checkbox" class="emp-checkbox" data-emp-id="${empId}" data-emp-name="${empName}" />
-            <div class="emp-info">
-              <span class="emp-name">${empName}</span>
-              <span class="emp-id">${empId} ${emp.dept ? '· ' + emp.dept : ''}</span>
-              ${existingAdmin ? `<span class="badge badge-admin">Under: ${existingAdmin.admin_id}</span>` : ''}
-            </div>
-          </label>
-        `;
-        empListEl.appendChild(div);
-      });
-
-      empListEl.querySelectorAll('.emp-checkbox').forEach(cb => {
-        cb.checked = selectedEmployeeIds.has(cb.dataset.empId);
-        cb.addEventListener('change', function () {
-          const id = this.dataset.empId;
-          if (this.checked) selectedEmployeeIds.add(id);
-          else selectedEmployeeIds.delete(id);
-          updateSelectedDisplay();
-        });
-      });
-    }
-
-    function toggleSelectAll() {
-      const allSelected = allEmployeesCache.every(emp => selectedEmployeeIds.has(emp.emp_id));
-
-      if (allSelected) {
-        selectedEmployeeIds.clear();
-        document.getElementById('selectAllBtn').textContent = 'Select All';
-      } else {
-        allEmployeesCache.forEach(emp => selectedEmployeeIds.add(emp.emp_id));
-        document.getElementById('selectAllBtn').textContent = 'Deselect All';
-      }
-
-      document.querySelectorAll('.emp-checkbox').forEach(cb => {
-        cb.checked = selectedEmployeeIds.has(cb.dataset.empId);
-      });
-
-      updateSelectedDisplay();
-    }
-
-    function updateSelectedDisplay() {
-      const count = selectedEmployeeIds.size;
-      document.getElementById('selectedEmpName').value =
-        count > 0 ? `${count} employee${count > 1 ? 's' : ''} selected` : '';
-    }
-
-    function renderAdmins(admins) {
-      const container = document.getElementById('adminsContainer');
-      container.innerHTML = '';
-
-      if (!admins.length) {
-        container.innerHTML = '<div class="empty-state" style="padding: 10px;">No custom admins created yet.</div>';
-        return;
-      }
-
-      admins.forEach(admin => {
-        const div = document.createElement('div');
-        div.className = 'admin-card';
-        const empCount = (admin.assigned_employees || []).length;
-        div.innerHTML = `
-          <div class="admin-info-main">
-            <span class="admin-id-label">${admin.admin_id}</span>
-            <span class="admin-emp-ref">Manages ${empCount} employee${empCount !== 1 ? 's' : ''}</span>
-          </div>
-          <button class="delete-btn" onclick="deleteAdmin('${admin.admin_id}')">🗑️</button>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    async function createAdmin() {
-      const adminId = document.getElementById('newAdminId').value.trim();
-      const adminPw = document.getElementById('newAdminPw').value;
-
-      if (selectedEmployeeIds.size === 0) {
-        showToast('⚠️ Please select at least one employee.', '#f59e0b');
-        return;
-      }
-      if (!adminId || !adminPw) {
-        showToast('⚠️ Please fill Admin ID and Password.', '#f59e0b');
-        return;
-      }
-
-      const empIdsArray = Array.from(selectedEmployeeIds);
-      const firstEmp = allEmployeesCache.find(e => e.emp_id === empIdsArray[0]);
-      const firstEmpName = firstEmp ? firstEmp.employee_name : 'Unknown';
-
-      try {
-        const res = await fetch(`${SERVER_URL}/api/admins`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            admin_id: adminId,
-            password: adminPw,
-            employee_id: empIdsArray[0],
-            employee_name: firstEmpName,
-            assigned_employees: empIdsArray
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          showToast(data.error || 'Failed to create admin.', '#e53935');
-          return;
-        }
-
-        showToast(`✅ Admin "${adminId}" created successfully!`, '#10b981');
-
-        selectedEmployeeIds.clear();
-        document.getElementById('selectedEmpName').value = '';
-        document.getElementById('newAdminId').value = '';
-        document.getElementById('newAdminPw').value = '';
-        document.getElementById('selectAllBtn').textContent = 'Select All';
-
-        loadData();
-        // Refresh modal list if open
-        if (document.getElementById('adminMgrOverlay').classList.contains('open')) {
-          admRenderList();
-        }
-      } catch (e) {
-        showToast('Server error: ' + e.message, '#e53935');
+        return JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
+      } catch {
+        return {};
       }
     }
 
-    async function deleteAdmin(adminId) {
-      if (!confirm(`Remove admin "${adminId}"?`)) return;
-      try {
-        await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(adminId)}`, { method: 'DELETE' });
-        showToast('🗑️ Admin removed.', '#64748b');
-        loadData();
-        if (document.getElementById('adminMgrOverlay').classList.contains('open')) {
-          admRenderList();
-        }
-      } catch (e) {
-        showToast('Failed to delete: ' + e.message, '#e53935');
-      }
-    }
-
-    // ========== ADMIN MANAGER MODAL FUNCTIONS ==========
-    function admGetList() {
+    function getAdmins() {
       return JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
     }
 
-    function admSaveList(list) {
+    function saveAdmins(list) {
       localStorage.setItem('mev_normalAdmins', JSON.stringify(list));
     }
 
-    async function admSyncFromServer() {
+    async function syncAdminsFromServer() {
       try {
         const resp = await fetch(`${SERVER_URL}/api/admins`);
         if (!resp.ok) return;
         const serverList = await resp.json();
-        const localList = admGetList();
-        const merged = [...serverList];
+        const localList = getAdmins();
+        const merged = [...serverList.map(a => ({
+          id: a.admin_id || a.id,
+          password: a.password,
+          employeeName: a.employee_name || a.employeeName || 'Admin',
+          assignedEmpIds: a.assigned_employees || a.assignedEmpIds || []
+        }))];
         localList.forEach(la => {
           if (!merged.find(sa => sa.id === la.id)) merged.push(la);
         });
-        admSaveList(merged);
+        saveAdmins(merged);
+        return merged;
       } catch (e) {
-        console.warn('Admin sync failed:', e.message);
+        console.warn('Sync failed:', e.message);
+        return getAdmins();
       }
     }
 
-    function admPushToServer(adm) {
-      fetch(`${SERVER_URL}/api/admins`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          admin_id: adm.id,
-          password: adm.password,
-          employee_id: (adm.assignedEmpIds || [])[0] || 'unknown',
-          employee_name: adm.employeeName || 'Admin',
-          assigned_employees: adm.assignedEmpIds || []
-        })
-      }).then(() => console.log('✅ Admin saved to MongoDB'))
-        .catch(e => console.warn('Admin MongoDB sync failed:', e.message));
+    async function pushAdminToServer(adm) {
+      try {
+        await fetch(`${SERVER_URL}/api/admins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            admin_id: adm.id,
+            password: adm.password,
+            employee_id: (adm.assignedEmpIds || [])[0] || 'unknown',
+            employee_name: adm.employeeName || 'Admin',
+            assigned_employees: adm.assignedEmpIds || []
+          })
+        });
+        console.log('✅ Admin saved to MongoDB');
+      } catch (e) {
+        console.warn('MongoDB save failed:', e.message);
+      }
     }
 
-    function admDeleteFromServer(id) {
-      fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(id)}`, { method: 'DELETE' })
-        .then(() => console.log('✅ Admin deleted from MongoDB'))
-        .catch(e => console.warn('Admin MongoDB delete failed:', e.message));
+    async function deleteAdminFromServer(id) {
+      try {
+        await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        console.log('✅ Admin deleted from MongoDB');
+      } catch (e) {
+        console.warn('MongoDB delete failed:', e.message);
+      }
     }
 
-    async function openAdminMgrModal() {
-      admCancelEdit();
-      document.getElementById('adminMgrOverlay').classList.add('open');
-      document.body.style.overflow = 'hidden';
-      admRenderEmpPicker();
-      admRenderList();
-      await admSyncFromServer();
-      admRenderList();
-    }
-
-    function closeAdminMgrModal() {
-      document.getElementById('adminMgrOverlay').classList.remove('open');
-      document.body.style.overflow = '';
-    }
-
-    document.getElementById('adminMgrOverlay').addEventListener('click', function(e) {
-      if (e.target === this) closeAdminMgrModal();
-    });
-
-    function admRenderEmpPicker(preselected) {
-      const db = credGetDB();
-      const search = (document.getElementById('admEmpSearch')?.value || '').toLowerCase();
-      const picker = document.getElementById('admEmpPicker');
-      const pre = preselected || admGetCheckedIds(true) || [];
+    function renderEmployeePicker() {
+      const db = getEmployeeDB();
+      const search = (document.getElementById('adminEmpSearch')?.value || '').toLowerCase();
+      const picker = document.getElementById('employeePicker');
 
       let entries = Object.values(db);
       if (search) {
@@ -1216,153 +1521,175 @@
       }
 
       if (!entries.length) {
-        picker.innerHTML = '<div class="adm-empty">No employees registered yet.</div>';
+        picker.innerHTML = `<div class="empty-state" style="padding:20px;">${Object.keys(db).length ? 'No employees match your search.' : 'No employees registered yet.'}</div>`;
         return;
       }
 
       picker.innerHTML = entries.map(e => `
-        <label>
-          <input type="checkbox" class="adm-emp-check" value="${e.id}" ${pre.includes(e.id) ? 'checked' : ''} />
-          <span>${e.name || '—'} <span style="color:#94a3b8;font-family:monospace;">(${e.id})</span></span>
+        <label style="display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:4px;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+          <input type="checkbox" class="emp-check" value="${e.id}" ${selectedEmployeeIds.has(e.id) ? 'checked' : ''} onchange="toggleEmployee('${e.id}')" />
+          <span>${e.name || '—'} <span style="color:#94a3b8;font-family:monospace;font-size:0.8rem;">(${e.id})</span></span>
         </label>
       `).join('');
     }
 
-    function admGetCheckedIds(silent) {
-      const boxes = document.querySelectorAll('.adm-emp-check');
-      if (!boxes.length && !silent) return [];
-      return Array.from(boxes).filter(b => b.checked).map(b => b.value);
-    }
-
-    function admSaveAdmin() {
-      const editingId = document.getElementById('admEditingId').value;
-      const name = document.getElementById('admName').value.trim();
-      const id = document.getElementById('admId').value.trim();
-      const pw = document.getElementById('admPw').value.trim();
-      const assignedEmpIds = Array.from(document.querySelectorAll('.adm-emp-check'))
-        .filter(b => b.checked)
-        .map(b => b.value);
-
-      if (!name || !id || !pw) {
-        showToast('⚠️ Name, ID and Password are required!', '#e53935');
-        return;
-      }
-
-      let list = admGetList();
-
-      if (editingId) {
-        const idx = list.findIndex(a => a.id === editingId);
-        if (idx === -1) {
-          showToast('⚠️ Admin not found.', '#e53935');
-          return;
-        }
-        if (id !== editingId && list.some(a => a.id === id)) {
-          showToast('⚠️ That Admin ID is already used.', '#f59e0b');
-          return;
-        }
-        if (id !== editingId) admDeleteFromServer(editingId);
-        list[idx] = { id, password: pw, employeeName: name, assignedEmpIds };
+    function toggleEmployee(id) {
+      if (selectedEmployeeIds.has(id)) {
+        selectedEmployeeIds.delete(id);
       } else {
-        if (list.some(a => a.id === id)) {
-          showToast('⚠️ That Admin ID is already used.', '#f59e0b');
-          return;
-        }
-        list.push({ id, password: pw, employeeName: name, assignedEmpIds });
+        selectedEmployeeIds.add(id);
       }
-
-      admSaveList(list);
-      admPushToServer({ id, password: pw, employeeName: name, assignedEmpIds });
-      admCancelEdit();
-      admRenderList();
-      // Also refresh the main list
-      loadData();
-      showToast(`✅ Admin "${name}" saved with ${assignedEmpIds.length} employee(s) assigned.`, '#7c3aed');
+      updateSelectedDisplay();
     }
 
-    function admStartEdit(id) {
-      const list = admGetList();
-      const adm = list.find(a => a.id === id);
-      if (!adm) return;
-      document.getElementById('admFormTitle').textContent = `✏️ Editing Admin: ${adm.employeeName}`;
-      document.getElementById('admEditingId').value = adm.id;
-      document.getElementById('admName').value = adm.employeeName;
-      const idField = document.getElementById('admId');
-      idField.value = adm.id;
-      idField.readOnly = true;
-      idField.style.background = '#f1f5f9';
-      document.getElementById('admPw').value = adm.password;
-      document.getElementById('admCancelEditBtn').style.display = 'inline-block';
-      admRenderEmpPicker(adm.assignedEmpIds || []);
-      document.querySelector('.modal-body').scrollTop = 0;
-    }
+    function updateSelectedDisplay() {
+      const count = selectedEmployeeIds.size;
+      document.getElementById('selectedCount').textContent = `${count} selected`;
 
-    function admCancelEdit() {
-      document.getElementById('admFormTitle').textContent = '➕ Create New Admin';
-      document.getElementById('admEditingId').value = '';
-      document.getElementById('admName').value = '';
-      const idField = document.getElementById('admId');
-      idField.value = '';
-      idField.readOnly = false;
-      idField.style.background = '';
-      document.getElementById('admPw').value = '';
-      document.getElementById('admCancelEditBtn').style.display = 'none';
-      admRenderEmpPicker([]);
-    }
-
-    function admDelete(id) {
-      if (!confirm(`Delete admin "${id}"? They will no longer be able to log in.`)) return;
-      let list = admGetList();
-      list = list.filter(a => a.id !== id);
-      admSaveList(list);
-      admDeleteFromServer(id);
-      admRenderList();
-      loadData();
-      showToast('🗑️ Admin removed.', '#64748b');
-    }
-
-    function admRenderList() {
-      const list = admGetList();
-      const box = document.getElementById('admList');
-      const count = document.getElementById('admCount');
-      count.textContent = `${list.length} admin${list.length !== 1 ? 's' : ''}`;
-
-      if (!list.length) {
-        box.innerHTML = '<div class="adm-empty">No admins created yet.</div>';
+      const list = document.getElementById('selectedEmployeesList');
+      if (count === 0) {
+        list.innerHTML = '';
         return;
       }
 
-      const empDB = credGetDB();
-      box.innerHTML = list.map(a => {
-        const initials = (a.employeeName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-        const chips = (a.assignedEmpIds || []).map(eid => {
-          const nm = empDB[eid]?.name || eid;
-          return `<span class="adm-chip">${nm}</span>`;
-        }).join('') || '<span class="adm-chip-empty">No employees assigned yet</span>';
+      const db = getEmployeeDB();
+      let html = '';
+      selectedEmployeeIds.forEach(id => {
+        const emp = db[id];
+        html += `<span class="assigned-employee-chip">${emp ? emp.name : id} ✕</span>`;
+      });
+      list.innerHTML = html;
+    }
+
+    async function createAdmin() {
+      const name = document.getElementById('newAdminName').value.trim();
+      const id = document.getElementById('newAdminId').value.trim();
+      const pw = document.getElementById('newAdminPw').value.trim();
+
+      if (selectedEmployeeIds.size === 0) {
+        showToast('⚠️ Please select at least one employee.', '#f59e0b');
+        return;
+      }
+      if (!name || !id || !pw) {
+        showToast('⚠️ Please fill all fields.', '#f59e0b');
+        return;
+      }
+
+      const assignedEmpIds = Array.from(selectedEmployeeIds);
+
+      try {
+        const res = await fetch(`${SERVER_URL}/api/admins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            admin_id: id,
+            password: pw,
+            employee_id: assignedEmpIds[0],
+            employee_name: name,
+            assigned_employees: assignedEmpIds
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showToast(data.error || 'Failed to create admin.', '#e53935');
+          return;
+        }
+
+        // Also save to localStorage
+        let list = getAdmins();
+        list.push({ id, password: pw, employeeName: name, assignedEmpIds });
+        saveAdmins(list);
+
+        showToast(`✅ Admin "${name}" created with ${assignedEmpIds.length} employees!`, '#10b981');
+
+        // Clear form
+        document.getElementById('newAdminName').value = '';
+        document.getElementById('newAdminId').value = '';
+        document.getElementById('newAdminPw').value = '';
+        selectedEmployeeIds.clear();
+        updateSelectedDisplay();
+        renderEmployeePicker();
+
+        loadAdminsTab();
+      } catch (e) {
+        showToast('Server error: ' + e.message, '#e53935');
+      }
+    }
+
+    async function deleteAdmin(adminId) {
+      if (!confirm(`Remove admin "${adminId}"?`)) return;
+      try {
+        await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(adminId)}`, { method: 'DELETE' });
+        let list = getAdmins();
+        list = list.filter(a => a.id !== adminId);
+        saveAdmins(list);
+        showToast('🗑️ Admin removed.', '#64748b');
+        loadAdminsTab();
+      } catch (e) {
+        showToast('Failed to delete: ' + e.message, '#e53935');
+      }
+    }
+
+    async function loadAdminsTab() {
+      const admins = await syncAdminsFromServer();
+      const empDB = getEmployeeDB();
+      const allEmployees = Object.values(empDB);
+      const allAssigned = admins.flatMap(a => a.assignedEmpIds || []);
+      const unassigned = allEmployees.filter(e => !allAssigned.includes(e.id));
+
+      document.getElementById('totalAdmins').textContent = admins.length;
+      document.getElementById('totalEmployees').textContent = allEmployees.length;
+      document.getElementById('totalAssigned').textContent = allAssigned.length;
+      document.getElementById('unassigned').textContent = unassigned.length;
+      document.getElementById('adminCount').textContent = `${admins.length} admins`;
+
+      const grid = document.getElementById('adminsGrid');
+      if (!admins.length) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <h3>No Admins Created Yet</h3>
+            <p>Use the form above to create your first admin.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = admins.map(admin => {
+        const initials = (admin.employeeName || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+        const assignedEmps = (admin.assignedEmpIds || []).map(id => empDB[id]?.name || id);
+        const empTags = assignedEmps.length ?
+          assignedEmps.map(name => `<span class="emp-tag">${name}</span>`).join('') :
+          '<span class="emp-tag-empty">No employees assigned</span>';
 
         return `
-          <div class="adm-row">
-            <div class="adm-row-top">
-              <div class="adm-avatar">${initials}</div>
-              <div class="adm-info">
-                <div class="name">${a.employeeName || '—'}</div>
-                <div class="id">Login ID: ${a.id}</div>
-              </div>
-              <div class="adm-pw-copy" onclick="navigator.clipboard.writeText('${a.password || ''}'); showToast('📋 Password copied!','#3f51b5')">
-                🔑 ${a.password || '—'}
-              </div>
-              <div class="adm-actions">
-                <button class="edit-btn" onclick="admStartEdit('${a.id}')" title="Edit">✏️</button>
-                <button class="del-btn" onclick="admDelete('${a.id}')" title="Delete">🗑️</button>
+          <div class="admin-card">
+            <div class="admin-card-header">
+              <div class="admin-avatar">${initials}</div>
+              <div class="admin-info">
+                <h4>${admin.employeeName || '—'}</h4>
+                <div class="admin-id">Login ID: ${admin.id}</div>
               </div>
             </div>
-            <div class="adm-chips">${chips}</div>
+            <div class="admin-stats">
+              <span>👥 ${assignedEmps.length} employees</span>
+              <span>🔑 <span style="font-family:monospace;cursor:pointer;" onclick="navigator.clipboard.writeText('${admin.password || ''}'); showToast('📋 Password copied!','#3f51b5')">${admin.password || '—'}</span></span>
+            </div>
+            <div class="admin-employees">${empTags}</div>
+            <div class="admin-actions">
+              <button class="btn-delete" onclick="deleteAdmin('${admin.id}')">🗑️ Delete</button>
+            </div>
           </div>
         `;
       }).join('');
     }
 
     // ========== INIT ==========
-    loadData();
+    renderRecords();
+    setInterval(renderRecords, 30000);
+    loadAdminsTab();
   </script>
 </body>
 

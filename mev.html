@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#3f51b5" />
-  <title>MEVTENCIA — Camera Login</title>
+  <title>MEVTENCIA — Employee Login</title>
   <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <style>
     * {
@@ -39,6 +39,18 @@
       font-size: 20px;
       font-weight: 800;
       text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo img {
+      height: 45px;
+      width: 45px;
+      object-fit: contain;
+      background: white;
+      border-radius: 50%;
+      padding: 5px;
     }
 
     .nav-links {
@@ -54,6 +66,15 @@
       padding: 8px 10px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.12);
+      transition: background 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.3);
     }
 
     .container {
@@ -71,6 +92,17 @@
       text-align: center;
     }
 
+    .header-card .logo-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: white;
+      padding: 10px;
+      box-shadow: 0 8px 25px rgba(63, 81, 181, 0.3);
+      margin-bottom: 15px;
+    }
+
     .header-card h2 {
       color: #3f51b5;
       font-size: 22px;
@@ -84,6 +116,15 @@
       line-height: 1.5;
     }
 
+    .main-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    /* Steps */
     .steps {
       display: flex;
       align-items: center;
@@ -129,14 +170,52 @@
       background: #4caf50;
     }
 
-    .main-card {
-      background: white;
-      border-radius: 20px;
-      padding: 25px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      margin-bottom: 20px;
+    /* Form */
+    .form-group {
+      margin-bottom: 18px;
     }
 
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .form-group input:focus {
+      border-color: #3f51b5;
+    }
+
+    .form-group input[readonly] {
+      background: #f5f7fa;
+      cursor: not-allowed;
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: #888;
+      margin-top: 8px;
+    }
+
+    .form-hint a {
+      color: #3f51b5;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Video/Photo */
     .video-wrap {
       border-radius: 12px;
       overflow: hidden;
@@ -179,6 +258,7 @@
       border-radius: 12px;
     }
 
+    /* Location */
     .location-box {
       background: #f5f7fa;
       border: 1px solid #e0e7ff;
@@ -230,6 +310,7 @@
       border-color: #3f51b5;
     }
 
+    /* Buttons */
     .btn-group {
       display: flex;
       gap: 12px;
@@ -239,10 +320,10 @@
     .btn {
       flex: 1;
       min-width: 120px;
-      padding: 14px 18px;
+      padding: 12px 18px;
       border: none;
       border-radius: 10px;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -277,6 +358,15 @@
       pointer-events: none;
     }
 
+    .btn-hidden {
+      display: none !important;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Status */
     .status-msg {
       padding: 12px 15px;
       border-radius: 10px;
@@ -307,28 +397,86 @@
       color: #856404;
       border: 1px solid #ffeeba;
     }
+
+    /* Debug Info */
+    .debug-info {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #666;
+      display: none;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .debug-info.show {
+      display: block;
+    }
+
+    .debug-toggle {
+      font-size: 11px;
+      color: #3f51b5;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        margin: 15px auto 30px;
+        padding: 0 12px;
+      }
+      .main-card {
+        padding: 18px;
+      }
+      .header-card {
+        padding: 20px;
+      }
+      .header-card h2 {
+        font-size: 18px;
+      }
+      .btn {
+        min-width: 100px;
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+      .step {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+      }
+      .step-line {
+        width: 25px;
+      }
+    }
   </style>
 </head>
 
 <body>
   <nav class="navbar">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <img src="assets/logo.png" alt="Mevrick Logo" style="height: 60px; width: 60px; object-fit: contain; background: white; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-      <a class="logo" href="index.html">MEVTENCIA</a>
-    </div>
+    <a class="logo" href="index.html">
+      <img src="assets/logo.png" alt="Mevrick Logo" />
+      MEVTENCIA
+    </a>
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
-      <li><a href="EmployeeProfile.html">Login</a></li>
+      <li><a href="mev.html" class="active">Employee Login</a></li>
     </ul>
   </nav>
 
   <div class="container">
     <div class="header-card">
-      <div style="margin-bottom: 20px;">
-        <img src="assets/logo.png" alt="Mevrick Logo" style="width: 100px; height: 100px; border-radius: 50%; object-fit: contain; background: white; padding: 10px; box-shadow: 0 8px 25px rgba(63, 81, 181, 0.3);">
-      </div>
-      <h2>Camera + Location Verification</h2>
-      <p>Enable your camera and GPS to capture your photo and current address for attendance verification.</p>
+      <img src="assets/logo.png" alt="Mevrick Logo" class="logo-img" />
+      <h2>Employee Login & Verification</h2>
+      <p>Enter your credentials, then verify with camera and GPS location.</p>
     </div>
 
     <div class="steps">
@@ -340,26 +488,52 @@
     </div>
 
     <div class="main-card">
-      <!-- Video element is always in DOM, only visibility is toggled -->
-      <div class="video-wrap" id="videoWrap">
-        <video id="video" autoplay playsinline muted></video>
-      </div>
-      <canvas id="canvas"></canvas>
-      <div class="photo-wrap" id="photoWrap">
-        <img id="photo" alt="Captured" />
-      </div>
-      <div class="location-box" id="locationBox">
-        <strong>📍 Current Building Location</strong>
-        <div class="location-address" id="locationAddress">Fetching precise GPS...</div>
-        <div class="location-coords" id="locationCoords"></div>
-        <a id="locVerifyLink" class="loc-verify-btn" target="_blank" style="display:none;">🗺️ Verify on Google Maps</a>
+      <!-- Step 1: Login Form -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label>Employee ID</label>
+          <input type="text" id="empId" placeholder="e.g. MEV/341/2026" autocomplete="off" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="empPw" placeholder="Enter your password" />
+        </div>
+        <div class="form-group" id="nameDisplay" style="display:none;">
+          <label>Welcome</label>
+          <input type="text" id="empName" readonly placeholder="Employee name will appear here" />
+        </div>
+        <button class="btn btn-primary btn-block" onclick="verifyEmployee()">
+          🔐 Verify & Continue
+        </button>
+        <!-- <div class="form-hint">
+          💡 Default password: <strong>MEVRICK1707</strong>
+          <span class="debug-toggle" onclick="toggleDebug()">🔍 Show Available Employees</span>
+        </div> -->
+        <div class="debug-info" id="debugInfo"></div>
       </div>
 
-      <div class="btn-group">
-        <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()">📷 Enable Camera</button>
-        <button class="btn btn-primary btn-disabled" id="captureBtn" onclick="capturePhoto()" style="display:none;">✓ Capture Photo</button>
-        <button class="btn btn-secondary" id="retakeBtn" onclick="retake()" style="display:none;">↩ Retake</button>
-        <button class="btn btn-success" id="continueBtn" onclick="continueToLogin()" style="display:none;">Continue →</button>
+      <!-- Step 2: Camera -->
+      <div id="cameraSection" style="display:none;">
+        <div class="video-wrap" id="videoWrap">
+          <video id="video" autoplay playsinline muted></video>
+        </div>
+        <canvas id="canvas"></canvas>
+        <div class="photo-wrap" id="photoWrap">
+          <img id="photo" alt="Captured" />
+        </div>
+        <div class="location-box" id="locationBox">
+          <strong>📍 Current Location</strong>
+          <div class="location-address" id="locationAddress">Fetching precise GPS...</div>
+          <div class="location-coords" id="locationCoords"></div>
+          <a id="locVerifyLink" class="loc-verify-btn" target="_blank" style="display:none;">🗺️ Verify on Google Maps</a>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()">📷 Enable Camera</button>
+          <button class="btn btn-primary btn-hidden" id="captureBtn" onclick="capturePhoto()">✓ Capture Photo</button>
+          <button class="btn btn-secondary btn-hidden" id="retakeBtn" onclick="retake()">↩ Retake</button>
+          <button class="btn btn-success btn-hidden" id="continueBtn" onclick="continueToDashboard()">📊 Go to Dashboard</button>
+        </div>
       </div>
 
       <div class="status-msg" id="statusMsg"></div>
@@ -367,19 +541,145 @@
   </div>
 
   <script>
-    // Global state
+    // ========== GLOBAL STATE ==========
     let stream = null;
     let capturedData = null;
     let locationData = null;
+    let verifiedEmployee = null;
 
-    // ─── Utility ────────────────────────────────────────────────────────────────
+    // ========== EMPLOYEE DATABASE ==========
+    // Default employees data - this will be used if localStorage is empty
+    const DEFAULT_EMPLOYEES = {
+      "MEV/336/2025": {
+        id: "MEV/336/2025",
+        name: "Sehenaz Khatun",
+        password: "MEVRICK1707",
+        dept: "HR",
+        city: "Kolkata"
+      },
+      "MEV/340/2026": {
+        id: "MEV/340/2026",
+        name: "Ishika Nayak",
+        password: "MEVRICK1707",
+        dept: "Sales",
+        city: "Mumbai"
+      },
+      "MEV/296/2025": {
+        id: "MEV/296/2025",
+        name: "Udita Karmakar",
+        password: "MEVRICK1707",
+        dept: "IT",
+        city: "Bangalore"
+      },
+      "MEV/110/2022": {
+        id: "MEV/110/2022",
+        name: "Indrani Ganguly",
+        password: "MEVRICK1707",
+        dept: "Finance",
+        city: "Delhi"
+      },
+      "MEV/339/2026": {
+        id: "MEV/339/2026",
+        name: "Sreeparna Biswas",
+        password: "MEVRICK1707",
+        dept: "Marketing",
+        city: "Hyderabad"
+      },
+      "MEV/322/2025": {
+        id: "MEV/322/2025",
+        name: "Tathagata Roy",
+        password: "MEVRICK1707",
+        dept: "IT",
+        city: "Kolkata"
+      },
+      "MEV/323/2025": {
+        id: "MEV/323/2025",
+        name: "Swagata Dutta",
+        password: "MEVRICK1707",
+        dept: "HR",
+        city: "Kolkata"
+      },
+      "MEV/264/2024": {
+        id: "MEV/264/2024",
+        name: "Sumit Naskar",
+        password: "MEVRICK1707",
+        dept: "Sales",
+        city: "Mumbai"
+      }
+    };
 
+    // Initialize employee database on page load
+    function initEmployeeDB() {
+      try {
+        const stored = localStorage.getItem('mev_employeeDB');
+        if (!stored) {
+          console.log('No employee DB found. Creating default...');
+          localStorage.setItem('mev_employeeDB', JSON.stringify(DEFAULT_EMPLOYEES));
+          return { ...DEFAULT_EMPLOYEES };
+        }
+        const db = JSON.parse(stored);
+        // Merge with defaults for any missing employees
+        let updated = false;
+        Object.keys(DEFAULT_EMPLOYEES).forEach(key => {
+          if (!db[key]) {
+            db[key] = DEFAULT_EMPLOYEES[key];
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem('mev_employeeDB', JSON.stringify(db));
+        }
+        return db;
+      } catch (e) {
+        console.error('Error reading employee DB:', e);
+        localStorage.setItem('mev_employeeDB', JSON.stringify(DEFAULT_EMPLOYEES));
+        return { ...DEFAULT_EMPLOYEES };
+      }
+    }
+
+    function getEmployeeDB() {
+      try {
+        const stored = localStorage.getItem('mev_employeeDB');
+        if (!stored) {
+          return initEmployeeDB();
+        }
+        return JSON.parse(stored);
+      } catch (e) {
+        return initEmployeeDB();
+      }
+    }
+
+    function toggleDebug() {
+      const debugEl = document.getElementById('debugInfo');
+      if (debugEl.classList.contains('show')) {
+        debugEl.classList.remove('show');
+        return;
+      }
+      const db = getEmployeeDB();
+      let text = '📋 Available Employees:\n\n';
+      Object.keys(db).forEach(key => {
+        const emp = db[key];
+        text += `  ${emp.id} → ${emp.name}\n`;
+      });
+      text += '\n🔑 All passwords: MEVRICK1707';
+      debugEl.textContent = text;
+      debugEl.classList.add('show');
+    }
+
+    // ========== STEP MANAGEMENT ==========
     function setStep(n) {
       [1, 2, 3].forEach(i => {
         const s = document.getElementById('s' + i);
-        if (i < n)       { s.className = 'step done';   s.textContent = '✓'; }
-        else if (i === n){ s.className = 'step active'; s.textContent = i;   }
-        else             { s.className = 'step';        s.textContent = i;   }
+        if (i < n) {
+          s.className = 'step done';
+          s.textContent = '✓';
+        } else if (i === n) {
+          s.className = 'step active';
+          s.textContent = i;
+        } else {
+          s.className = 'step';
+          s.textContent = i;
+        }
         if (i < 3)
           document.getElementById('sl' + i).className = i < n ? 'step-line done' : 'step-line';
       });
@@ -391,27 +691,57 @@
       el.className = 'status-msg show ' + type;
     }
 
-    // ─── Enable Camera ───────────────────────────────────────────────────────────
-    //
-    // Root causes of AbortError / "Timeout starting video source":
-    //   1. Video element was hidden in DOM when srcObject was assigned
-    //   2. onloadedmetadata never fires if video is display:none
-    //   3. play() promise was rejected due to autoplay policy
-    //
-    // Fix strategy:
-    //   • Show videoWrap first (display:block) — then assign stream
-    //   • 100ms DOM settle timeout
-    //   • Await onloadedmetadata + play()
-    //   • Resolve even if play() rejects (ignore autoplay block)
-    //   • 8s safety timeout that resolves (not rejects)
-    //   • Fallback to plain { video: true } if facingMode fails
+    function hideMsg() {
+      document.getElementById('statusMsg').className = 'status-msg';
+    }
 
+    // ========== STEP 1: VERIFY EMPLOYEE ==========
+    function verifyEmployee() {
+      const empId = document.getElementById('empId').value.trim();
+      const empPw = document.getElementById('empPw').value.trim();
+
+      if (!empId || !empPw) {
+        showMsg('⚠️ Please enter Employee ID and Password.', 'error');
+        return;
+      }
+
+      const db = getEmployeeDB();
+      console.log('🔍 Employee DB loaded:', Object.keys(db).length, 'employees');
+
+      const employee = db[empId];
+
+      if (!employee) {
+        const available = Object.keys(db).join(', ');
+        showMsg(`❌ Employee "${empId}" not found. Available: ${available}`, 'error');
+        return;
+      }
+
+      if (employee.password !== empPw) {
+        showMsg('❌ Invalid password. Please try again.', 'error');
+        return;
+      }
+
+      // ✅ Employee verified - PROCEED TO CAMERA
+      verifiedEmployee = employee;
+      document.getElementById('empName').value = employee.name;
+      document.getElementById('nameDisplay').style.display = 'block';
+      showMsg(`✅ Welcome ${employee.name}! Now enable camera for verification.`, 'success');
+
+      // Show camera section
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('cameraSection').style.display = 'block';
+      setStep(2);
+
+      // Auto-enable camera after a short delay
+      setTimeout(enableCamera, 500);
+    }
+
+    // ========== STEP 2: CAMERA ==========
     async function enableCamera() {
-      const video     = document.getElementById('video');
+      const video = document.getElementById('video');
       const videoWrap = document.getElementById('videoWrap');
 
       try {
-        // Check support
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           showMsg('❌ Camera API not supported. Please use HTTPS and a modern browser.', 'error');
           return;
@@ -419,74 +749,58 @@
 
         showMsg('⏳ Starting camera, please wait...', 'warning');
 
-        // STEP 1 — Show video element first (AbortError fix)
         videoWrap.classList.add('active');
-
-        // STEP 2 — Allow DOM to settle
         await new Promise(r => setTimeout(r, 100));
 
-        // STEP 3 — Get stream; fallback if facingMode fails
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
             audio: false
           });
         } catch (constraintErr) {
-          console.warn('facingMode constraint failed, trying basic video:', constraintErr.message);
+          console.warn('facingMode failed, trying basic video:', constraintErr.message);
           stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         }
 
-        // STEP 4 — Assign stream
         video.srcObject = stream;
 
-        // STEP 5 — Wait for video to be ready
         await new Promise((resolve) => {
           video.onloadedmetadata = () => {
             video.play()
               .then(resolve)
               .catch(err => {
-                // Autoplay blocked — ignore, video usually plays anyway
-                console.warn('play() blocked (autoplay policy):', err.message);
+                console.warn('play() blocked:', err.message);
                 resolve();
               });
           };
-          // 8 second safety net — resolve (not reject)
-          // (stream received, video may start slightly late)
           setTimeout(resolve, 8000);
         });
 
-        // STEP 6 — Update UI
-        document.getElementById('enableBtn').style.display  = 'none';
-        document.getElementById('captureBtn').style.display = 'flex';
-        document.getElementById('captureBtn').classList.remove('btn-disabled');
+        document.getElementById('enableBtn').classList.add('btn-hidden');
+        document.getElementById('captureBtn').classList.remove('btn-hidden');
         setStep(2);
-        showMsg('✅ Camera ready! Please position your face and capture.', 'success');
+        showMsg('✅ Camera ready! Position your face and capture.', 'success');
 
       } catch (e) {
-        // Cleanup on error
-        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        if (stream) {
+          stream.getTracks().forEach(t => t.stop());
+          stream = null;
+        }
         videoWrap.classList.remove('active');
 
         const errorMap = {
-          NotAllowedError           : '❌ Camera permission denied. Please allow camera access in your browser settings.',
-          PermissionDeniedError     : '❌ Camera permission denied. Please allow camera access in your browser settings.',
-          NotFoundError             : '❌ No camera found on this device.',
-          DevicesNotFoundError      : '❌ No camera found on this device.',
-          NotReadableError          : '❌ Camera is being used by another app. Please close Zoom/Teams/Meet and retry.',
-          TrackStartError           : '❌ Camera is being used by another app. Please close other apps and retry.',
-          OverconstrainedError      : '❌ Camera constraints not supported. Please retry.',
-          ConstraintNotSatisfiedError: '❌ Camera constraints not supported. Please retry.',
-          AbortError                : '❌ Camera could not start (AbortError). Please restart your browser or try a different one.',
-          SecurityError             : '❌ Security error — please use HTTPS.',
+          NotAllowedError: '❌ Camera permission denied. Please allow camera access.',
+          NotFoundError: '❌ No camera found on this device.',
+          NotReadableError: '❌ Camera is being used by another app.',
+          AbortError: '❌ Camera could not start. Please restart your browser.',
         };
-        const msg = errorMap[e.name] || `❌ Camera error: ${e.name} — ${e.message}`;
+        const msg = errorMap[e.name] || `❌ Camera error: ${e.message}`;
         showMsg(msg, 'error');
-        console.error('Camera error detail:', e.name, e.message, e);
+        console.error('Camera error:', e.name, e.message);
       }
     }
 
-    // ─── Capture Photo ───────────────────────────────────────────────────────────
-
+    // ========== CAPTURE PHOTO ==========
     async function capturePhoto() {
       const video = document.getElementById('video');
 
@@ -495,64 +809,63 @@
         return;
       }
       if (!video.videoWidth || !video.videoHeight) {
-        showMsg('⏳ Video still loading, please wait a moment...', 'warning');
+        showMsg('⏳ Video still loading, please wait...', 'warning');
         return;
       }
 
       const canvas = document.getElementById('canvas');
-      canvas.width  = video.videoWidth;
+      canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext('2d').drawImage(video, 0, 0);
       capturedData = canvas.toDataURL('image/jpeg', 0.92);
 
       document.getElementById('photo').src = capturedData;
 
-      // Stop stream
       stream.getTracks().forEach(t => t.stop());
       stream = null;
 
-      // Toggle UI
       document.getElementById('videoWrap').classList.remove('active');
       document.getElementById('photoWrap').classList.add('active');
-      document.getElementById('captureBtn').style.display  = 'none';
-      document.getElementById('retakeBtn').style.display   = 'flex';
-      document.getElementById('continueBtn').style.display = 'flex';
+      document.getElementById('captureBtn').classList.add('btn-hidden');
+      document.getElementById('retakeBtn').classList.remove('btn-hidden');
+      document.getElementById('continueBtn').classList.remove('btn-hidden');
       setStep(3);
 
       showMsg('⏳ Fetching your location...', 'warning');
       await fetchLocation();
 
-      showMsg('✅ Photo and location verified! Redirecting...', 'success');
-      setTimeout(() => continueToLogin(), 1500);
+      showMsg('✅ Photo and location captured! Click "Go to Dashboard" to continue.', 'success');
     }
 
-    // ─── Retake ──────────────────────────────────────────────────────────────────
-
+    // ========== RETAKE ==========
     function retake() {
       capturedData = null;
       locationData = null;
 
-      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
 
       document.getElementById('photoWrap').classList.remove('active');
       document.getElementById('videoWrap').classList.remove('active');
       document.getElementById('locationBox').classList.remove('show');
-      document.getElementById('retakeBtn').style.display   = 'none';
-      document.getElementById('continueBtn').style.display = 'none';
-      document.getElementById('enableBtn').style.display   = 'flex';
-      document.getElementById('statusMsg').className       = 'status-msg';
-      setStep(1);
+      document.getElementById('retakeBtn').classList.add('btn-hidden');
+      document.getElementById('continueBtn').classList.add('btn-hidden');
+      document.getElementById('enableBtn').classList.remove('btn-hidden');
+      document.getElementById('statusMsg').className = 'status-msg';
+      setStep(2);
+      showMsg('📷 Retake your photo. Click "Enable Camera" when ready.', 'warning');
     }
 
-    // ─── Fetch Location ──────────────────────────────────────────────────────────
-
+    // ========== FETCH LOCATION ==========
     async function fetchLocation() {
       const box = document.getElementById('locationBox');
       box.classList.add('show');
       document.getElementById('locationAddress').textContent = '⏳ Fetching precise GPS location...';
 
       if (!navigator.geolocation) {
-        document.getElementById('locationAddress').textContent = 'Geolocation is not supported.';
+        document.getElementById('locationAddress').textContent = 'Geolocation not supported.';
         locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
         return;
       }
@@ -575,35 +888,30 @@
 
         try {
           const r = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18&extratags=1&namedetails=1`,
-            { headers: { 'Accept': 'application/json', 'User-Agent': 'MevtenciaAttendanceApp/1.0' } }
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`,
+            { headers: { 'Accept': 'application/json', 'User-Agent': 'MevtenciaApp/1.0' } }
           );
           const d = await r.json();
 
           if (d && d.address) {
             const a = d.address;
             const landmark =
-              a.building || a.office || a.amenity || a.shop || a.tourism || a.industrial ||
-              a.leisure || a.house_name || a.residential || a.apartments || a.mall ||
-              a.hotel || a.theatre || a.school || a.college || a.university ||
-              a.hospital || a.government || a.public_building || a.retail ||
-              a.bank || a.restaurant || a.cafe || a.fast_food || a.clinic || a.pharmacy ||
-              a.commercial || a.warehouse || a.chapel || a.place_of_worship || a.clubhouse || '';
+              a.building || a.office || a.amenity || a.shop || a.tourism ||
+              a.house_name || a.residential || a.apartments || a.mall ||
+              a.hotel || a.school || a.college || a.university || '';
 
             const parts = [
               landmark,
               a.house_number || '',
-              a.road || a.pedestrian || '',
-              a.suburb || a.neighbourhood || '',
+              a.road || '',
+              a.suburb || '',
               a.city || a.town || a.village || '',
-              a.state_district || '',
               a.state || '',
               a.postcode || ''
             ].filter(Boolean);
 
             address = parts.join(', ');
-
-            if (d.display_name && (landmark === '' || d.display_name.length > address.length)) {
+            if (d.display_name && address.length < 20) {
               address = d.display_name;
             }
           }
@@ -615,35 +923,72 @@
         document.getElementById('locationAddress').textContent = address;
 
         const verLink = document.getElementById('locVerifyLink');
-        verLink.href          = `https://www.google.com/maps?q=${lat},${lng}`;
+        verLink.href = `https://www.google.com/maps?q=${lat},${lng}`;
         verLink.style.display = 'inline-block';
 
       } catch (e) {
         document.getElementById('locationAddress').textContent =
-          'Location not available. Please enable GPS.';
+          '⚠️ Location not available. Please enable GPS.';
         locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
         showMsg('⚠️ GPS unavailable — Please enable high-accuracy location.', 'warning');
       }
     }
 
-    // ─── Continue to Login ───────────────────────────────────────────────────────
-
-    function continueToLogin() {
+    // ========== STEP 3: CONTINUE TO DASHBOARD ==========
+    function continueToDashboard() {
       if (!capturedData) {
         showMsg('❌ Please capture your photo first.', 'error');
         return;
       }
-      localStorage.setItem('mev_capturedPhoto',    capturedData);
+
+      if (!verifiedEmployee) {
+        showMsg('❌ Verification failed. Please login again.', 'error');
+        return;
+      }
+
+      // Store session data
+      localStorage.setItem('mev_employeeSession', JSON.stringify({
+        empId: verifiedEmployee.id,
+        empName: verifiedEmployee.name,
+        photo: capturedData,
+        location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
+        loginAt: new Date().toISOString()
+      }));
+
+      // Store for attendance
+      localStorage.setItem('mev_capturedPhoto', capturedData);
       localStorage.setItem('mev_capturedLocation', JSON.stringify(locationData || { address: 'Unknown', lat: 0, lng: 0 }));
-      localStorage.setItem('mev_captureAt',        new Date().toISOString());
-      window.location.href = 'EmployeeProfile.html';
+
+      showMsg('✅ Login successful! Redirecting to dashboard...', 'success');
+
+      setTimeout(() => {
+        window.location.href = 'EmployeeDashboard.html';
+      }, 1000);
     }
 
-    // ─── Cleanup on page leave ───────────────────────────────────────────────────
+    // ========== ENTER KEY SUPPORT ==========
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        if (document.getElementById('loginForm').style.display !== 'none') {
+          verifyEmployee();
+        }
+      }
+    });
 
+    // ========== CLEANUP ==========
     window.addEventListener('beforeunload', () => {
       if (stream) stream.getTracks().forEach(t => t.stop());
     });
+
+    // ========== INIT ==========
+    // Initialize DB on load
+    const db = initEmployeeDB();
+    console.log('✅ Employee DB initialized with', Object.keys(db).length, 'employees');
+    console.log('📋 Available IDs:', Object.keys(db).join(', '));
+
+    // Set default values for demo
+    document.getElementById('empId').value = 'MEV/336/2025';
+    document.getElementById('empPw').value = 'MEVRICK1707';
   </script>
 </body>
 
