@@ -152,6 +152,20 @@ app.post('/api/register', upload.any(), async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+///////////////////////////////
+app.patch('/api/admins/:adminId', async (req, res) => {
+  try {
+    const { assigned_employees, permissions } = req.body;
+    const admin = await Admin.findOneAndUpdate(
+      { admin_id: req.params.adminId },
+      { $set: { assigned_employees, permissions } },
+      { new: true }
+    );
+    if (!admin) return res.status(404).json({ error: 'Admin not found' });
+    res.json({ success: true, admin });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+//////////////////////////////
 app.delete('/api/employees/:empId', async (req, res) => {
   try {
     await Employee.deleteOne({ emp_id: decodeURIComponent(req.params.empId) });

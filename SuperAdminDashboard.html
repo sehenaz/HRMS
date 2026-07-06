@@ -1123,6 +1123,14 @@
             <label>👥 Assign Employees Under This Admin</label>
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
               <input type="text" id="adminEmpSearch" placeholder="🔍 Search employees..." oninput="renderEmployeePicker()" style="flex:1;min-width:200px;" />
+              <button type="button" id="selectAllBtn" onclick="toggleSelectAll()"
+                style="background:#3f51b5;color:white;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                ✅ Select All
+              </button>
+              <button type="button" onclick="deselectAll()"
+                style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                ✕ Clear
+              </button>
               <span style="font-size:12px;color:#888;" id="selectedCount">0 selected</span>
             </div>
             <div id="employeePicker" style="border:2px solid #e0e0e0;border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;margin-top:5px;">
@@ -1574,6 +1582,39 @@
         selectedEmployeeIds.add(id);
       }
       updateSelectedDisplay();
+      updateSelectAllBtn();
+    }
+
+    function toggleSelectAll() {
+      const db = getEmployeeDB();
+      const allIds = Object.values(db).map(e => e.id);
+      const allSelected = allIds.every(id => selectedEmployeeIds.has(id));
+      if (allSelected) {
+        allIds.forEach(id => selectedEmployeeIds.delete(id));
+      } else {
+        allIds.forEach(id => selectedEmployeeIds.add(id));
+      }
+      renderEmployeePicker();
+      updateSelectedDisplay();
+      updateSelectAllBtn();
+    }
+
+    function deselectAll() {
+      selectedEmployeeIds.clear();
+      renderEmployeePicker();
+      updateSelectedDisplay();
+      updateSelectAllBtn();
+    }
+
+    function updateSelectAllBtn() {
+      const db = getEmployeeDB();
+      const allIds = Object.values(db).map(e => e.id);
+      const allSelected = allIds.length > 0 && allIds.every(id => selectedEmployeeIds.has(id));
+      const btn = document.getElementById('selectAllBtn');
+      if (btn) {
+        btn.textContent = allSelected ? '☑ All Selected' : '✅ Select All';
+        btn.style.background = allSelected ? '#10b981' : '#3f51b5';
+      }
     }
 
     function updateSelectedDisplay() {
