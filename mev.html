@@ -532,6 +532,7 @@
           <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()">📷 Enable Camera</button>
           <button class="btn btn-primary btn-hidden" id="captureBtn" onclick="capturePhoto()">✓ Capture Photo</button>
           <button class="btn btn-secondary btn-hidden" id="retakeBtn" onclick="retake()">↩ Retake</button>
+          <button class="btn btn-secondary btn-hidden" id="profileBtn" onclick="goToProfile()">👤 View Profile</button>
           <button class="btn btn-success btn-hidden" id="continueBtn" onclick="continueToDashboard()">📊 Go to Dashboard</button>
         </div>
       </div>
@@ -546,6 +547,8 @@
     let capturedData = null;
     let locationData = null;
     let verifiedEmployee = null;
+    let isAdminEmployee = false;
+    let linkedAdminInfo = null;
 
     // ========== EMPLOYEE DATABASE ==========
     // Default employees data - this will be used if localStorage is empty
@@ -646,6 +649,18 @@
         return JSON.parse(stored);
       } catch (e) {
         return initEmployeeDB();
+      }
+    }
+
+    // Looks up whether this employee ID was picked (by the Super Admin) as
+    // the "source employee" of an Admin account. If so, this person should
+    // land on AdminDashboard.html instead of the normal AttendanceTracker.
+    function checkIfAdmin(empId) {
+      try {
+        const admins = JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
+        return admins.find(a => a.sourceEmployeeId === empId) || null;
+      } catch (e) {
+        return null;
       }
     }
 
@@ -828,19 +843,33 @@
       document.getElementById('photoWrap').classList.add('active');
       document.getElementById('captureBtn').classList.add('btn-hidden');
       document.getElementById('retakeBtn').classList.remove('btn-hidden');
+      document.getElementById('profileBtn').classList.remove('btn-hidden');
       document.getElementById('continueBtn').classList.remove('btn-hidden');
       setStep(3);
+
+      // Figure out whether this employee is also linked to an Admin account
+      linkedAdminInfo = checkIfAdmin(verifiedEmployee.id);
+      isAdminEmployee = !!linkedAdminInfo;
+      document.getElementById('continueBtn').textContent =
+        isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
 
       showMsg('⏳ Fetching your location...', 'warning');
       await fetchLocation();
 
-      showMsg('✅ Photo and location captured! Click "Go to Dashboard" to continue.', 'success');
+      showMsg(
+        isAdminEmployee
+          ? '✅ Photo and location captured! You can view your profile or continue to the Admin Dashboard.'
+          : '✅ Photo and location captured! Click "Go to Dashboard" to continue.',
+        'success'
+      );
     }
 
     // ========== RETAKE ==========
     function retake() {
       capturedData = null;
       locationData = null;
+      isAdminEmployee = false;
+      linkedAdminInfo = null;
 
       if (stream) {
         stream.getTracks().forEach(t => t.stop());
@@ -851,7 +880,9 @@
       document.getElementById('videoWrap').classList.remove('active');
       document.getElementById('locationBox').classList.remove('show');
       document.getElementById('retakeBtn').classList.add('btn-hidden');
+      document.getElementById('profileBtn').classList.add('btn-hidden');
       document.getElementById('continueBtn').classList.add('btn-hidden');
+      document.getElementById('continueBtn').textContent = '📊 Go to Dashboard';
       document.getElementById('enableBtn').classList.remove('btn-hidden');
       document.getElementById('statusMsg').className = 'status-msg';
       setStep(2);
@@ -959,11 +990,42 @@
       localStorage.setItem('mev_capturedPhoto', capturedData);
       localStorage.setItem('mev_capturedLocation', JSON.stringify(locationData || { address: 'Unknown', lat: 0, lng: 0 }));
 
-      showMsg('✅ Login successful! Redirecting to dashboard...', 'success');
+      // If this employee is also linked to an Admin account, log them into
+      // the Admin Dashboard too (same data the Super Admin already created
+      // for them via "Manage Admins" — id, password, assignedEmpIds).
+      if (isAdminEmployee && linkedAdminInfo) {
+        localStorage.setItem('mev_adminSession', JSON.stringify({
+          type: 'admin',
+          id: linkedAdminInfo.id,
+          name: linkedAdminInfo.employeeName,
+          assignedEmpIds: Array.isArray(linkedAdminInfo.assignedEmpIds) ? linkedAdminInfo.assignedEmpIds : [],
+          loginAt: new Date().toISOString()
+        }));
+      }
 
-      setTimeout(() => {
-        window.location.href = 'AttendanceTracker.html';
-      }, 1000);
+      showMsg(
+        isAdminEmployee ? '✅ Login successful! Redirecting to Admin Dashboard...' : '✅ Login successful! Redirecting to dashboard...',
+        'success'
+      );
+
+      window.location.href = isAdminEmployee ? 'AdminDashboard.html' : 'AttendanceTracker.html';
+    }
+
+    // ========== VIEW PROFILE ==========
+    function goToProfile() {
+      if (!verifiedEmployee) {
+        showMsg('❌ Please verify your login first.', 'error');
+        return;
+      }
+      // Save session so Profile.html knows who's viewing, same as continueToDashboard()
+      localStorage.setItem('mev_employeeSession', JSON.stringify({
+        empId: verifiedEmployee.id,
+        empName: verifiedEmployee.name,
+        photo: capturedData || '',
+        location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
+        loginAt: new Date().toISOString()
+      }));
+      window.location.href = 'Profile.html';
     }
 
     // ========== ENTER KEY SUPPORT ==========

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#3f51b5" />
+  <title>MEVTENCIA — My Profile</title>
+  <link rel="icon" href="assets/logo.png" type="image/x-icon">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .navbar {
+      background-color: #3f51b5;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo { color: white; font-size: 20px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+    .logo img { height: 45px; width: 45px; object-fit: contain; background: white; border-radius: 50%; padding: 5px; }
+
+    .nav-links { list-style: none; display: flex; gap: 10px; }
+    .nav-links a {
+      color: white; text-decoration: none; font-size: 12px;
+      padding: 8px 10px; border-radius: 999px; background: rgba(255,255,255,0.12);
+      transition: background 0.2s;
+    }
+    .nav-links a:hover { background: rgba(255,255,255,0.25); }
+
+    .container { max-width: 560px; margin: 30px auto 50px; padding: 0 20px; }
+
+    /* Header / photo card */
+    .profile-header {
+      background: white;
+      border-radius: 20px;
+      padding: 30px 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .photo-wrap-outer {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 16px;
+    }
+
+    .profile-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #e0e7ff;
+      background: #eef2ff;
+      display: block;
+    }
+
+    .photo-edit-btn {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #3f51b5;
+      color: white;
+      border: 3px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+
+    .profile-header h2 { color: #222; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .profile-header .emp-id { color: #888; font-size: 12px; font-family: monospace; margin-bottom: 10px; }
+
+    .role-badge {
+      display: inline-block;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .role-badge.employee { background: #e0f2fe; color: #0369a1; }
+    .role-badge.admin     { background: #ede9fe; color: #5b21b6; }
+
+    /* Main form card */
+    .main-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 5px; }
+
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .form-group input:focus { border-color: #3f51b5; }
+    .form-group input[readonly] { background: #f5f7fa; color: #777; cursor: not-allowed; }
+
+    .pw-row { display: flex; gap: 8px; }
+    .pw-row input { flex: 1; }
+    .pw-toggle {
+      padding: 0 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      color: #555;
+    }
+    .pw-toggle:hover { border-color: #3f51b5; color: #3f51b5; }
+
+    .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+
+    .btn {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary  { background: linear-gradient(135deg, #3f51b5, #5c6bc0); color: white; }
+    .btn-success  { background: linear-gradient(135deg, #4caf50, #388e3c); color: white; }
+    .btn-purple   { background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; }
+    .btn-outline  { background: white; color: #555; border: 2px solid #e0e0e0; }
+    .btn-outline:hover { border-color: #e53935; color: #e53935; }
+    .btn-block { width: 100%; }
+
+    .status-msg {
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 14px;
+      display: none;
+      line-height: 1.5;
+    }
+    .status-msg.show { display: block; }
+    .status-msg.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .status-msg.error   { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    input[type="file"] { display: none; }
+
+    @media (max-width: 600px) {
+      .container { margin: 15px auto 30px; padding: 0 12px; }
+      .main-card, .profile-header { padding: 18px; }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <a class="logo" href="index.html">
+      <img src="assets/logo.png" alt="Mevrick Logo" />
+      MEVTENCIA
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="mev.html">Employee Login</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+
+    <div class="profile-header">
+      <div class="photo-wrap-outer">
+        <img class="profile-photo" id="profilePhoto" src="" alt="Profile Photo" />
+        <div class="photo-edit-btn" onclick="document.getElementById('photoInput').click()" title="Change Photo">📷</div>
+        <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoChange(event)" />
+      </div>
+      <h2 id="profName">—</h2>
+      <div class="emp-id" id="profEmpId">—</div>
+      <span class="role-badge employee" id="roleBadge">Employee</span>
+    </div>
+
+    <div class="main-card">
+      <div class="section-label">Your Details</div>
+
+      <div class="form-group">
+        <label>Designation / Department</label>
+        <input type="text" id="fldDesignation" placeholder="e.g. Sales Executive" />
+      </div>
+
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="fldPhone" placeholder="e.g. 98765 43210" />
+      </div>
+
+      <div class="form-group">
+        <label>City</label>
+        <input type="text" id="fldCity" placeholder="e.g. Kolkata" />
+      </div>
+
+      <div class="form-group">
+        <label>Employee ID</label>
+        <input type="text" id="fldEmpId" readonly />
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <div class="pw-row">
+          <input type="password" id="fldPassword" placeholder="Your password" />
+          <button type="button" class="pw-toggle" onclick="togglePwVisibility()" id="pwToggleBtn">👁 Show</button>
+        </div>
+      </div>
+
+      <div class="form-group" id="adminIdGroup" style="display:none;">
+        <label>Admin Login ID (used on Admin Login page)</label>
+        <input type="text" id="fldAdminId" readonly />
+      </div>
+
+      <button class="btn btn-success btn-block" onclick="saveProfile()">💾 Save Changes</button>
+
+      <div class="status-msg" id="statusMsg"></div>
+    </div>
+
+    <div class="main-card">
+      <div class="section-label">Go To</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="window.location.href='AttendanceTracker.html'">📊 Attendance Dashboard</button>
+        <button class="btn btn-purple" id="adminDashBtn" style="display:none;" onclick="window.location.href='AdminDashboard.html'">🛠️ Admin Dashboard</button>
+      </div>
+      <div class="btn-group" style="margin-top:12px;">
+        <button class="btn btn-outline btn-block" onclick="doLogout()">🚪 Logout</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ========== STATE ==========
+    let currentEmpId = null;
+    let pendingPhoto = null; // base64 of newly chosen photo, committed on Save
+    let isAdminLinked = false;
+    let linkedAdmin = null;
+
+    // ========== HELPERS ==========
+    function getEmployeeDB() {
+      try { return JSON.parse(localStorage.getItem('mev_employeeDB') || '{}'); }
+      catch (e) { return {}; }
+    }
+    function saveEmployeeDB(db) {
+      localStorage.setItem('mev_employeeDB', JSON.stringify(db));
+    }
+    function checkIfAdmin(empId) {
+      try {
+        const admins = JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
+        return admins.find(a => a.sourceEmployeeId === empId) || null;
+      } catch (e) { return null; }
+    }
+    function showMsg(msg, type) {
+      const el = document.getElementById('statusMsg');
+      el.textContent = msg;
+      el.className = 'status-msg show ' + type;
+    }
+
+    // ========== INIT ==========
+    function init() {
+      const empSession = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
+      const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+
+      if (empSession && empSession.empId) {
+        currentEmpId = empSession.empId;
+      } else if (adminSession && adminSession.type === 'admin') {
+        // Reached Profile.html via AdminDashboard.html without an employee
+        // session — resolve identity from the admin's linked source employee.
+        const admins = JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
+        const adm = admins.find(a => a.id === adminSession.id);
+        if (adm && adm.sourceEmployeeId) {
+          currentEmpId = adm.sourceEmployeeId;
+        }
+      }
+
+      if (!currentEmpId) {
+        window.location.href = 'mev.html';
+        return;
+      }
+
+      const db = getEmployeeDB();
+      const emp = db[currentEmpId] || { id: currentEmpId, name: (empSession && empSession.empName) || (adminSession && adminSession.name) || 'Unknown', password: '', dept: '', city: '' };
+
+      document.getElementById('profName').textContent = emp.name || 'Unknown';
+      document.getElementById('profEmpId').textContent = currentEmpId;
+      document.getElementById('fldEmpId').value = currentEmpId;
+      document.getElementById('fldDesignation').value = emp.dept || '';
+      document.getElementById('fldPhone').value = emp.phone || '';
+      document.getElementById('fldCity').value = emp.city || '';
+      document.getElementById('fldPassword').value = emp.password || '';
+
+      // Profile photo: prefer a saved profile photo, else fall back to the
+      // most recent attendance capture, else a neutral placeholder.
+      const photoSrc = emp.photo || (empSession && empSession.photo) || '';
+      document.getElementById('profilePhoto').src = photoSrc ||
+        'data:image/svg+xml;utf8,' + encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#c7d2fe"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`
+        );
+
+      // Admin link check
+      linkedAdmin = checkIfAdmin(currentEmpId);
+      isAdminLinked = !!linkedAdmin;
+      if (isAdminLinked) {
+        document.getElementById('roleBadge').textContent = '🛠️ Admin';
+        document.getElementById('roleBadge').className = 'role-badge admin';
+        document.getElementById('adminIdGroup').style.display = 'block';
+        document.getElementById('fldAdminId').value = linkedAdmin.id;
+        document.getElementById('adminDashBtn').style.display = 'block';
+      } else {
+        document.getElementById('roleBadge').textContent = 'Employee';
+        document.getElementById('roleBadge').className = 'role-badge employee';
+        document.getElementById('adminIdGroup').style.display = 'none';
+        document.getElementById('adminDashBtn').style.display = 'none';
+      }
+    }
+
+    // ========== PHOTO ==========
+    function handlePhotoChange(evt) {
+      const file = evt.target.files[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showMsg('⚠️ Please choose an image file.', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        pendingPhoto = e.target.result;
+        document.getElementById('profilePhoto').src = pendingPhoto;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ========== PASSWORD VISIBILITY ==========
+    function togglePwVisibility() {
+      const fld = document.getElementById('fldPassword');
+      const btn = document.getElementById('pwToggleBtn');
+      if (fld.type === 'password') {
+        fld.type = 'text';
+        btn.textContent = '🙈 Hide';
+      } else {
+        fld.type = 'password';
+        btn.textContent = '👁 Show';
+      }
+    }
+
+    // ========== SAVE ==========
+    function saveProfile() {
+      const designation = document.getElementById('fldDesignation').value.trim();
+      const phone = document.getElementById('fldPhone').value.trim();
+      const city = document.getElementById('fldCity').value.trim();
+      const password = document.getElementById('fldPassword').value.trim();
+
+      if (!password) {
+        showMsg('⚠️ Password cannot be empty.', 'error');
+        return;
+      }
+
+      const db = getEmployeeDB();
+      const existing = db[currentEmpId] || { id: currentEmpId, name: document.getElementById('profName').textContent };
+
+      const updated = {
+        ...existing,
+        id: currentEmpId,
+        name: existing.name,
+        password,
+        dept: designation,
+        phone,
+        city,
+        photo: pendingPhoto || existing.photo || ''
+      };
+
+      db[currentEmpId] = updated;
+      saveEmployeeDB(db);
+
+      // Keep the live session's photo in sync too, so other pages that read
+      // mev_employeeSession show the newest picture immediately.
+      try {
+        const session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
+        if (session) {
+          session.photo = updated.photo || session.photo;
+          session.empName = updated.name;
+          localStorage.setItem('mev_employeeSession', JSON.stringify(session));
+        }
+      } catch (e) { /* ignore */ }
+
+      // Best-effort sync to the backend (same endpoint AdminDashboard.html's
+      // Credentials manager uses). Safe to fail silently if offline.
+      fetch('/api/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emp_id: currentEmpId,
+          employee_name: updated.name,
+          password: updated.password,
+          dept: updated.dept,
+          city: updated.city,
+          phone: updated.phone,
+          photo: updated.photo,
+          work_location: updated.city,
+          employee_type: 'Full Time'
+        })
+      }).then(() => console.log('✅ Profile synced to MongoDB'))
+        .catch(e => console.warn('Profile MongoDB sync failed (offline?):', e.message));
+
+      pendingPhoto = null;
+      showMsg('✅ Profile updated successfully!', 'success');
+    }
+
+    // ========== LOGOUT ==========
+    function doLogout() {
+      localStorage.removeItem('mev_employeeSession');
+      localStorage.removeItem('mev_adminSession');
+      localStorage.removeItem('mev_capturedPhoto');
+      localStorage.removeItem('mev_capturedLocation');
+      window.location.href = 'mev.html';
+    }
+
+    init();
+  </script>
+</body>
+
+</html>
