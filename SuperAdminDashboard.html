@@ -1804,6 +1804,7 @@
             </div>
             <div class="admin-employees" style="margin-top:8px;">${empTags}</div>
             <div class="admin-actions" onclick="event.stopPropagation()">
+              <button class="btn-edit" onclick="openEditAdmin('${loginId}')">✏️ Edit Admin</button>
               <button class="btn-delete" onclick="deleteAdmin('${loginId}')">🗑️ Remove Admin</button>
             </div>
           </div>
@@ -1898,8 +1899,206 @@
     populateEmpDropdown();
     renderRecords();
     setInterval(renderRecords, 30000);
+    // ── EDIT ADMIN ──────────────────────────────────────────
+    let editingAdminId  = null;
+    let editSelectedIds = new Set();
+
+    async function openEditAdmin(adminId) {
+      editingAdminId = adminId;
+      try {
+        const res    = await fetch(`${SERVER_URL}/api/admins`);
+        const admins = await res.json();
+        const admin  = admins.find(a => (a.admin_id || a.id) === adminId);
+        if (!admin) { showToast('Admin not found', '#e53935'); return; }
+
+        document.getElementById('editAdminTitle').textContent =
+          admin.employee_name || admin.employeeName || adminId;
+
+        const perms = admin.permissions || { attendance: true, leave: false, salary: false };
+        document.getElementById('editPermAttendance').checked = !!perms.attendance;
+        document.getElementById('editPermLeave').checked      = !!perms.leave;
+        document.getElementById('editPermSalary').checked     = !!perms.salary;
+
+        const assigned = admin.assigned_employees || admin.assignedEmpIds || [];
+        editSelectedIds = new Set(assigned);
+
+        renderEditPicker();
+        updateEditCount();
+
+        document.getElementById('editAdminOverlay').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      } catch (e) {
+        showToast('Failed to load admin: ' + e.message, '#e53935');
+      }
+    }
+
+    function closeEditAdmin() {
+      document.getElementById('editAdminOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+      editingAdminId = null;
+      editSelectedIds = new Set();
+      document.getElementById('editEmpSearch').value = '';
+    }
+
+    function renderEditPicker() {
+      const db     = getEmployeeDB();
+      const search = (document.getElementById('editEmpSearch')?.value || '').toLowerCase();
+      const picker = document.getElementById('editEmpPicker');
+      let entries  = Object.values(db);
+      if (search) entries = entries.filter(e =>
+        (e.name||'').toLowerCase().includes(search) ||
+        (e.id||'').toLowerCase().includes(search)
+      );
+      if (!entries.length) {
+        picker.innerHTML = '<div style="padding:20px;text-align:center;color:#a0aec0;">No employees found.</div>';
+        return;
+      }
+      picker.innerHTML = entries.map(e => `
+        <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer;background:${editSelectedIds.has(e.id)?'#e8f5e9':'transparent'};"
+          onmouseover="this.style.background='${editSelectedIds.has(e.id)?'#c8e6c9':'#f8fafc'}'"
+          onmouseout="this.style.background='${editSelectedIds.has(e.id)?'#e8f5e9':'transparent'}'">
+          <input type="checkbox" value="${e.id}" ${editSelectedIds.has(e.id)?'checked':''}
+            onchange="toggleEditEmp('${e.id}')"
+            style="width:16px;height:16px;accent-color:#3f51b5;" />
+          <span style="font-size:0.9rem;flex:1;">${e.name||'—'}
+            <span style="color:#94a3b8;font-family:monospace;font-size:0.78rem;">(${e.id})</span>
+          </span>
+          ${editSelectedIds.has(e.id)?'<span style="color:#10b981;font-size:0.75rem;font-weight:700;">✓</span>':''}
+        </label>`).join('');
+    }
+
+    function toggleEditEmp(id) {
+      if (editSelectedIds.has(id)) editSelectedIds.delete(id);
+      else editSelectedIds.add(id);
+      updateEditCount();
+      renderEditPicker();
+    }
+
+    function editSelectAll() {
+      Object.values(getEmployeeDB()).forEach(e => editSelectedIds.add(e.id));
+      renderEditPicker(); updateEditCount();
+    }
+
+    function editDeselectAll() {
+      editSelectedIds.clear();
+      renderEditPicker(); updateEditCount();
+    }
+
+    function updateEditCount() {
+      const el = document.getElementById('editSelectedCount');
+      if (el) el.textContent = `${editSelectedIds.size} employee${editSelectedIds.size!==1?'s':''} selected`;
+    }
+
+    async function saveEditAdmin() {
+      if (!editingAdminId) return;
+      const assigned = Array.from(editSelectedIds);
+      if (!assigned.length) { showToast('⚠️ Select at least one employee.', '#f59e0b'); return; }
+
+      const permissions = {
+        attendance: document.getElementById('editPermAttendance').checked,
+        leave:      document.getElementById('editPermLeave').checked,
+        salary:     document.getElementById('editPermSalary').checked,
+      };
+
+      try {
+        // Try PATCH first
+        let res = await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(editingAdminId)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ assigned_employees: assigned, permissions })
+        });
+
+        if (!res.ok) {
+          // Fallback: delete + recreate
+          const allAdmins = await (await fetch(`${SERVER_URL}/api/admins`)).json();
+          const admin = allAdmins.find(a => (a.admin_id||a.id) === editingAdminId);
+          if (admin) {
+            await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(editingAdminId)}`, { method: 'DELETE' });
+            await fetch(`${SERVER_URL}/api/admins`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                admin_id:           editingAdminId,
+                password:           admin.password,
+                employee_id:        admin.employee_id,
+                employee_name:      admin.employee_name || admin.employeeName,
+                assigned_employees: assigned,
+                permissions
+              })
+            });
+          }
+        }
+
+        showToast('✅ Admin updated successfully!', '#10b981');
+        closeEditAdmin();
+        loadAdminsTab();
+      } catch (e) {
+        showToast('Error: ' + e.message, '#e53935');
+      }
+    }
+
+    document.getElementById('editAdminOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeEditAdmin();
+    });
+
     loadAdminsTab();
   </script>
-</body>
 
+<!-- ══ EDIT ADMIN MODAL ══════════════════════════════════ -->
+<div id="editAdminOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:20px;padding:30px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="color:#1e293b;font-size:1.1rem;">✏️ Edit Admin — <span id="editAdminTitle">—</span></h3>
+      <button onclick="closeEditAdmin()" style="background:#f1f5f9;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;font-weight:700;">✕</button>
+    </div>
+
+    <!-- Permissions -->
+    <div style="margin-bottom:20px;">
+      <div style="font-weight:700;font-size:0.9rem;color:#475569;margin-bottom:10px;">🔐 Permissions</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e8f5e9;padding:9px 16px;border-radius:10px;border:2px solid #a5d6a7;">
+          <input type="checkbox" id="editPermAttendance" style="width:16px;height:16px;accent-color:#2e7d32;" />
+          <span style="font-weight:600;color:#2e7d32;font-size:0.85rem;">📋 Attendance</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e3f2fd;padding:9px 16px;border-radius:10px;border:2px solid #90caf9;">
+          <input type="checkbox" id="editPermLeave" style="width:16px;height:16px;accent-color:#1565c0;" />
+          <span style="font-weight:600;color:#1565c0;font-size:0.85rem;">📅 Leave</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff3e0;padding:9px 16px;border-radius:10px;border:2px solid #ffcc80;">
+          <input type="checkbox" id="editPermSalary" style="width:16px;height:16px;accent-color:#e65100;" />
+          <span style="font-weight:600;color:#e65100;font-size:0.85rem;">💰 Salary</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Employees -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-weight:700;font-size:0.9rem;color:#475569;">👥 Assigned Employees</div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="editSelectAll()" style="background:#3f51b5;color:white;border:none;padding:5px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;">✅ All</button>
+          <button onclick="editDeselectAll()" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;">✕ Clear</button>
+        </div>
+      </div>
+      <input type="text" id="editEmpSearch" placeholder="🔍 Search employees..." oninput="renderEditPicker()"
+        style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;margin-bottom:8px;" />
+      <div id="editEmpPicker" style="border:2px solid #e0e0e0;border-radius:10px;padding:8px;max-height:220px;overflow-y:auto;"></div>
+      <div style="margin-top:8px;font-size:0.82rem;color:#64748b;font-weight:600;" id="editSelectedCount">0 selected</div>
+    </div>
+
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px;">
+      <button onclick="saveEditAdmin()" style="flex:1;padding:12px;background:linear-gradient(135deg,#3f51b5,#512da8);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.95rem;">
+        💾 Save Changes
+      </button>
+      <button onclick="closeEditAdmin()" style="padding:12px 20px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>
+
+</body>
 </html>
