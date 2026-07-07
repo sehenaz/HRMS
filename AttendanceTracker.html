@@ -279,7 +279,8 @@
     </div>
     <div class="nav-right">
       <ul class="nav-links">
-        <li><a href="SalaryHistory.html">Salary</a></li>
+        <li><a href="SalaryHistory.html">💰 Salary</a></li>
+        <li><a href="#" id="navAdminBtn" style="display:none;background:rgba(124,58,237,0.3);" onclick="goToAdminDashboard()">🛡️ Admin</a></li>
         <li><a href="mev.html" onclick="logout()">Logout</a></li>
       </ul>
     </div>
@@ -294,6 +295,11 @@
         <h3 id="empName">Employee</h3>
         <p id="empMeta">—</p>
         <div class="profile-location" id="empLocation" style="display:none;"></div>
+        <div id="adminBadge" style="display:none;margin-top:6px;">
+          <span onclick="goToAdminDashboard()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
+            🛡️ Admin — Click to open Dashboard
+          </span>
+        </div>
       </div>
     </div>
 
@@ -398,23 +404,20 @@
     let taskCount = 0;
 
     window.onload = async function () {
-      // Support both old 'mev_session' and new 'mev_employeeSession' key
+      // Support both session keys
       session = JSON.parse(localStorage.getItem('mev_session') || 'null');
       if (!session) {
-        // Try new session key from mev.html
         const empSession = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
         if (empSession) {
-          // Convert to expected format
           session = {
-            type:  'employee',
-            id:    empSession.empId,
-            name:  empSession.empName,
-            photo: empSession.photo || '',
-            city:  empSession.location?.city || '',
-            dept:  'Employee',
+            type:    'employee',
+            id:      empSession.empId,
+            name:    empSession.empName,
+            photo:   empSession.photo || '',
+            city:    empSession.location?.city || '',
+            dept:    'Employee',
             loginAt: empSession.loginAt
           };
-          // Save in expected format for rest of page
           localStorage.setItem('mev_session', JSON.stringify(session));
         }
       }
@@ -443,6 +446,9 @@
           }
         } catch (e) {}
       }
+
+      // Check if this employee is an Admin
+      await checkAndShowAdminBadge(session.id);
 
       setInterval(tickClock, 1000); tickClock();
       loadTodayState();
@@ -637,7 +643,7 @@
         if (localEmp && localEmp.salary) monthlySalary = parseInt(localEmp.salary);
       } catch (e) {}
       try {
-        const resp = await fetch('https://hrms-2-n4kt.onrender.com/api/employees');
+        const resp = await fetch('/api/employees');
         if (resp.ok) { const emps = await resp.json(); const me = emps.find(e => e.emp_id === session.id); if (me && me.salary) monthlySalary = parseInt(me.salary); }
       } catch (e) {}
 
@@ -657,12 +663,12 @@
     }
 
     // async function getRecordsFromBackend() {
-    //   const response = await fetch(`https://hrms-2-n4kt.onrender.com/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
+    //   const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
     //   if (!response.ok) throw new Error('Failed');
     //   return await response.json();
     // }
     async function getRecordsFromBackend() {
-      const response = await fetch(`https://hrms-2-n4kt.onrender.com/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
+      const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
       if (!response.ok) throw new Error('Failed');
       return await response.json();
     }
@@ -676,7 +682,7 @@
     //       work_hours: record.work_hours || '', attendance_type: record.attendance_type || 'In Progress',
     //       location: record.location, lat: record.lat || null, lng: record.lng || null, photo: record.photo
     //     };
-    //     await fetch('https://hrms-2-n4kt.onrender.com/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+    //     await fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     //   } catch (e) { console.error('Sync failed:', e); }
     // }
 
@@ -702,7 +708,7 @@
           tasks:           record.tasks || [],
           note:            record.note  || ''
         };
-        const resp = await fetch('https://hrms-2-n4kt.onrender.com/api/attendance', {
+        const resp = await fetch('/api/attendance', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
@@ -738,6 +744,45 @@
       if (clockInTime && !getRecord()?.clock_out) {
         document.getElementById('statHours').textContent = diffHM(now - clockInTime);
       }
+    }
+
+    // ── ADMIN CHECK ──────────────────────────────────────────
+    async function checkAndShowAdminBadge(empId) {
+      try {
+        const res    = await fetch('https://hrms-2-n4kt.onrender.com/api/admins');
+        if (!res.ok) return;
+        const admins = await res.json();
+        const admin  = admins.find(a =>
+          a.employee_id === empId || a.admin_id === empId
+        );
+
+        if (admin) {
+          // Save admin session
+          localStorage.setItem('mev_adminSession', JSON.stringify({
+            type:               'normal',
+            id:                 admin.admin_id || admin.id,
+            name:               admin.employee_name || admin.employeeName,
+            assigned_employees: admin.assigned_employees || admin.assignedEmpIds || [],
+            assignedEmpIds:     admin.assigned_employees || admin.assignedEmpIds || [],
+            permissions:        admin.permissions || { attendance: true, leave: false, salary: false },
+            loginAt:            new Date().toISOString()
+          }));
+
+          // Show Admin badge in profile
+          const badge = document.getElementById('adminBadge');
+          if (badge) badge.style.display = 'block';
+
+          // Show Admin button in navbar
+          const navBtn = document.getElementById('navAdminBtn');
+          if (navBtn) navBtn.style.display = '';
+        }
+      } catch (e) {
+        console.warn('Admin check failed:', e);
+      }
+    }
+
+    function goToAdminDashboard() {
+      window.location.href = 'AdminDashboard.html';
     }
 
     function getKey() { return `mev_att_${session.id}`; }
@@ -921,6 +966,7 @@
     function logout() {
       localStorage.removeItem('mev_session');
       localStorage.removeItem('mev_employeeSession');
+      localStorage.removeItem('mev_adminSession');
       localStorage.removeItem('mev_capturedPhoto');
       localStorage.removeItem('mev_capturedLocation');
       localStorage.removeItem('mev_captureAt');
