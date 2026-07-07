@@ -469,6 +469,8 @@
     <ul class="nav-links">
       <li><a href="index.html">Home</a></li>
       <li><a href="mev.html" class="active">Employee Login</a></li>
+      <li><a href="SalaryHistory.html" id="navSalary" style="display:none;">💰 Salary</a></li>
+      <li><a href="#" id="navAdminProfile" style="display:none;" onclick="goToAdminDashboard()">🛡️ Admin</a></li>
     </ul>
   </nav>
 
@@ -652,14 +654,20 @@
       }
     }
 
-    // Looks up whether this employee ID was picked (by the Super Admin) as
-    // the "source employee" of an Admin account. If so, this person should
-    // land on AdminDashboard.html instead of the normal AttendanceTracker.
-    function checkIfAdmin(empId) {
+    // Looks up whether this employee ID is an Admin in MongoDB
+    // Returns admin object if found, null otherwise
+    async function checkIfAdmin(empId) {
       try {
-        const admins = JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
-        return admins.find(a => a.sourceEmployeeId === empId) || null;
+        const res    = await fetch('https://hrms-2-n4kt.onrender.com/api/admins');
+        if (!res.ok) return null;
+        const admins = await res.json();
+        // Match by employee_id OR admin_id (since we use emp_id as admin_id)
+        return admins.find(a =>
+          a.employee_id === empId ||
+          a.admin_id    === empId
+        ) || null;
       } catch (e) {
+        console.warn('checkIfAdmin failed:', e);
         return null;
       }
     }
@@ -848,13 +856,26 @@
       setStep(3);
 
       // Figure out whether this employee is also linked to an Admin account
-      linkedAdminInfo = checkIfAdmin(verifiedEmployee.id);
+      showMsg('⏳ Checking admin status...', 'warning');
+      linkedAdminInfo = await checkIfAdmin(verifiedEmployee.id);
       isAdminEmployee = !!linkedAdminInfo;
+      document.getElementById('continueBtn').textContent =
+        isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
+
+      // Update profileBtn for admin
+      if (isAdminEmployee) {
+        document.getElementById('profileBtn').textContent = '🛡️ Admin Profile';
+      } else {
+        document.getElementById('profileBtn').textContent = '👤 View Profile';
+      }
       document.getElementById('continueBtn').textContent =
         isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
 
       showMsg('⏳ Fetching your location...', 'warning');
       await fetchLocation();
+
+      // Show navbar links (Salary + Admin if applicable)
+      showNavLinks();
 
       showMsg(
         isAdminEmployee
@@ -991,15 +1012,16 @@
       localStorage.setItem('mev_capturedLocation', JSON.stringify(locationData || { address: 'Unknown', lat: 0, lng: 0 }));
 
       // If this employee is also linked to an Admin account, log them into
-      // the Admin Dashboard too (same data the Super Admin already created
-      // for them via "Manage Admins" — id, password, assignedEmpIds).
+      // the Admin Dashboard too (MongoDB format)
       if (isAdminEmployee && linkedAdminInfo) {
         localStorage.setItem('mev_adminSession', JSON.stringify({
-          type: 'admin',
-          id: linkedAdminInfo.id,
-          name: linkedAdminInfo.employeeName,
-          assignedEmpIds: Array.isArray(linkedAdminInfo.assignedEmpIds) ? linkedAdminInfo.assignedEmpIds : [],
-          loginAt: new Date().toISOString()
+          type:               'normal',
+          id:                 linkedAdminInfo.admin_id || linkedAdminInfo.id,
+          name:               linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
+          assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
+          assignedEmpIds:     linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
+          permissions:        linkedAdminInfo.permissions || { attendance: true, leave: false, salary: false },
+          loginAt:            new Date().toISOString()
         }));
       }
 
@@ -1011,21 +1033,70 @@
       window.location.href = isAdminEmployee ? 'AdminDashboard.html' : 'AttendanceTracker.html';
     }
 
-    // ========== VIEW PROFILE ==========
+    // ========== VIEW PROFILE / ADMIN ==========
     function goToProfile() {
       if (!verifiedEmployee) {
         showMsg('❌ Please verify your login first.', 'error');
         return;
       }
-      // Save session so Profile.html knows who's viewing, same as continueToDashboard()
+
+      // Save session
       localStorage.setItem('mev_employeeSession', JSON.stringify({
-        empId: verifiedEmployee.id,
-        empName: verifiedEmployee.name,
-        photo: capturedData || '',
+        empId:    verifiedEmployee.id,
+        empName:  verifiedEmployee.name,
+        photo:    capturedData || '',
         location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
-        loginAt: new Date().toISOString()
+        loginAt:  new Date().toISOString()
       }));
+
+      // If admin — go to AdminDashboard
+      if (isAdminEmployee) {
+        goToAdminDashboard();
+        return;
+      }
+
       window.location.href = 'Profile.html';
+    }
+
+    function goToAdminDashboard() {
+      if (!verifiedEmployee) return;
+
+      // Save employee session
+      localStorage.setItem('mev_employeeSession', JSON.stringify({
+        empId:    verifiedEmployee.id,
+        empName:  verifiedEmployee.name,
+        photo:    capturedData || '',
+        location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
+        loginAt:  new Date().toISOString()
+      }));
+
+      // Save admin session
+      if (linkedAdminInfo) {
+        localStorage.setItem('mev_adminSession', JSON.stringify({
+          type:               'normal',
+          id:                 linkedAdminInfo.admin_id || linkedAdminInfo.id,
+          name:               linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
+          assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
+          assignedEmpIds:     linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
+          permissions:        linkedAdminInfo.permissions || { attendance: true, leave: false, salary: false },
+          loginAt:            new Date().toISOString()
+        }));
+      }
+
+      window.location.href = 'AdminDashboard.html';
+    }
+
+    // Show navbar links after login
+    function showNavLinks() {
+      // Always show salary
+      const salaryLink = document.getElementById('navSalary');
+      if (salaryLink) salaryLink.style.display = '';
+
+      // Show Admin link only if admin
+      const adminLink = document.getElementById('navAdminProfile');
+      if (adminLink && isAdminEmployee) {
+        adminLink.style.display = '';
+      }
     }
 
     // ========== ENTER KEY SUPPORT ==========
