@@ -534,7 +534,6 @@
           <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()">📷 Enable Camera</button>
           <button class="btn btn-primary btn-hidden" id="captureBtn" onclick="capturePhoto()">✓ Capture Photo</button>
           <button class="btn btn-secondary btn-hidden" id="retakeBtn" onclick="retake()">↩ Retake</button>
-          <!-- <button class="btn btn-secondary btn-hidden" id="profileBtn" onclick="goToProfile()">👤 View Profile</button> -->
           <button class="btn btn-success btn-hidden" id="continueBtn" onclick="continueToDashboard()">📊 Go to Dashboard</button>
         </div>
       </div>
@@ -851,7 +850,6 @@
       document.getElementById('photoWrap').classList.add('active');
       document.getElementById('captureBtn').classList.add('btn-hidden');
       document.getElementById('retakeBtn').classList.remove('btn-hidden');
-      document.getElementById('profileBtn').classList.remove('btn-hidden');
       document.getElementById('continueBtn').classList.remove('btn-hidden');
       setStep(3);
 
@@ -859,15 +857,6 @@
       showMsg('⏳ Checking admin status...', 'warning');
       linkedAdminInfo = await checkIfAdmin(verifiedEmployee.id);
       isAdminEmployee = !!linkedAdminInfo;
-      document.getElementById('continueBtn').textContent =
-        isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
-
-      // Update profileBtn for admin
-      if (isAdminEmployee) {
-        document.getElementById('profileBtn').textContent = '🛡️ Admin Profile';
-      } else {
-        document.getElementById('profileBtn').textContent = '👤 View Profile';
-      }
       document.getElementById('continueBtn').textContent =
         isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
 
@@ -879,7 +868,7 @@
 
       showMsg(
         isAdminEmployee
-          ? '✅ Photo and location captured! You can view your profile or continue to the Admin Dashboard.'
+          ? '✅ Photo and location captured! Click "Go to Admin Dashboard" to continue.'
           : '✅ Photo and location captured! Click "Go to Dashboard" to continue.',
         'success'
       );
@@ -901,7 +890,6 @@
       document.getElementById('videoWrap').classList.remove('active');
       document.getElementById('locationBox').classList.remove('show');
       document.getElementById('retakeBtn').classList.add('btn-hidden');
-      document.getElementById('profileBtn').classList.add('btn-hidden');
       document.getElementById('continueBtn').classList.add('btn-hidden');
       document.getElementById('continueBtn').textContent = '📊 Go to Dashboard';
       document.getElementById('enableBtn').classList.remove('btn-hidden');
@@ -1031,31 +1019,6 @@
       );
 
       window.location.href = isAdminEmployee ? 'AdminDashboard.html' : 'AttendanceTracker.html';
-    }
-
-    // ========== VIEW PROFILE / ADMIN ==========
-    function goToProfile() {
-      if (!verifiedEmployee) {
-        showMsg('❌ Please verify your login first.', 'error');
-        return;
-      }
-
-      // Save session
-      localStorage.setItem('mev_employeeSession', JSON.stringify({
-        empId:    verifiedEmployee.id,
-        empName:  verifiedEmployee.name,
-        photo:    capturedData || '',
-        location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
-        loginAt:  new Date().toISOString()
-      }));
-
-      // If admin — go to AdminDashboard
-      if (isAdminEmployee) {
-        goToAdminDashboard();
-        return;
-      }
-
-      window.location.href = 'Profile.html';
     }
 
     function goToAdminDashboard() {

@@ -216,23 +216,13 @@
       <span class="role-badge employee" id="roleBadge">Employee</span>
     </div>
 
-    <!-- <div class="main-card">
+    <div class="main-card">
       <div class="section-label">Your Details</div>
-
-      <div class="form-group">
-        <label>Designation / Department</label>
-        <input type="text" id="fldDesignation" placeholder="e.g. Sales Executive" />
-      </div> -->
 
       <div class="form-group">
         <label>Phone Number</label>
         <input type="tel" id="fldPhone" placeholder="e.g. 98765 43210" />
       </div>
-
-      <!-- <div class="form-group">
-        <label>City</label>
-        <input type="text" id="fldCity" placeholder="e.g. Kolkata" />
-      </div> -->
 
       <div class="form-group">
         <label>Employee ID</label>
@@ -325,9 +315,7 @@
       document.getElementById('profName').textContent = emp.name || 'Unknown';
       document.getElementById('profEmpId').textContent = currentEmpId;
       document.getElementById('fldEmpId').value = currentEmpId;
-      document.getElementById('fldDesignation').value = emp.dept || '';
       document.getElementById('fldPhone').value = emp.phone || '';
-      document.getElementById('fldCity').value = emp.city || '';
       document.getElementById('fldPassword').value = emp.password || '';
 
       // Profile photo: prefer a saved profile photo, else fall back to the
@@ -386,9 +374,7 @@
 
     // ========== SAVE ==========
     function saveProfile() {
-      const designation = document.getElementById('fldDesignation').value.trim();
       const phone = document.getElementById('fldPhone').value.trim();
-      const city = document.getElementById('fldCity').value.trim();
       const password = document.getElementById('fldPassword').value.trim();
 
       if (!password) {
@@ -404,9 +390,9 @@
         id: currentEmpId,
         name: existing.name,
         password,
-        dept: designation,
+        dept: existing.dept || '',
         phone,
-        city,
+        city: existing.city || '',
         photo: pendingPhoto || existing.photo || ''
       };
 
@@ -445,7 +431,6 @@
 
       pendingPhoto = null;
       showMsg('✅ Profile updated successfully!', 'success');
-      
     }
 
     // ========== LOGOUT ==========
