@@ -507,10 +507,6 @@
         <button class="btn btn-primary btn-block" onclick="verifyEmployee()">
           🔐 Verify & Continue
         </button>
-        <!-- <div class="form-hint">
-          💡 Default password: <strong>MEVRICK1707</strong>
-          <span class="debug-toggle" onclick="toggleDebug()">🔍 Show Available Employees</span>
-        </div> -->
         <div class="debug-info" id="debugInfo"></div>
       </div>
 
@@ -552,7 +548,6 @@
     let linkedAdminInfo = null;
 
     // ========== EMPLOYEE DATABASE ==========
-    // Default employees data - this will be used if localStorage is empty
     const DEFAULT_EMPLOYEES = {
       "MEV/336/2025": {
         id: "MEV/336/2025",
@@ -612,17 +607,14 @@
       }
     };
 
-    // Initialize employee database on page load
     function initEmployeeDB() {
       try {
         const stored = localStorage.getItem('mev_employeeDB');
         if (!stored) {
-          console.log('No employee DB found. Creating default...');
           localStorage.setItem('mev_employeeDB', JSON.stringify(DEFAULT_EMPLOYEES));
           return { ...DEFAULT_EMPLOYEES };
         }
         const db = JSON.parse(stored);
-        // Merge with defaults for any missing employees
         let updated = false;
         Object.keys(DEFAULT_EMPLOYEES).forEach(key => {
           if (!db[key]) {
@@ -635,7 +627,6 @@
         }
         return db;
       } catch (e) {
-        console.error('Error reading employee DB:', e);
         localStorage.setItem('mev_employeeDB', JSON.stringify(DEFAULT_EMPLOYEES));
         return { ...DEFAULT_EMPLOYEES };
       }
@@ -644,26 +635,22 @@
     function getEmployeeDB() {
       try {
         const stored = localStorage.getItem('mev_employeeDB');
-        if (!stored) {
-          return initEmployeeDB();
-        }
+        if (!stored) return initEmployeeDB();
         return JSON.parse(stored);
       } catch (e) {
         return initEmployeeDB();
       }
     }
 
-    // Looks up whether this employee ID is an Admin in MongoDB
-    // Returns admin object if found, null otherwise
+    // Check if employee is an Admin
     async function checkIfAdmin(empId) {
       try {
-        const res    = await fetch('https://hrms-2-n4kt.onrender.com/api/admins');
+        const res = await fetch('https://hrms-2-n4kt.onrender.com/api/admins');
         if (!res.ok) return null;
         const admins = await res.json();
-        // Match by employee_id OR admin_id (since we use emp_id as admin_id)
         return admins.find(a =>
           a.employee_id === empId ||
-          a.admin_id    === empId
+          a.admin_id === empId
         ) || null;
       } catch (e) {
         console.warn('checkIfAdmin failed:', e);
@@ -671,37 +658,14 @@
       }
     }
 
-    function toggleDebug() {
-      const debugEl = document.getElementById('debugInfo');
-      if (debugEl.classList.contains('show')) {
-        debugEl.classList.remove('show');
-        return;
-      }
-      const db = getEmployeeDB();
-      let text = '📋 Available Employees:\n\n';
-      Object.keys(db).forEach(key => {
-        const emp = db[key];
-        text += `  ${emp.id} → ${emp.name}\n`;
-      });
-      text += '\n🔑 All passwords: MEVRICK1707';
-      debugEl.textContent = text;
-      debugEl.classList.add('show');
-    }
-
     // ========== STEP MANAGEMENT ==========
     function setStep(n) {
       [1, 2, 3].forEach(i => {
         const s = document.getElementById('s' + i);
-        if (i < n) {
-          s.className = 'step done';
-          s.textContent = '✓';
-        } else if (i === n) {
-          s.className = 'step active';
-          s.textContent = i;
-        } else {
-          s.className = 'step';
-          s.textContent = i;
-        }
+        if (i < n) { s.className = 'step done';
+          s.textContent = '✓'; } else if (i === n) { s.className = 'step active';
+          s.textContent = i; } else { s.className = 'step';
+          s.textContent = i; }
         if (i < 3)
           document.getElementById('sl' + i).className = i < n ? 'step-line done' : 'step-line';
       });
@@ -718,7 +682,7 @@
     }
 
     // ========== STEP 1: VERIFY EMPLOYEE ==========
-    function verifyEmployee() {
+    async function verifyEmployee() {
       const empId = document.getElementById('empId').value.trim();
       const empPw = document.getElementById('empPw').value.trim();
 
@@ -728,13 +692,11 @@
       }
 
       const db = getEmployeeDB();
-      console.log('🔍 Employee DB loaded:', Object.keys(db).length, 'employees');
-
       const employee = db[empId];
 
       if (!employee) {
         const available = Object.keys(db).join(', ');
-        showMsg(`❌ Employee "${empId}" not found. Available: ${available}`, 'error');
+        showMsg(`❌ Employee "${empId}" not found.`, 'error');
         return;
       }
 
@@ -743,18 +705,37 @@
         return;
       }
 
-      // ✅ Employee verified - PROCEED TO CAMERA
+      // ✅ Employee verified
       verifiedEmployee = employee;
       document.getElementById('empName').value = employee.name;
       document.getElementById('nameDisplay').style.display = 'block';
-      showMsg(`✅ Welcome ${employee.name}! Now enable camera for verification.`, 'success');
+      showMsg(`✅ Welcome ${employee.name}!`, 'success');
 
-      // Show camera section
+      // Check if employee already has captured photo today
+      const lastSession = JSON.parse(localStorage.getItem('mev_employeeSession') || '{}');
+      const today = new Date().toISOString().split('T')[0];
+      const lastLoginDate = lastSession.loginAt ? new Date(lastSession.loginAt).toISOString().split('T')[0] : '';
+
+      // If same employee logged in today with photo, skip camera
+      if (lastSession.empId === empId && lastSession.photo && lastLoginDate === today) {
+        showMsg('✅ Welcome back! Redirecting to dashboard...', 'success');
+        capturedData = lastSession.photo;
+        locationData = lastSession.location || { address: 'Unknown', lat: 0, lng: 0 };
+        
+        // Check admin status
+        linkedAdminInfo = await checkIfAdmin(empId);
+        isAdminEmployee = !!linkedAdminInfo;
+        
+        setTimeout(() => {
+          continueToDashboard();
+        }, 1000);
+        return;
+      }
+
+      // First time today - need camera
       document.getElementById('loginForm').style.display = 'none';
       document.getElementById('cameraSection').style.display = 'block';
       setStep(2);
-
-      // Auto-enable camera after a short delay
       setTimeout(enableCamera, 500);
     }
 
@@ -765,12 +746,11 @@
 
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          showMsg('❌ Camera API not supported. Please use HTTPS and a modern browser.', 'error');
+          showMsg('❌ Camera API not supported.', 'error');
           return;
         }
 
-        showMsg('⏳ Starting camera, please wait...', 'warning');
-
+        showMsg('⏳ Starting camera...', 'warning');
         videoWrap.classList.add('active');
         await new Promise(r => setTimeout(r, 100));
 
@@ -780,7 +760,6 @@
             audio: false
           });
         } catch (constraintErr) {
-          console.warn('facingMode failed, trying basic video:', constraintErr.message);
           stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         }
 
@@ -788,12 +767,7 @@
 
         await new Promise((resolve) => {
           video.onloadedmetadata = () => {
-            video.play()
-              .then(resolve)
-              .catch(err => {
-                console.warn('play() blocked:', err.message);
-                resolve();
-              });
+            video.play().then(resolve).catch(() => resolve());
           };
           setTimeout(resolve, 8000);
         });
@@ -801,24 +775,18 @@
         document.getElementById('enableBtn').classList.add('btn-hidden');
         document.getElementById('captureBtn').classList.remove('btn-hidden');
         setStep(2);
-        showMsg('✅ Camera ready! Position your face and capture.', 'success');
+        showMsg('✅ Camera ready! Capture your photo.', 'success');
 
       } catch (e) {
-        if (stream) {
-          stream.getTracks().forEach(t => t.stop());
-          stream = null;
-        }
+        if (stream) { stream.getTracks().forEach(t => t.stop());
+          stream = null; }
         videoWrap.classList.remove('active');
-
         const errorMap = {
-          NotAllowedError: '❌ Camera permission denied. Please allow camera access.',
-          NotFoundError: '❌ No camera found on this device.',
-          NotReadableError: '❌ Camera is being used by another app.',
-          AbortError: '❌ Camera could not start. Please restart your browser.',
+          NotAllowedError: '❌ Camera permission denied.',
+          NotFoundError: '❌ No camera found.',
+          NotReadableError: '❌ Camera in use by another app.',
         };
-        const msg = errorMap[e.name] || `❌ Camera error: ${e.message}`;
-        showMsg(msg, 'error');
-        console.error('Camera error:', e.name, e.message);
+        showMsg(errorMap[e.name] || `❌ Camera error: ${e.message}`, 'error');
       }
     }
 
@@ -826,12 +794,8 @@
     async function capturePhoto() {
       const video = document.getElementById('video');
 
-      if (!stream) {
+      if (!stream || !video.videoWidth) {
         showMsg('⏳ Camera not ready. Please wait...', 'warning');
-        return;
-      }
-      if (!video.videoWidth || !video.videoHeight) {
-        showMsg('⏳ Video still loading, please wait...', 'warning');
         return;
       }
 
@@ -853,60 +817,46 @@
       document.getElementById('continueBtn').classList.remove('btn-hidden');
       setStep(3);
 
-      // Figure out whether this employee is also linked to an Admin account
-      showMsg('⏳ Checking admin status...', 'warning');
+      // Check admin status
       linkedAdminInfo = await checkIfAdmin(verifiedEmployee.id);
       isAdminEmployee = !!linkedAdminInfo;
       document.getElementById('continueBtn').textContent =
         isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
 
-      showMsg('⏳ Fetching your location...', 'warning');
+      showMsg('⏳ Fetching location...', 'warning');
       await fetchLocation();
 
-      // Show navbar links (Salary + Admin if applicable)
-      showNavLinks();
-
-      showMsg(
-        isAdminEmployee
-          ? '✅ Photo and location captured! Click "Go to Admin Dashboard" to continue.'
-          : '✅ Photo and location captured! Click "Go to Dashboard" to continue.',
-        'success'
-      );
+      showMsg('✅ Ready! Click to continue.', 'success');
     }
 
     // ========== RETAKE ==========
     function retake() {
       capturedData = null;
       locationData = null;
-      isAdminEmployee = false;
-      linkedAdminInfo = null;
 
-      if (stream) {
-        stream.getTracks().forEach(t => t.stop());
-        stream = null;
-      }
+      if (stream) { stream.getTracks().forEach(t => t.stop());
+        stream = null; }
 
       document.getElementById('photoWrap').classList.remove('active');
       document.getElementById('videoWrap').classList.remove('active');
       document.getElementById('locationBox').classList.remove('show');
       document.getElementById('retakeBtn').classList.add('btn-hidden');
       document.getElementById('continueBtn').classList.add('btn-hidden');
-      document.getElementById('continueBtn').textContent = '📊 Go to Dashboard';
       document.getElementById('enableBtn').classList.remove('btn-hidden');
       document.getElementById('statusMsg').className = 'status-msg';
       setStep(2);
-      showMsg('📷 Retake your photo. Click "Enable Camera" when ready.', 'warning');
+      showMsg('📷 Retake photo. Click "Enable Camera" when ready.', 'warning');
     }
 
     // ========== FETCH LOCATION ==========
     async function fetchLocation() {
       const box = document.getElementById('locationBox');
       box.classList.add('show');
-      document.getElementById('locationAddress').textContent = '⏳ Fetching precise GPS location...';
+      document.getElementById('locationAddress').textContent = '⏳ Fetching GPS...';
 
       if (!navigator.geolocation) {
-        document.getElementById('locationAddress').textContent = 'Geolocation not supported.';
         locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
+        document.getElementById('locationAddress').textContent = 'Geolocation not supported.';
         return;
       }
 
@@ -932,32 +882,19 @@
             { headers: { 'Accept': 'application/json', 'User-Agent': 'MevtenciaApp/1.0' } }
           );
           const d = await r.json();
-
           if (d && d.address) {
             const a = d.address;
-            const landmark =
-              a.building || a.office || a.amenity || a.shop || a.tourism ||
-              a.house_name || a.residential || a.apartments || a.mall ||
-              a.hotel || a.school || a.college || a.university || '';
-
             const parts = [
-              landmark,
+              a.building || a.office || a.amenity || '',
               a.house_number || '',
               a.road || '',
-              a.suburb || '',
               a.city || a.town || a.village || '',
               a.state || '',
               a.postcode || ''
             ].filter(Boolean);
-
             address = parts.join(', ');
-            if (d.display_name && address.length < 20) {
-              address = d.display_name;
-            }
           }
-        } catch (geoErr) {
-          console.error('Geocoding failed:', geoErr);
-        }
+        } catch (geoErr) { console.warn('Geocoding failed'); }
 
         locationData = { address, lat, lng, capturedAt: new Date().toISOString() };
         document.getElementById('locationAddress').textContent = address;
@@ -967,14 +904,13 @@
         verLink.style.display = 'inline-block';
 
       } catch (e) {
-        document.getElementById('locationAddress').textContent =
-          '⚠️ Location not available. Please enable GPS.';
         locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
-        showMsg('⚠️ GPS unavailable — Please enable high-accuracy location.', 'warning');
+        document.getElementById('locationAddress').textContent = '⚠️ GPS unavailable.';
+        showMsg('⚠️ GPS unavailable. Please enable location.', 'warning');
       }
     }
 
-    // ========== STEP 3: CONTINUE TO DASHBOARD ==========
+    // ========== CONTINUE TO DASHBOARD ==========
     function continueToDashboard() {
       if (!capturedData) {
         showMsg('❌ Please capture your photo first.', 'error');
@@ -982,92 +918,60 @@
       }
 
       if (!verifiedEmployee) {
-        showMsg('❌ Verification failed. Please login again.', 'error');
+        showMsg('❌ Verification failed.', 'error');
         return;
       }
 
-      // Store session data
-      localStorage.setItem('mev_employeeSession', JSON.stringify({
+      // Store session
+      const sessionData = {
         empId: verifiedEmployee.id,
         empName: verifiedEmployee.name,
         photo: capturedData,
         location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
-        loginAt: new Date().toISOString()
-      }));
-
-      // Store for attendance
+        loginAt: new Date().toISOString(),
+        isAdmin: isAdminEmployee
+      };
+      localStorage.setItem('mev_employeeSession', JSON.stringify(sessionData));
       localStorage.setItem('mev_capturedPhoto', capturedData);
       localStorage.setItem('mev_capturedLocation', JSON.stringify(locationData || { address: 'Unknown', lat: 0, lng: 0 }));
 
-      // If this employee is also linked to an Admin account, log them into
-      // the Admin Dashboard too (MongoDB format)
+      // If admin, store admin session
       if (isAdminEmployee && linkedAdminInfo) {
         localStorage.setItem('mev_adminSession', JSON.stringify({
-          type:               'normal',
-          id:                 linkedAdminInfo.admin_id || linkedAdminInfo.id,
-          name:               linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
+          type: 'normal',
+          id: linkedAdminInfo.admin_id || linkedAdminInfo.id,
+          name: linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
           assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
-          assignedEmpIds:     linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
-          permissions:        linkedAdminInfo.permissions || { attendance: true, leave: false, salary: false },
-          loginAt:            new Date().toISOString()
+          assignedEmpIds: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
+          loginAt: new Date().toISOString()
         }));
       }
 
-      showMsg(
-        isAdminEmployee ? '✅ Login successful! Redirecting to Admin Dashboard...' : '✅ Login successful! Redirecting to dashboard...',
-        'success'
-      );
-
-      window.location.href = isAdminEmployee ? 'AdminDashboard.html' : 'AttendanceTracker.html';
+      showMsg('✅ Redirecting...', 'success');
+      setTimeout(() => {
+        window.location.href = isAdminEmployee ? 'AdminDashboard.html' : 'AttendanceTracker.html';
+      }, 800);
     }
 
+    // ========== GO TO ADMIN DASHBOARD ==========
     function goToAdminDashboard() {
-      if (!verifiedEmployee) return;
-
-      // Save employee session
-      localStorage.setItem('mev_employeeSession', JSON.stringify({
-        empId:    verifiedEmployee.id,
-        empName:  verifiedEmployee.name,
-        photo:    capturedData || '',
-        location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
-        loginAt:  new Date().toISOString()
-      }));
-
-      // Save admin session
       if (linkedAdminInfo) {
         localStorage.setItem('mev_adminSession', JSON.stringify({
-          type:               'normal',
-          id:                 linkedAdminInfo.admin_id || linkedAdminInfo.id,
-          name:               linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
+          type: 'normal',
+          id: linkedAdminInfo.admin_id || linkedAdminInfo.id,
+          name: linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
           assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
-          assignedEmpIds:     linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
-          permissions:        linkedAdminInfo.permissions || { attendance: true, leave: false, salary: false },
-          loginAt:            new Date().toISOString()
+          assignedEmpIds: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
+          loginAt: new Date().toISOString()
         }));
       }
-
       window.location.href = 'AdminDashboard.html';
     }
 
-    // Show navbar links after login
-    function showNavLinks() {
-      // Always show salary
-      const salaryLink = document.getElementById('navSalary');
-      if (salaryLink) salaryLink.style.display = '';
-
-      // Show Admin link only if admin
-      const adminLink = document.getElementById('navAdminProfile');
-      if (adminLink && isAdminEmployee) {
-        adminLink.style.display = '';
-      }
-    }
-
-    // ========== ENTER KEY SUPPORT ==========
+    // ========== KEYBOARD SUPPORT ==========
     document.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        if (document.getElementById('loginForm').style.display !== 'none') {
-          verifyEmployee();
-        }
+      if (e.key === 'Enter' && document.getElementById('loginForm').style.display !== 'none') {
+        verifyEmployee();
       }
     });
 
@@ -1077,12 +981,7 @@
     });
 
     // ========== INIT ==========
-    // Initialize DB on load
-    const db = initEmployeeDB();
-    console.log('✅ Employee DB initialized with', Object.keys(db).length, 'employees');
-    console.log('📋 Available IDs:', Object.keys(db).join(', '));
-
-    // Set default values for demo
+    initEmployeeDB();
     document.getElementById('empId').value = 'MEV/336/2025';
     document.getElementById('empPw').value = 'MEVRICK1707';
   </script>
