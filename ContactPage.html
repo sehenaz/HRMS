@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#3f51b5" />
-  <title>MEVTENCIA — Contact</title>
+  <title>MEVTENCIA — Employee Search</title>
   <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <style>
     * {
@@ -151,7 +151,214 @@
       fill: #3f51b5;
     }
 
-    /* Contact Grid */
+    /* ===== Search Box ===== */
+    .search-box {
+      position: relative;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-row .input-wrap {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-row .input-wrap span {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 17px;
+    }
+
+    .search-row input {
+      width: 100%;
+      padding: 14px 14px 14px 42px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      background: #f8fafc;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-row input:focus {
+      border-color: #3f51b5;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.12);
+    }
+
+    .search-row button {
+      padding: 0 24px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .search-row button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(63, 81, 181, 0.3);
+    }
+
+    /* Autocomplete suggestions */
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      z-index: 20;
+      display: none;
+      max-height: 240px;
+      overflow-y: auto;
+    }
+
+    .suggestions.show {
+      display: block;
+    }
+
+    .suggestions .item {
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .suggestions .item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestions .item:hover {
+      background: #f0f4ff;
+    }
+
+    .suggestions .item .sub {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    /* ===== Search History ===== */
+    .history-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .history-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f0f4ff;
+      border: 1px solid #c7d2fe;
+      color: #3f51b5;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .history-chip:hover {
+      background: #3f51b5;
+      color: white;
+    }
+
+    .history-chip .remove-chip {
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .history-empty {
+      color: #94a3b8;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    .clear-history-btn {
+      margin-top: 14px;
+      background: none;
+      border: none;
+      color: #e53935;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* ===== Result Card ===== */
+    #resultCard {
+      display: none;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .result-header .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3f51b5, #2c3e9e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .result-header .avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .result-header .names h3 {
+      font-size: 19px;
+      color: #1e293b;
+      font-weight: 800;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 3px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .role-badge.employee { background: #dbeafe; color: #1d4ed8; }
+    .role-badge.admin { background: #ede9fe; color: #5b21b6; }
+    .role-badge.manager { background: #fef3c7; color: #92400e; }
+    .role-badge.superadmin { background: #fce4ec; color: #c62828; }
+
     .contact-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -169,12 +376,6 @@
       border-radius: 14px;
       padding: 18px 20px;
       border: 1px solid #e2e8f0;
-      transition: all 0.2s;
-    }
-
-    .contact-item:hover {
-      border-color: #3f51b5;
-      box-shadow: 0 4px 15px rgba(63, 81, 181, 0.1);
     }
 
     .contact-item .label {
@@ -190,277 +391,133 @@
       font-weight: 700;
       color: #1e293b;
       margin-top: 4px;
-      word-break: break-all;
-    }
-
-    .contact-item .value a {
-      color: #3f51b5;
-      text-decoration: none;
-    }
-
-    .contact-item .value a:hover {
-      text-decoration: underline;
-    }
-
-    .contact-item .icon {
-      font-size: 20px;
-      margin-right: 8px;
-    }
-
-    .role-badge {
-      display: inline-block;
-      padding: 3px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-
-    .role-badge.employee {
-      background: #dbeafe;
-      color: #1d4ed8;
-    }
-
-    .role-badge.admin {
-      background: #ede9fe;
-      color: #5b21b6;
-    }
-
-    .role-badge.manager {
-      background: #fef3c7;
-      color: #92400e;
-    }
-
-    .role-badge.superadmin {
-      background: #fce4ec;
-      color: #c62828;
-    }
-
-    /* Profile Photo in Contact */
-    .contact-photo {
-      text-align: center;
-      padding: 20px 0;
-    }
-
-    .contact-photo img {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 4px solid #3f51b5;
-      box-shadow: 0 5px 25px rgba(63, 81, 181, 0.3);
-    }
-
-    .contact-photo .placeholder {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #3f51b5, #2c3e9e);
+      word-break: break-word;
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      border: 4px solid #3f51b5;
-      box-shadow: 0 5px 25px rgba(63, 81, 181, 0.3);
-    }
-
-    .contact-photo .placeholder svg {
-      width: 60px;
-      height: 60px;
-      fill: white;
-    }
-
-    /* HR / Manager Contact */
-    .hr-contact {
-      background: #f0f4ff;
-      border-radius: 14px;
-      padding: 18px 20px;
-      border: 1px solid #c7d2fe;
-      margin-top: 15px;
-    }
-
-    .hr-contact .label {
-      font-size: 11px;
-      color: #4338ca;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
-    }
-
-    .hr-contact .value {
-      font-size: 15px;
-      font-weight: 700;
-      color: #1e293b;
-      margin-top: 4px;
-    }
-
-    .hr-contact .value a {
-      color: #3f51b5;
-      text-decoration: none;
-    }
-
-    .hr-contact .value a:hover {
-      text-decoration: underline;
-    }
-
-    /* Quick Actions */
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-top: 10px;
-    }
-
-    .quick-action-btn {
-      padding: 14px 18px;
-      border: none;
-      border-radius: 12px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       gap: 8px;
     }
 
-    .quick-action-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .quick-action-btn.email {
-      background: linear-gradient(135deg, #3f51b5, #5c6bc0);
-      color: white;
-    }
-
-    .quick-action-btn.call {
-      background: linear-gradient(135deg, #4caf50, #388e3c);
-      color: white;
-    }
-
-    .quick-action-btn.whatsapp {
-      background: linear-gradient(135deg, #25d366, #128c7e);
-      color: white;
-    }
-
-    .quick-action-btn.profile {
-      background: linear-gradient(135deg, #ff9800, #f57c00);
-      color: white;
-    }
-
-    /* ===== Editable Form ===== */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-    }
-
-    @media (max-width: 600px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .form-field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-field label {
-      font-size: 11px;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 700;
-    }
-
-    .form-field .input-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .form-field .input-wrap .field-icon {
-      position: absolute;
-      left: 12px;
-      font-size: 15px;
-      pointer-events: none;
-    }
-
-    .form-field input {
-      width: 100%;
-      padding: 12px 14px 12px 36px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #1e293b;
-      background: #f8fafc;
-      outline: none;
-      transition: all 0.2s;
-    }
-
-    .form-field input:focus {
-      border-color: #3f51b5;
-      background: white;
-      box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.12);
-    }
-
-    .form-field input:disabled {
-      background: #eef1f8;
-      color: #64748b;
-      cursor: not-allowed;
-    }
-
-    .toggle-pass-btn {
-      position: absolute;
-      right: 10px;
+    .contact-item .value button {
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 15px;
-      color: #64748b;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 22px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      padding: 13px 22px;
-      border: none;
-      border-radius: 12px;
       font-size: 14px;
+    }
+
+    .relation-section {
+      margin-top: 20px;
+    }
+
+    .relation-section .rel-title {
+      font-size: 13px;
       font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
+      color: #3f51b5;
+      margin-bottom: 10px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    .manager-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff7e6;
+      border: 1px solid #fde3a7;
+      border-radius: 14px;
+      padding: 14px 16px;
     }
 
-    .btn.save {
-      background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+    .manager-card .m-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f57c00, #ff9800);
       color: white;
-      flex: 1;
+      display: flex;
+      align-items: center;
       justify-content: center;
+      font-weight: 800;
+      flex-shrink: 0;
     }
 
-    .btn.reset {
-      background: #f1f5f9;
-      color: #475569;
+    .manager-card .m-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .manager-card .m-sub {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .reports-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .report-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .report-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .report-card .r-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .report-card .r-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .report-card .r-sub {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .empty-relation {
+      font-size: 13px;
+      color: #94a3b8;
+      font-style: italic;
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .no-result {
+      text-align: center;
+      padding: 30px 10px;
+      color: #94a3b8;
+    }
+
+    .no-result .big-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
     }
 
     /* Toast */
@@ -488,15 +545,9 @@
       transform: translateY(0);
     }
 
-    .toast.success {
-      background: #1d6f42;
-    }
+    .toast.success { background: #1d6f42; }
+    .toast.error { background: #e53935; }
 
-    .toast.error {
-      background: #e53935;
-    }
-
-    /* Responsive */
     @media (max-width: 600px) {
       .container {
         margin: 15px auto 30px;
@@ -511,8 +562,11 @@
       .header-card h2 {
         font-size: 18px;
       }
-      .contact-item .value {
-        font-size: 14px;
+      .search-row {
+        flex-direction: column;
+      }
+      .search-row button {
+        padding: 14px;
       }
       .toast {
         right: 15px;
@@ -531,9 +585,9 @@
     </a>
     <div class="nav-right">
       <ul class="nav-links">
-        <li><a href="AttendanceTracker.html"> Dashboard</a></li>
-        <li><a href="SalaryHistory.html"> Salary</a></li>
-        <li><a href="ContactPage.html" class="active"> Contact</a></li>
+        <li><a href="AttendanceTracker.html">Dashboard</a></li>
+        <li><a href="SalaryHistory.html">Salary</a></li>
+        <li><a href="ContactPage.html" class="active">Search</a></li>
         <li><a href="index.html" onclick="logout()">Logout</a></li>
       </ul>
     </div>
@@ -542,194 +596,108 @@
   <div class="container">
     <div class="header-card">
       <img src="assets/logo.png" alt="Mevrick Logo" class="logo-img" />
-      <h2>Contact Information</h2>
-      <p>Your personal contact details and company support</p>
+      <h2>Employee Search</h2>
+      <p>Search any employee by name to view their details and reporting structure</p>
     </div>
 
-    <!-- Profile Photo -->
-    <!-- <div class="main-card">
-      <div class="contact-photo" id="contactPhoto">
-        <div class="placeholder" id="photoPlaceholder">
-          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        </div>
-        <img id="profilePhoto" style="display:none;" alt="Profile Photo" />
-        <div style="margin-top:10px;">
-          <span id="empName" style="font-size:18px;font-weight:700;color:#1e293b;">Employee</span>
-          <div id="empRoleBadge" style="margin-top:4px;"></div>
-        </div>
+    <!-- Search Box -->
+    <div class="main-card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+        Search Employee
       </div>
-    </div> -->
+      <div class="search-box">
+        <div class="search-row">
+          <div class="input-wrap">
+            <span>🔎</span>
+            <input type="text" id="searchInput" placeholder="Type an employee name..." autocomplete="off" />
+          </div>
+          <button type="button" id="searchBtn">Search</button>
+        </div>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+    </div>
 
-    <!-- Personal Contact Details (view) -->
-    <!-- <div class="main-card">
+    <!-- Search History -->
+    <div class="main-card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6a7 7 0 1 1 2.05 4.95l-1.42 1.42A9 9 0 1 0 13 3zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8z"/></svg>
+        Search History
+      </div>
+      <div class="history-list" id="historyList">
+        <span class="history-empty">No searches yet — search for an employee above.</span>
+      </div>
+      <button class="clear-history-btn" id="clearHistoryBtn" style="display:none;">Clear history</button>
+    </div>
+
+    <!-- Result Card -->
+    <div class="main-card" id="resultCard">
       <div class="section-title">
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-        Personal Details
+        Employee Details
       </div>
+
+      <div class="result-header">
+        <div class="avatar" id="resAvatar">?</div>
+        <div class="names">
+          <h3 id="resName">—</h3>
+          <div id="resRoleBadge"></div>
+        </div>
+      </div>
+
       <div class="contact-grid">
         <div class="contact-item">
           <div class="label">Employee ID</div>
-          <div class="value" id="empId">—</div>
+          <div class="value" id="resId">—</div>
         </div>
         <div class="contact-item">
-          <div class="label">Role / Designation</div>
-          <div class="value" id="empDesignation">—</div>
-        </div>
-        <div class="contact-item">
-          <div class="label">📧 Email Address</div>
-          <div class="value" id="empEmail">
-            <a href="#" id="emailLink">—</a>
+          <div class="label">Password</div>
+          <div class="value">
+            <span id="resPassword">••••••••</span>
+            <button type="button" id="resTogglePass">👁️</button>
           </div>
         </div>
         <div class="contact-item">
-          <div class="label">📱 Phone Number</div>
-          <div class="value" id="empPhone">
-            <a href="#" id="phoneLink">—</a>
-          </div>
+          <div class="label">Designation</div>
+          <div class="value" id="resDesignation">—</div>
         </div>
         <div class="contact-item">
-          <div class="label">🏢 Department</div>
-          <div class="value" id="empDept">—</div>
-        </div>
-        <div class="contact-item">
-          <div class="label">📍 City</div>
-          <div class="value" id="empCity">—</div>
+          <div class="label">Department</div>
+          <div class="value" id="resDept">—</div>
         </div>
       </div>
-    </div> -->
 
-    <!-- Editable Contact Details Form -->
-    <div class="main-card">
-      <div class="section-title">
-        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-        Edit Contact Details
+      <div class="relation-section">
+        <div class="rel-title"> Reports To (Manager)</div>
+        <div id="resManager"></div>
       </div>
-      <form id="contactForm" autocomplete="off">
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="fEmpId">Employee ID</label>
-            <div class="input-wrap">
-              <span class="field-icon">🆔</span>
-              <input type="text" id="fEmpId" placeholder="e.g. EMP1024" disabled />
-            </div>
-          </div>
 
-          <div class="form-field">
-            <label for="fPassword">Password</label>
-            <div class="input-wrap">
-              <span class="field-icon">🔒</span>
-              <input type="password" id="fPassword" placeholder="Enter new password" />
-              <button type="button" class="toggle-pass-btn" id="togglePassBtn">👁️</button>
-            </div>
-          </div>
-
-          <div class="form-field">
-            <label for="fName">Full Name</label>
-            <div class="input-wrap">
-              <span class="field-icon">🙍</span>
-              <input type="text" id="fName" placeholder="Your full name" />
-            </div>
-          </div>
-
-          <div class="form-field">
-            <label for="fEmail">Email Address</label>
-            <div class="input-wrap">
-              <span class="field-icon">📧</span>
-              <input type="email" id="fEmail" placeholder="you@example.com" />
-            </div>
-          </div>
-
-          <div class="form-field">
-            <label for="fDesignation">Designation</label>
-            <div class="input-wrap">
-              <span class="field-icon">💼</span>
-              <input type="text" id="fDesignation" placeholder="e.g. Software Engineer" />
-            </div>
-          </div>
-
-          <div class="form-field">
-            <label for="fPhone">Phone Number</label>
-            <div class="input-wrap">
-              <span class="field-icon">📱</span>
-              <input type="tel" id="fPhone" placeholder="e.g. 9876543210" />
-            </div>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn save">💾 Save Changes</button>
-          <button type="button" class="btn reset" id="resetFormBtn">↺ Reset</button>
-        </div>
-      </form>
+      <div class="relation-section">
+        <div class="rel-title">Employees Reporting To This Person</div>
+        <div class="reports-list" id="resReports"></div>
+      </div>
     </div>
 
-    <!-- HR / Manager Contact
-    <div class="main-card">
-      <div class="section-title">
-        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-        Support / HR Contact
-      </div>
-      <div class="hr-contact">
-        <div class="label">👨‍💼 HR Manager</div>
-        <div class="value" id="hrName">Mevrick HR Team</div>
-        <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div>
-            <div style="font-size:11px;color:#888;">📧 Email</div>
-            <div style="font-size:14px;font-weight:600;color:#3f51b5;">
-              <a href="mailto:hr@mevrick.com">hr@mevrick.com</a>
-            </div>
-          </div>
-          <div>
-            <div style="font-size:11px;color:#888;">📱 Phone</div>
-            <div style="font-size:14px;font-weight:600;color:#3f51b5;">
-              <a href="tel:+919876543210">+91 98765 43210</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div> -->
-
-    <!-- Quick Actions -->
-    <!-- <div class="main-card">
-      <div class="section-title">
-        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
-        Quick Actions
-      </div>
-      <div class="quick-actions">
-        <a href="mailto:hr@mevrick.com" class="quick-action-btn email">
-          ✉️ Email HR
-        </a>
-        <a href="tel:+919876543210" class="quick-action-btn call">
-          📞 Call HR
-        </a>
-        <a href="https://wa.me/919876543210" target="_blank" class="quick-action-btn whatsapp">
-          💬 WhatsApp
-        </a>
-        <a href="EmployeeProfile.html" class="quick-action-btn profile">
-          👤 Edit Profile
-        </a>
-      </div>
-    </div> -->
+    <!-- No result -->
+    <div class="main-card no-result" id="noResultCard" style="display:none;">
+      <div class="big-icon">🙁</div>
+      <div>No employee found with that name. Try a different name.</div>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    // ========== SESSION MANAGEMENT ==========
+    // ========== SESSION / DB HELPERS ==========
     function getSession() {
       try {
         const session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
-        if (session && session.empId) {
-          return session;
-        }
-        // Fallback to admin session
+        if (session && session.empId) return session;
         const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
         if (adminSession) {
           return {
             empId: adminSession.id || adminSession.admin_id,
             name: adminSession.name || adminSession.employeeName || 'Admin',
-            dept: 'Admin',
-            city: '',
             role: 'admin'
           };
         }
@@ -747,15 +715,11 @@
       }
     }
 
-    function saveEmployeeDB(db) {
-      localStorage.setItem('mev_employeeDB', JSON.stringify(db));
-    }
-
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.className = 'toast ' + type + ' show';
-      setTimeout(() => t.classList.remove('show'), 3500);
+      setTimeout(() => t.classList.remove('show'), 3000);
     }
 
     function logout() {
@@ -766,179 +730,271 @@
       window.location.href = 'index.html';
     }
 
-    let currentEmpId = null;
+    const roleNames = {
+      employee: 'Employee',
+      admin: 'Admin',
+      manager: 'Manager',
+      superadmin: 'Super Admin'
+    };
 
-    // ========== LOAD CONTACT PAGE ==========
-    function loadContactPage() {
-      const session = getSession();
+    function initials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    }
 
-      if (!session) {
-        window.location.href = 'mev.html';
+    // ========== SEARCH HISTORY (stored in localStorage) ==========
+    const HISTORY_KEY = 'mev_contactSearchHistory';
+
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHistory(list) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    }
+
+    function addToHistory(name) {
+      let list = getHistory();
+      list = list.filter(n => n.toLowerCase() !== name.toLowerCase());
+      list.unshift(name);
+      if (list.length > 10) list = list.slice(0, 10);
+      saveHistory(list);
+      renderHistory();
+    }
+
+    function removeFromHistory(name) {
+      let list = getHistory().filter(n => n.toLowerCase() !== name.toLowerCase());
+      saveHistory(list);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = getHistory();
+      const container = document.getElementById('historyList');
+      const clearBtn = document.getElementById('clearHistoryBtn');
+
+      if (!list.length) {
+        container.innerHTML = '<span class="history-empty">No searches yet — search for an employee above.</span>';
+        clearBtn.style.display = 'none';
         return;
       }
 
-      currentEmpId = session.empId;
+      clearBtn.style.display = 'inline-block';
+      container.innerHTML = list.map(name => `
+        <div class="history-chip" data-name="${escapeHtml(name)}">
+          <span class="chip-label">🕘 ${escapeHtml(name)}</span>
+          <span class="remove-chip" data-remove="${escapeHtml(name)}">✖</span>
+        </div>
+      `).join('');
+
+      container.querySelectorAll('.history-chip').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+          if (e.target.dataset.remove) return;
+          const name = chip.dataset.name;
+          document.getElementById('searchInput').value = name;
+          runSearch(name);
+        });
+      });
+
+      container.querySelectorAll('.remove-chip').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeFromHistory(btn.dataset.remove);
+        });
+      });
+    }
+
+    document.getElementById('clearHistoryBtn').addEventListener('click', () => {
+      saveHistory([]);
+      renderHistory();
+      showToast('Search history cleared', 'success');
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ========== AUTOCOMPLETE SUGGESTIONS ==========
+    const searchInput = document.getElementById('searchInput');
+    const suggestionsBox = document.getElementById('suggestions');
+
+    function getAllEmployees() {
       const db = getEmployeeDB();
-      const emp = db[session.empId] || {};
+      return Object.values(db).filter(e => e && e.name);
+    }
 
-      // Set name
-      document.getElementById('empName').textContent = session.name || emp.name || 'Employee';
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) {
+        suggestionsBox.classList.remove('show');
+        suggestionsBox.innerHTML = '';
+        return;
+      }
+      const matches = getAllEmployees().filter(e => e.name.toLowerCase().includes(q)).slice(0, 8);
+      if (!matches.length) {
+        suggestionsBox.classList.remove('show');
+        suggestionsBox.innerHTML = '';
+        return;
+      }
+      suggestionsBox.innerHTML = matches.map(e => `
+        <div class="item" data-name="${escapeHtml(e.name)}">
+          <span>${escapeHtml(e.name)}</span>
+          <span class="sub">${escapeHtml(e.id || e.empId || '')}</span>
+        </div>
+      `).join('');
+      suggestionsBox.classList.add('show');
 
-      // Set role badge
-      const role = session.role || emp.role || 'employee';
-      const badgeEl = document.getElementById('empRoleBadge');
-      const roleNames = {
-        'employee': 'Employee',
-        'admin': 'Admin',
-        'manager': 'Manager',
-        'superadmin': 'Super Admin'
-      };
-      badgeEl.innerHTML = `<span class="role-badge ${role}">${roleNames[role] || 'Employee'}</span>`;
+      suggestionsBox.querySelectorAll('.item').forEach(item => {
+        item.addEventListener('click', () => {
+          searchInput.value = item.dataset.name;
+          suggestionsBox.classList.remove('show');
+          runSearch(item.dataset.name);
+        });
+      });
+    });
 
-      // Load photo
-      const photo = session.photo || localStorage.getItem('mev_capturedPhoto') || emp.photo;
-      const img = document.getElementById('profilePhoto');
-      const placeholder = document.getElementById('photoPlaceholder');
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.search-box')) {
+        suggestionsBox.classList.remove('show');
+      }
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        suggestionsBox.classList.remove('show');
+        runSearch(searchInput.value.trim());
+      }
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      runSearch(searchInput.value.trim());
+    });
+
+    // ========== RUN SEARCH ==========
+    function runSearch(name) {
+      if (!name) {
+        showToast('Please type a name to search', 'error');
+        return;
+      }
+
+      const db = getEmployeeDB();
+      const all = Object.values(db).filter(e => e && e.name);
+      const match = all.find(e => e.name.toLowerCase() === name.toLowerCase())
+        || all.find(e => e.name.toLowerCase().includes(name.toLowerCase()));
+
+      document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('noResultCard').style.display = 'none';
+
+      if (!match) {
+        document.getElementById('noResultCard').style.display = 'block';
+        addToHistory(name);
+        return;
+      }
+
+      addToHistory(match.name);
+      renderResult(match, db);
+    }
+
+    function renderResult(emp, db) {
+      const resultCard = document.getElementById('resultCard');
+      resultCard.style.display = 'block';
+
+      // Basic info
+      const avatarEl = document.getElementById('resAvatar');
+      const photo = emp.photo;
       if (photo) {
-        img.src = photo;
-        img.style.display = 'block';
-        placeholder.style.display = 'none';
+        avatarEl.innerHTML = `<img src="${photo}" alt="${escapeHtml(emp.name)}" />`;
       } else {
-        img.style.display = 'none';
-        placeholder.style.display = 'flex';
+        avatarEl.textContent = initials(emp.name);
       }
 
-      // Personal details (view section)
-      document.getElementById('empId').textContent = session.empId || emp.id || '—';
-      document.getElementById('empDesignation').textContent = emp.designation || roleNames[role] || 'Employee';
-      document.getElementById('empDept').textContent = emp.dept || session.dept || '—';
-      document.getElementById('empCity').textContent = emp.city || session.city || '—';
+      document.getElementById('resName').textContent = emp.name;
+      const role = emp.role || 'employee';
+      document.getElementById('resRoleBadge').innerHTML =
+        `<span class="role-badge ${role}">${roleNames[role] || 'Employee'}</span>`;
 
-      // Email
-      const email = emp.email || session.email || '';
-      const emailLink = document.getElementById('emailLink');
-      if (email) {
-        emailLink.href = 'mailto:' + email;
-        emailLink.textContent = email;
+      document.getElementById('resId').textContent = emp.id || emp.empId || '—';
+
+      const passSpan = document.getElementById('resPassword');
+      passSpan.dataset.value = emp.password || '';
+      passSpan.textContent = emp.password ? '••••••••' : '—';
+      document.getElementById('resTogglePass').textContent = '👁️';
+
+      document.getElementById('resDesignation').textContent = emp.designation || roleNames[role] || '—';
+      document.getElementById('resDept').textContent = emp.dept || '—';
+
+      // Manager (who this employee reports to)
+      const managerEl = document.getElementById('resManager');
+      const manager = emp.managerId ? db[emp.managerId] : null;
+      if (manager) {
+        managerEl.innerHTML = `
+          <div class="manager-card">
+            <div class="m-avatar">${initials(manager.name)}</div>
+            <div>
+              <div class="m-name">${escapeHtml(manager.name)}</div>
+              <div class="m-sub">${escapeHtml(manager.designation || roleNames[manager.role] || 'Manager')} · ID: ${escapeHtml(manager.id || emp.managerId)}</div>
+            </div>
+          </div>
+        `;
       } else {
-        emailLink.textContent = '—';
-        emailLink.href = '#';
+        managerEl.innerHTML = `<div class="empty-relation">This employee has no manager assigned (top-level).</div>`;
       }
 
-      // Phone
-      const phone = emp.phone || session.phone || '';
-      const phoneLink = document.getElementById('phoneLink');
-      if (phone) {
-        phoneLink.href = 'tel:' + phone;
-        phoneLink.textContent = phone;
+      // Reports (employees who report to this person)
+      const reportsEl = document.getElementById('resReports');
+      const empKey = emp.id || emp.empId;
+      const reports = Object.values(db).filter(e => e && e.managerId && e.managerId === empKey);
+      if (reports.length) {
+        reportsEl.innerHTML = reports.map(r => `
+          <div class="report-card" data-name="${escapeHtml(r.name)}">
+            <div class="r-avatar">${initials(r.name)}</div>
+            <div>
+              <div class="r-name">${escapeHtml(r.name)}</div>
+              <div class="r-sub">${escapeHtml(r.designation || roleNames[r.role] || 'Employee')} · ID: ${escapeHtml(r.id || '')}</div>
+            </div>
+          </div>
+        `).join('');
+        reportsEl.querySelectorAll('.report-card').forEach(card => {
+          card.addEventListener('click', () => {
+            searchInput.value = card.dataset.name;
+            runSearch(card.dataset.name);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        });
       } else {
-        phoneLink.textContent = '—';
-        phoneLink.href = '#';
+        reportsEl.innerHTML = `<div class="empty-relation">No one currently reports to this employee.</div>`;
       }
-
-      // HR Contact - show based on role
-      const hrName = document.getElementById('hrName');
-      if (role === 'admin' || role === 'manager') {
-        hrName.textContent = 'Super Admin Support';
-      } else {
-        hrName.textContent = 'HR Manager - Mevrick Team';
-      }
-
-      // Fill the editable form with current values
-      fillForm(session, emp);
     }
 
-    function fillForm(session, emp) {
-      document.getElementById('fEmpId').value = session.empId || emp.id || '';
-      document.getElementById('fPassword').value = ''; // never pre-fill password
-      document.getElementById('fName').value = session.name || emp.name || '';
-      document.getElementById('fEmail').value = emp.email || session.email || '';
-      document.getElementById('fDesignation').value = emp.designation || '';
-      document.getElementById('fPhone').value = emp.phone || session.phone || '';
-    }
-
-    // ========== SHOW/HIDE PASSWORD ==========
-    document.getElementById('togglePassBtn').addEventListener('click', function () {
-      const pass = document.getElementById('fPassword');
-      if (pass.type === 'password') {
-        pass.type = 'text';
+    document.getElementById('resTogglePass').addEventListener('click', function () {
+      const span = document.getElementById('resPassword');
+      const real = span.dataset.value || '';
+      if (!real) return;
+      if (span.textContent === '••••••••') {
+        span.textContent = real;
         this.textContent = '🙈';
       } else {
-        pass.type = 'password';
+        span.textContent = '••••••••';
         this.textContent = '👁️';
       }
     });
 
-    // ========== RESET FORM ==========
-    document.getElementById('resetFormBtn').addEventListener('click', function () {
-      const session = getSession();
-      const db = getEmployeeDB();
-      const emp = db[session.empId] || {};
-      fillForm(session, emp);
-      showToast('Form reset', 'success');
-    });
-
-    // ========== SAVE FORM ==========
-    document.getElementById('contactForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const name = document.getElementById('fName').value.trim();
-      const email = document.getElementById('fEmail').value.trim();
-      const designation = document.getElementById('fDesignation').value.trim();
-      const phone = document.getElementById('fPhone').value.trim();
-      const password = document.getElementById('fPassword').value;
-
-      if (!name || !email) {
-        showToast('Name and email are required', 'error');
-        return;
-      }
-
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailPattern.test(email)) {
-        showToast('Please enter a valid email address', 'error');
-        return;
-      }
-
-      if (!currentEmpId) {
-        showToast('No active session found', 'error');
-        return;
-      }
-
-      const db = getEmployeeDB();
-      const existing = db[currentEmpId] || {};
-
-      db[currentEmpId] = {
-        ...existing,
-        id: currentEmpId,
-        name,
-        email,
-        designation,
-        phone
-      };
-
-      if (password) {
-        db[currentEmpId].password = password;
-      }
-
-      saveEmployeeDB(db);
-
-      // Update the current session too, so the change reflects immediately
-      try {
-        const session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
-        if (session) {
-          session.name = name;
-          session.email = email;
-          session.phone = phone;
-          localStorage.setItem('mev_employeeSession', JSON.stringify(session));
-        }
-      } catch {}
-
-      showToast('Contact details saved successfully ✅', 'success');
-      loadContactPage();
-    });
-
     // ========== INIT ==========
-    document.addEventListener('DOMContentLoaded', loadContactPage);
+    document.addEventListener('DOMContentLoaded', () => {
+      const session = getSession();
+      if (!session) {
+        window.location.href = 'mev.html';
+        return;
+      }
+      renderHistory();
+    });
   </script>
 </body>
 
