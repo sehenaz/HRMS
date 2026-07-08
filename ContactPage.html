@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#3f51b5" />
+  <title>MEVTENCIA — Contact</title>
+  <link rel="icon" href="assets/logo.png" type="image/x-icon">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .navbar {
+      background-color: #3f51b5;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .logo {
+      color: white;
+      font-size: 20px;
+      font-weight: 800;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo img {
+      height: 45px;
+      width: 45px;
+      object-fit: contain;
+      background: white;
+      border-radius: 50%;
+      padding: 5px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      transition: background 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto 50px;
+      padding: 0 20px;
+    }
+
+    .header-card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .header-card .logo-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: contain;
+      background: white;
+      padding: 8px;
+      box-shadow: 0 8px 25px rgba(63, 81, 181, 0.3);
+      margin-bottom: 15px;
+    }
+
+    .header-card h2 {
+      color: #3f51b5;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .header-card p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .main-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #3f51b5;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    .section-title svg {
+      width: 22px;
+      height: 22px;
+      fill: #3f51b5;
+    }
+
+    /* Contact Grid */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .contact-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .contact-item {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 18px 20px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
+    }
+
+    .contact-item:hover {
+      border-color: #3f51b5;
+      box-shadow: 0 4px 15px rgba(63, 81, 181, 0.1);
+    }
+
+    .contact-item .label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .contact-item .value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 4px;
+      word-break: break-all;
+    }
+
+    .contact-item .value a {
+      color: #3f51b5;
+      text-decoration: none;
+    }
+
+    .contact-item .value a:hover {
+      text-decoration: underline;
+    }
+
+    .contact-item .icon {
+      font-size: 20px;
+      margin-right: 8px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 3px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .role-badge.employee {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .role-badge.admin {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .role-badge.manager {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .role-badge.superadmin {
+      background: #fce4ec;
+      color: #c62828;
+    }
+
+    /* Profile Photo in Contact */
+    .contact-photo {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .contact-photo img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #3f51b5;
+      box-shadow: 0 5px 25px rgba(63, 81, 181, 0.3);
+    }
+
+    .contact-photo .placeholder {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3f51b5, #2c3e9e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      border: 4px solid #3f51b5;
+      box-shadow: 0 5px 25px rgba(63, 81, 181, 0.3);
+    }
+
+    .contact-photo .placeholder svg {
+      width: 60px;
+      height: 60px;
+      fill: white;
+    }
+
+    /* HR / Manager Contact */
+    .hr-contact {
+      background: #f0f4ff;
+      border-radius: 14px;
+      padding: 18px 20px;
+      border: 1px solid #c7d2fe;
+      margin-top: 15px;
+    }
+
+    .hr-contact .label {
+      font-size: 11px;
+      color: #4338ca;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .hr-contact .value {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 4px;
+    }
+
+    .hr-contact .value a {
+      color: #3f51b5;
+      text-decoration: none;
+    }
+
+    .hr-contact .value a:hover {
+      text-decoration: underline;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .quick-action-btn {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .quick-action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .quick-action-btn.email {
+      background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+      color: white;
+    }
+
+    .quick-action-btn.call {
+      background: linear-gradient(135deg, #4caf50, #388e3c);
+      color: white;
+    }
+
+    .quick-action-btn.whatsapp {
+      background: linear-gradient(135deg, #25d366, #128c7e);
+      color: white;
+    }
+
+    .quick-action-btn.profile {
+      background: linear-gradient(135deg, #ff9800, #f57c00);
+      color: white;
+    }
+
+    /* ===== Editable Form ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-field label {
+      font-size: 11px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    .form-field .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .form-field .input-wrap .field-icon {
+      position: absolute;
+      left: 12px;
+      font-size: 15px;
+      pointer-events: none;
+    }
+
+    .form-field input {
+      width: 100%;
+      padding: 12px 14px 12px 36px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      background: #f8fafc;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .form-field input:focus {
+      border-color: #3f51b5;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.12);
+    }
+
+    .form-field input:disabled {
+      background: #eef1f8;
+      color: #64748b;
+      cursor: not-allowed;
+    }
+
+    .toggle-pass-btn {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      color: #64748b;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 13px 22px;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn.save {
+      background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+      color: white;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .btn.reset {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #2d3748;
+      color: white;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s;
+      pointer-events: none;
+      max-width: 90vw;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background: #1d6f42;
+    }
+
+    .toast.error {
+      background: #e53935;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        margin: 15px auto 30px;
+        padding: 0 12px;
+      }
+      .main-card {
+        padding: 18px;
+      }
+      .header-card {
+        padding: 20px;
+      }
+      .header-card h2 {
+        font-size: 18px;
+      }
+      .contact-item .value {
+        font-size: 14px;
+      }
+      .toast {
+        right: 15px;
+        left: 15px;
+        bottom: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <a class="logo" href="index.html">
+      <img src="assets/logo.png" alt="Mevrick Logo" />
+      MEVTENCIA
+    </a>
+    <div class="nav-right">
+      <ul class="nav-links">
+        <li><a href="AttendanceTracker.html">📊 Dashboard</a></li>
+        <li><a href="SalaryHistory.html">💰 Salary</a></li>
+        <li><a href="ContactPage.html" class="active">📞 Contact</a></li>
+        <li><a href="index.html" onclick="logout()">🚪 Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="header-card">
+      <img src="assets/logo.png" alt="Mevrick Logo" class="logo-img" />
+      <h2>📞 Contact Information</h2>
+      <p>Your personal contact details and company support</p>
+    </div>
+
+    <!-- Profile Photo -->
+    <!-- <div class="main-card">
+      <div class="contact-photo" id="contactPhoto">
+        <div class="placeholder" id="photoPlaceholder">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <img id="profilePhoto" style="display:none;" alt="Profile Photo" />
+        <div style="margin-top:10px;">
+          <span id="empName" style="font-size:18px;font-weight:700;color:#1e293b;">Employee</span>
+          <div id="empRoleBadge" style="margin-top:4px;"></div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Personal Contact Details (view) -->
+    <div class="main-card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Personal Details
+      </div>
+      <div class="contact-grid">
+        <div class="contact-item">
+          <div class="label">Employee ID</div>
+          <div class="value" id="empId">—</div>
+        </div>
+        <div class="contact-item">
+          <div class="label">Role / Designation</div>
+          <div class="value" id="empDesignation">—</div>
+        </div>
+        <div class="contact-item">
+          <div class="label">📧 Email Address</div>
+          <div class="value" id="empEmail">
+            <a href="#" id="emailLink">—</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="label">📱 Phone Number</div>
+          <div class="value" id="empPhone">
+            <a href="#" id="phoneLink">—</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="label">🏢 Department</div>
+          <div class="value" id="empDept">—</div>
+        </div>
+        <div class="contact-item">
+          <div class="label">📍 City</div>
+          <div class="value" id="empCity">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Editable Contact Details Form -->
+    <div class="main-card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        Edit Contact Details
+      </div>
+      <form id="contactForm" autocomplete="off">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="fEmpId">Employee ID</label>
+            <div class="input-wrap">
+              <span class="field-icon">🆔</span>
+              <input type="text" id="fEmpId" placeholder="e.g. EMP1024" disabled />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="fPassword">Password</label>
+            <div class="input-wrap">
+              <span class="field-icon">🔒</span>
+              <input type="password" id="fPassword" placeholder="Enter new password" />
+              <button type="button" class="toggle-pass-btn" id="togglePassBtn">👁️</button>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="fName">Full Name</label>
+            <div class="input-wrap">
+              <span class="field-icon">🙍</span>
+              <input type="text" id="fName" placeholder="Your full name" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="fEmail">Email Address</label>
+            <div class="input-wrap">
+              <span class="field-icon">📧</span>
+              <input type="email" id="fEmail" placeholder="you@example.com" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="fDesignation">Designation</label>
+            <div class="input-wrap">
+              <span class="field-icon">💼</span>
+              <input type="text" id="fDesignation" placeholder="e.g. Software Engineer" />
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label for="fPhone">Phone Number</label>
+            <div class="input-wrap">
+              <span class="field-icon">📱</span>
+              <input type="tel" id="fPhone" placeholder="e.g. 9876543210" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn save">💾 Save Changes</button>
+          <button type="button" class="btn reset" id="resetFormBtn">↺ Reset</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- HR / Manager Contact
+    <div class="main-card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+        Support / HR Contact
+      </div>
+      <div class="hr-contact">
+        <div class="label">👨‍💼 HR Manager</div>
+        <div class="value" id="hrName">Mevrick HR Team</div>
+        <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div>
+            <div style="font-size:11px;color:#888;">📧 Email</div>
+            <div style="font-size:14px;font-weight:600;color:#3f51b5;">
+              <a href="mailto:hr@mevrick.com">hr@mevrick.com</a>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#888;">📱 Phone</div>
+            <div style="font-size:14px;font-weight:600;color:#3f51b5;">
+              <a href="tel:+919876543210">+91 98765 43210</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> -->
+
+    <!-- Quick Actions -->
+    <!-- <div class="main-card">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Quick Actions
+      </div>
+      <div class="quick-actions">
+        <a href="mailto:hr@mevrick.com" class="quick-action-btn email">
+          ✉️ Email HR
+        </a>
+        <a href="tel:+919876543210" class="quick-action-btn call">
+          📞 Call HR
+        </a>
+        <a href="https://wa.me/919876543210" target="_blank" class="quick-action-btn whatsapp">
+          💬 WhatsApp
+        </a>
+        <a href="EmployeeProfile.html" class="quick-action-btn profile">
+          👤 Edit Profile
+        </a>
+      </div>
+    </div> -->
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ========== SESSION MANAGEMENT ==========
+    function getSession() {
+      try {
+        const session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
+        if (session && session.empId) {
+          return session;
+        }
+        // Fallback to admin session
+        const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+        if (adminSession) {
+          return {
+            empId: adminSession.id || adminSession.admin_id,
+            name: adminSession.name || adminSession.employeeName || 'Admin',
+            dept: 'Admin',
+            city: '',
+            role: 'admin'
+          };
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    }
+
+    function getEmployeeDB() {
+      try {
+        return JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveEmployeeDB(db) {
+      localStorage.setItem('mev_employeeDB', JSON.stringify(db));
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    function logout() {
+      localStorage.removeItem('mev_employeeSession');
+      localStorage.removeItem('mev_adminSession');
+      localStorage.removeItem('mev_capturedPhoto');
+      localStorage.removeItem('mev_capturedLocation');
+      window.location.href = 'index.html';
+    }
+
+    let currentEmpId = null;
+
+    // ========== LOAD CONTACT PAGE ==========
+    function loadContactPage() {
+      const session = getSession();
+
+      if (!session) {
+        window.location.href = 'mev.html';
+        return;
+      }
+
+      currentEmpId = session.empId;
+      const db = getEmployeeDB();
+      const emp = db[session.empId] || {};
+
+      // Set name
+      document.getElementById('empName').textContent = session.name || emp.name || 'Employee';
+
+      // Set role badge
+      const role = session.role || emp.role || 'employee';
+      const badgeEl = document.getElementById('empRoleBadge');
+      const roleNames = {
+        'employee': 'Employee',
+        'admin': 'Admin',
+        'manager': 'Manager',
+        'superadmin': 'Super Admin'
+      };
+      badgeEl.innerHTML = `<span class="role-badge ${role}">${roleNames[role] || 'Employee'}</span>`;
+
+      // Load photo
+      const photo = session.photo || localStorage.getItem('mev_capturedPhoto') || emp.photo;
+      const img = document.getElementById('profilePhoto');
+      const placeholder = document.getElementById('photoPlaceholder');
+      if (photo) {
+        img.src = photo;
+        img.style.display = 'block';
+        placeholder.style.display = 'none';
+      } else {
+        img.style.display = 'none';
+        placeholder.style.display = 'flex';
+      }
+
+      // Personal details (view section)
+      document.getElementById('empId').textContent = session.empId || emp.id || '—';
+      document.getElementById('empDesignation').textContent = emp.designation || roleNames[role] || 'Employee';
+      document.getElementById('empDept').textContent = emp.dept || session.dept || '—';
+      document.getElementById('empCity').textContent = emp.city || session.city || '—';
+
+      // Email
+      const email = emp.email || session.email || '';
+      const emailLink = document.getElementById('emailLink');
+      if (email) {
+        emailLink.href = 'mailto:' + email;
+        emailLink.textContent = email;
+      } else {
+        emailLink.textContent = '—';
+        emailLink.href = '#';
+      }
+
+      // Phone
+      const phone = emp.phone || session.phone || '';
+      const phoneLink = document.getElementById('phoneLink');
+      if (phone) {
+        phoneLink.href = 'tel:' + phone;
+        phoneLink.textContent = phone;
+      } else {
+        phoneLink.textContent = '—';
+        phoneLink.href = '#';
+      }
+
+      // HR Contact - show based on role
+      const hrName = document.getElementById('hrName');
+      if (role === 'admin' || role === 'manager') {
+        hrName.textContent = 'Super Admin Support';
+      } else {
+        hrName.textContent = 'HR Manager - Mevrick Team';
+      }
+
+      // Fill the editable form with current values
+      fillForm(session, emp);
+    }
+
+    function fillForm(session, emp) {
+      document.getElementById('fEmpId').value = session.empId || emp.id || '';
+      document.getElementById('fPassword').value = ''; // never pre-fill password
+      document.getElementById('fName').value = session.name || emp.name || '';
+      document.getElementById('fEmail').value = emp.email || session.email || '';
+      document.getElementById('fDesignation').value = emp.designation || '';
+      document.getElementById('fPhone').value = emp.phone || session.phone || '';
+    }
+
+    // ========== SHOW/HIDE PASSWORD ==========
+    document.getElementById('togglePassBtn').addEventListener('click', function () {
+      const pass = document.getElementById('fPassword');
+      if (pass.type === 'password') {
+        pass.type = 'text';
+        this.textContent = '🙈';
+      } else {
+        pass.type = 'password';
+        this.textContent = '👁️';
+      }
+    });
+
+    // ========== RESET FORM ==========
+    document.getElementById('resetFormBtn').addEventListener('click', function () {
+      const session = getSession();
+      const db = getEmployeeDB();
+      const emp = db[session.empId] || {};
+      fillForm(session, emp);
+      showToast('Form reset', 'success');
+    });
+
+    // ========== SAVE FORM ==========
+    document.getElementById('contactForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById('fName').value.trim();
+      const email = document.getElementById('fEmail').value.trim();
+      const designation = document.getElementById('fDesignation').value.trim();
+      const phone = document.getElementById('fPhone').value.trim();
+      const password = document.getElementById('fPassword').value;
+
+      if (!name || !email) {
+        showToast('Name and email are required', 'error');
+        return;
+      }
+
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+      }
+
+      if (!currentEmpId) {
+        showToast('No active session found', 'error');
+        return;
+      }
+
+      const db = getEmployeeDB();
+      const existing = db[currentEmpId] || {};
+
+      db[currentEmpId] = {
+        ...existing,
+        id: currentEmpId,
+        name,
+        email,
+        designation,
+        phone
+      };
+
+      if (password) {
+        db[currentEmpId].password = password;
+      }
+
+      saveEmployeeDB(db);
+
+      // Update the current session too, so the change reflects immediately
+      try {
+        const session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
+        if (session) {
+          session.name = name;
+          session.email = email;
+          session.phone = phone;
+          localStorage.setItem('mev_employeeSession', JSON.stringify(session));
+        }
+      } catch {}
+
+      showToast('Contact details saved successfully ✅', 'success');
+      loadContactPage();
+    });
+
+    // ========== INIT ==========
+    document.addEventListener('DOMContentLoaded', loadContactPage);
+  </script>
+</body>
+
+</html>

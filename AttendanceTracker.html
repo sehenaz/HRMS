@@ -9,129 +9,685 @@
   <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%); min-height: 100vh; }
-    .navbar { background-color: #3f51b5; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 10; }
-    .logo { color: white; font-size: 20px; font-weight: 800; text-decoration: none; }
-    .nav-right { display: flex; align-items: center; gap: 10px; }
-    .nav-links { list-style: none; display: flex; gap: 8px; }
-    .nav-links a { color: white; text-decoration: none; font-size: 12px; padding: 7px 10px; border-radius: 999px; background: rgba(255,255,255,0.12); }
-    .container { max-width: 700px; margin: 0 auto; padding: 25px 18px 60px; }
-    .profile-bar { background: white; border-radius: 16px; padding: 18px 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); margin-bottom: 20px; display: flex; align-items: center; gap: 15px; }
-    .profile-img { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #3f51b5, #2c3e9e); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid #e0e7ff; flex-shrink: 0; }
-    .profile-img img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-img svg { width: 28px; height: 28px; fill: white; }
-    .profile-info { flex: 1; }
-    .profile-info h3 { color: #333; font-size: 16px; font-weight: 700; margin-bottom: 2px; }
-    .profile-info p { color: #888; font-size: 12px; }
-    .profile-location { font-size: 12px; color: #3f51b5; background: #e8eef5; padding: 4px 10px; border-radius: 20px; margin-top: 5px; display: inline-block; }
-    .clock-section { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
-    .clock-section h3 { color: #3f51b5; margin-bottom: 15px; font-size: 16px; font-weight: 700; }
-    .date-display { font-size: 15px; color: #666; margin-bottom: 6px; }
-    .time-display { font-size: 46px; color: #3f51b5; font-weight: bold; margin-bottom: 8px; font-family: 'Courier New', monospace; line-height: 1; }
-    .shift-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; margin-bottom: 18px; }
-    .shift-normal { background: #d4edda; color: #155724; }
-    .shift-half { background: #fff3cd; color: #856404; }
-    .shift-dot { width: 7px; height: 7px; border-radius: 50%; animation: blink 1.5s infinite; }
-    .dot-green { background: #28a745; }
-    .dot-amber { background: #ffc107; }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .clock-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-    .btn { padding: 14px 35px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-    .btn-in { background: linear-gradient(135deg, #4caf50, #45a049); color: white; }
-    .btn-out { background: linear-gradient(135deg, #f44336, #da190b); color: white; }
-    .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
-    .btn:active { transform: scale(0.98); }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
-    .status-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    .status-card h3 { color: #3f51b5; margin-bottom: 18px; font-size: 16px; font-weight: 700; }
-    .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .status-item { background: #f5f7fa; padding: 16px; border-radius: 12px; text-align: center; }
-    .status-item label { display: block; color: #888; font-size: 12px; margin-bottom: 8px; }
-    .status-item .value { font-size: 22px; font-weight: bold; color: #3f51b5; }
-    .badge-full { font-size: 11px; font-weight: 700; background: #d4edda; color: #155724; padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 4px; }
-    .badge-half { font-size: 11px; font-weight: 700; background: #fff3cd; color: #856404; padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 4px; }
-    .badge-live { font-size: 11px; font-weight: 700; background: #cce5ff; color: #004085; padding: 3px 10px; border-radius: 10px; display: inline-block; margin-top: 4px; }
-    .summary-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 20px; }
-    .sum-card { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); text-align: center; }
-    .sum-card .num { font-size: 30px; font-weight: bold; color: #3f51b5; margin-bottom: 6px; }
-    .sum-card .lbl { color: #888; font-size: 12px; }
-    .attendance-table { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow-x: auto; }
-    .attendance-table h3 { color: #3f51b5; margin-bottom: 18px; font-size: 16px; font-weight: 700; }
-    table { width: 100%; border-collapse: collapse; min-width: 500px; }
-    th { background: #3f51b5; color: white; padding: 12px 14px; text-align: left; font-weight: 600; font-size: 13px; }
-    td { padding: 12px 14px; border-bottom: 1px solid #e0e7ff; font-size: 13px; }
-    tr:hover { background: #f5f7fa; }
-    tr:last-child td { border-bottom: none; }
-    .status-present { color: #4caf50; font-weight: 600; }
-    .status-half { color: #ff9800; font-weight: 600; }
-    .status-wip { color: #3f51b5; font-weight: 600; }
-    .status-error { color: #e53e3e; font-weight: 600; }
-    .loc-cell { max-width: 180px; font-size: 11px; color: #555; line-height: 1.4; }
-    .loc-short { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; white-space: normal; font-size: 11px; color: #555; line-height: 1.4; margin-bottom: 3px; }
-    .map-btn { display: inline-flex; align-items: center; gap: 3px; color: #3f51b5; text-decoration: none; font-size: 10px; font-weight: 600; background: #e8eef5; padding: 2px 8px; border-radius: 6px; margin-top: 3px; }
-    .map-btn:hover { background: #c5cee0; }
-    .toast { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 22px; border-radius: 25px; font-size: 14px; z-index: 999; transition: transform 0.3s; white-space: nowrap; box-shadow: 0 5px 20px rgba(0,0,0,0.25); }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .insights-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; }
-    @media(min-width: 600px) { .insights-card { grid-template-columns: 1.2fr 1fr; align-items: center; } }
-    .chart-container { position: relative; height: 220px; width: 100%; }
-    .salary-payout-box { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
-    .salary-payout-box h4 { color: #3f51b5; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
-    .salary-payout-box .payout-amount { font-size: 28px; font-weight: 800; color: #10b981; margin-bottom: 8px; }
-    .salary-details { font-size: 12px; color: #64748b; line-height: 1.6; }
-    .salary-details strong { color: #334155; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+      min-height: 100vh;
+    }
+
+    .navbar {
+      background-color: #3f51b5;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .logo {
+      color: white;
+      font-size: 20px;
+      font-weight: 800;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo img {
+      height: 45px;
+      width: 45px;
+      object-fit: contain;
+      background: white;
+      border-radius: 50%;
+      padding: 5px;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      transition: background 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 25px 18px 60px;
+    }
+
+    .profile-bar {
+      background: white;
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .profile-img {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3f51b5, #2c3e9e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border: 3px solid #e0e7ff;
+      flex-shrink: 0;
+    }
+
+    .profile-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-img svg {
+      width: 28px;
+      height: 28px;
+      fill: white;
+    }
+
+    .profile-info {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .profile-info h3 {
+      color: #333;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .profile-info p {
+      color: #888;
+      font-size: 12px;
+    }
+
+    .profile-location {
+      font-size: 12px;
+      color: #3f51b5;
+      background: #e8eef5;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 5px;
+      display: inline-block;
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-sm:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-sm-primary {
+      background: #3f51b5;
+      color: white;
+    }
+    .btn-sm-primary:hover {
+      background: #303f9f;
+    }
+
+    .btn-sm-success {
+      background: #4caf50;
+      color: white;
+    }
+    .btn-sm-success:hover {
+      background: #388e3c;
+    }
+
+    .btn-sm-danger {
+      background: #f44336;
+      color: white;
+    }
+    .btn-sm-danger:hover {
+      background: #d32f2f;
+    }
+
+    .clock-section {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .clock-section h3 {
+      color: #3f51b5;
+      margin-bottom: 15px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .date-display {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+
+    .time-display {
+      font-size: 46px;
+      color: #3f51b5;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-family: 'Courier New', monospace;
+      line-height: 1;
+    }
+
+    .shift-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+
+    .shift-normal {
+      background: #d4edda;
+      color: #155724;
+    }
+    .shift-half {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .shift-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      animation: blink 1.5s infinite;
+    }
+
+    .dot-green {
+      background: #28a745;
+    }
+    .dot-amber {
+      background: #ffc107;
+    }
+
+    @keyframes blink {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    .clock-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 35px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-in {
+      background: linear-gradient(135deg, #4caf50, #45a049);
+      color: white;
+    }
+
+    .btn-out {
+      background: linear-gradient(135deg, #f44336, #da190b);
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .status-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .status-card h3 {
+      color: #3f51b5;
+      margin-bottom: 18px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .status-item {
+      background: #f5f7fa;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .status-item label {
+      display: block;
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .status-item .value {
+      font-size: 22px;
+      font-weight: bold;
+      color: #3f51b5;
+    }
+
+    .badge-full {
+      font-size: 11px;
+      font-weight: 700;
+      background: #d4edda;
+      color: #155724;
+      padding: 3px 10px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .badge-half {
+      font-size: 11px;
+      font-weight: 700;
+      background: #fff3cd;
+      color: #856404;
+      padding: 3px 10px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .badge-live {
+      font-size: 11px;
+      font-weight: 700;
+      background: #cce5ff;
+      color: #004085;
+      padding: 3px 10px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .sum-card {
+      background: white;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    .sum-card .num {
+      font-size: 30px;
+      font-weight: bold;
+      color: #3f51b5;
+      margin-bottom: 6px;
+    }
+
+    .sum-card .lbl {
+      color: #888;
+      font-size: 12px;
+    }
+
+    .attendance-table {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+    }
+
+    .attendance-table h3 {
+      color: #3f51b5;
+      margin-bottom: 18px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 500px;
+    }
+
+    th {
+      background: #3f51b5;
+      color: white;
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #e0e7ff;
+      font-size: 13px;
+    }
+
+    tr:hover {
+      background: #f5f7fa;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-present {
+      color: #4caf50;
+      font-weight: 600;
+    }
+    .status-half {
+      color: #ff9800;
+      font-weight: 600;
+    }
+    .status-wip {
+      color: #3f51b5;
+      font-weight: 600;
+    }
+    .status-error {
+      color: #e53e3e;
+      font-weight: 600;
+    }
+
+    .loc-cell {
+      max-width: 180px;
+      font-size: 11px;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .loc-short {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-word;
+      white-space: normal;
+      font-size: 11px;
+      color: #555;
+      line-height: 1.4;
+      margin-bottom: 3px;
+    }
+
+    .map-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: #3f51b5;
+      text-decoration: none;
+      font-size: 10px;
+      font-weight: 600;
+      background: #e8eef5;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-top: 3px;
+    }
+
+    .map-btn:hover {
+      background: #c5cee0;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #333;
+      color: white;
+      padding: 12px 22px;
+      border-radius: 25px;
+      font-size: 14px;
+      z-index: 999;
+      transition: transform 0.3s;
+      white-space: nowrap;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .insights-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media(min-width: 600px) {
+      .insights-card {
+        grid-template-columns: 1.2fr 1fr;
+        align-items: center;
+      }
+    }
+
+    .chart-container {
+      position: relative;
+      height: 220px;
+      width: 100%;
+    }
+
+    .salary-payout-box {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .salary-payout-box h4 {
+      color: #3f51b5;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .salary-payout-box .payout-amount {
+      font-size: 28px;
+      font-weight: 800;
+      color: #10b981;
+      margin-bottom: 8px;
+    }
+
+    .salary-details {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .salary-details strong {
+      color: #334155;
+    }
 
     /* ===================== CLOCKOUT POPUP STYLES ===================== */
     .popup-overlay {
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
       background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(4px);
       z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 16px;
-      opacity: 0; pointer-events: none;
+      opacity: 0;
+      pointer-events: none;
       transition: opacity 0.25s ease;
     }
-    .popup-overlay.active { opacity: 1; pointer-events: all; }
+
+    .popup-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
 
     .popup-box {
       background: white;
       border-radius: 24px;
       padding: 28px 24px 24px;
-      width: 100%; max-width: 480px;
-      box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
       transform: translateY(30px) scale(0.97);
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
       max-height: 90vh;
       overflow-y: auto;
     }
-    .popup-overlay.active .popup-box { transform: translateY(0) scale(1); }
+
+    .popup-overlay.active .popup-box {
+      transform: translateY(0) scale(1);
+    }
 
     .popup-header {
-      display: flex; align-items: center; gap: 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       margin-bottom: 20px;
       padding-bottom: 16px;
       border-bottom: 2px solid #f1f5f9;
     }
+
     .popup-icon {
-      width: 48px; height: 48px; border-radius: 14px;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
       background: linear-gradient(135deg, #f44336, #da190b);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
     }
-    .popup-header h2 { color: #1e293b; font-size: 18px; font-weight: 800; margin-bottom: 2px; }
-    .popup-header p { color: #94a3b8; font-size: 12px; }
+
+    .popup-header h2 {
+      color: #1e293b;
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .popup-header p {
+      color: #94a3b8;
+      font-size: 12px;
+    }
 
     .popup-section-title {
-      font-size: 12px; font-weight: 700; color: #64748b;
-      text-transform: uppercase; letter-spacing: 0.8px;
-      margin-bottom: 10px; margin-top: 18px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+      margin-top: 18px;
     }
-    .popup-section-title:first-of-type { margin-top: 0; }
 
-    /* Task entry rows */
-    .task-list { display: flex; flex-direction: column; gap: 10px; }
+    .popup-section-title:first-of-type {
+      margin-top: 0;
+    }
+
+    .task-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
     .task-row {
       display: grid;
@@ -144,57 +700,95 @@
       border: 1.5px solid #e2e8f0;
       transition: border-color 0.2s;
     }
-    .task-row:focus-within { border-color: #3f51b5; background: #f0f4ff; }
+
+    .task-row:focus-within {
+      border-color: #3f51b5;
+      background: #f0f4ff;
+    }
 
     .task-row .task-num {
       grid-column: 1 / -1;
-      font-size: 10px; font-weight: 700; color: #3f51b5;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #3f51b5;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       margin-bottom: 4px;
     }
 
     .task-desc {
       grid-column: 1 / -1;
       width: 100%;
-      border: none; outline: none;
+      border: none;
+      outline: none;
       background: transparent;
-      font-size: 14px; color: #1e293b;
+      font-size: 14px;
+      color: #1e293b;
       font-family: inherit;
       resize: none;
       min-height: 40px;
     }
-    .task-desc::placeholder { color: #cbd5e1; }
+
+    .task-desc::placeholder {
+      color: #cbd5e1;
+    }
 
     .task-meta-row {
       grid-column: 1 / -1;
-      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
     .task-select {
-      border: 1px solid #e2e8f0; border-radius: 8px;
-      padding: 4px 8px; font-size: 12px; color: #475569;
-      background: white; outline: none; cursor: pointer;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: #475569;
+      background: white;
+      outline: none;
+      cursor: pointer;
       font-family: inherit;
     }
-    .task-select:focus { border-color: #3f51b5; }
+
+    .task-select:focus {
+      border-color: #3f51b5;
+    }
 
     .task-hours-input {
       width: 70px;
-      border: 1px solid #e2e8f0; border-radius: 8px;
-      padding: 4px 8px; font-size: 12px; color: #475569;
-      background: white; outline: none;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: #475569;
+      background: white;
+      outline: none;
       font-family: inherit;
     }
-    .task-hours-input:focus { border-color: #3f51b5; }
+
+    .task-hours-input:focus {
+      border-color: #3f51b5;
+    }
 
     .remove-task-btn {
-      background: none; border: none; cursor: pointer;
-      color: #f43f5e; font-size: 18px; line-height: 1;
-      padding: 2px 4px; border-radius: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #f43f5e;
+      font-size: 18px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 6px;
       transition: background 0.15s;
       align-self: flex-start;
     }
-    .remove-task-btn:hover { background: #fff1f2; }
+
+    .remove-task-btn:hover {
+      background: #fff1f2;
+    }
 
     .add-task-btn {
       width: 100%;
@@ -203,86 +797,166 @@
       border-radius: 12px;
       background: none;
       color: #94a3b8;
-      font-size: 13px; font-weight: 600;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
       margin-top: 6px;
       font-family: inherit;
     }
-    .add-task-btn:hover { border-color: #3f51b5; color: #3f51b5; background: #f0f4ff; }
 
-    /* Overall note */
+    .add-task-btn:hover {
+      border-color: #3f51b5;
+      color: #3f51b5;
+      background: #f0f4ff;
+    }
+
     .popup-note {
       width: 100%;
       border: 1.5px solid #e2e8f0;
       border-radius: 12px;
       padding: 12px 14px;
-      font-size: 14px; color: #1e293b;
+      font-size: 14px;
+      color: #1e293b;
       font-family: inherit;
-      resize: none; outline: none;
+      resize: none;
+      outline: none;
       background: #f8fafc;
       min-height: 70px;
       transition: border-color 0.2s;
     }
-    .popup-note:focus { border-color: #3f51b5; background: #f0f4ff; }
-    .popup-note::placeholder { color: #cbd5e1; }
 
-    /* Popup action buttons */
+    .popup-note:focus {
+      border-color: #3f51b5;
+      background: #f0f4ff;
+    }
+
+    .popup-note::placeholder {
+      color: #cbd5e1;
+    }
+
     .popup-actions {
-      display: flex; gap: 10px;
+      display: flex;
+      gap: 10px;
       margin-top: 22px;
     }
+
     .popup-cancel-btn {
-      flex: 1; padding: 13px;
-      border: 2px solid #e2e8f0; border-radius: 12px;
-      background: white; color: #64748b;
-      font-size: 15px; font-weight: 600;
-      cursor: pointer; font-family: inherit;
+      flex: 1;
+      padding: 13px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      background: white;
+      color: #64748b;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
       transition: all 0.2s;
     }
-    .popup-cancel-btn:hover { border-color: #94a3b8; color: #334155; }
+
+    .popup-cancel-btn:hover {
+      border-color: #94a3b8;
+      color: #334155;
+    }
 
     .popup-submit-btn {
-      flex: 2; padding: 13px;
-      border: none; border-radius: 12px;
+      flex: 2;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
       background: linear-gradient(135deg, #f44336, #da190b);
       color: white;
-      font-size: 15px; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-      box-shadow: 0 4px 15px rgba(244,67,54,0.35);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 15px rgba(244, 67, 54, 0.35);
       transition: all 0.2s;
     }
-    .popup-submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244,67,54,0.45); }
-    .popup-submit-btn:active { transform: scale(0.98); }
 
-    /* Task summary in history table */
+    .popup-submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(244, 67, 54, 0.45);
+    }
+
+    .popup-submit-btn:active {
+      transform: scale(0.98);
+    }
+
     .task-summary-cell {
-      font-size: 11px; color: #475569; max-width: 160px;
+      font-size: 11px;
+      color: #475569;
+      max-width: 160px;
       line-height: 1.5;
     }
+
     .task-tag {
       display: inline-block;
-      background: #e0e7ff; color: #3730a3;
-      font-size: 10px; font-weight: 600;
-      padding: 1px 6px; border-radius: 6px;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 6px;
       margin: 1px 2px 1px 0;
+    }
+
+    /* Super Admin Badge */
+    .super-admin-badge {
+      display: inline-block;
+      background: #fce4ec;
+      color: #c62828;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .profile-bar {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      .profile-actions {
+        justify-content: center;
+      }
+      .status-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .time-display {
+        font-size: 32px;
+      }
+      .navbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-right {
+        justify-content: center;
+      }
     }
   </style>
 </head>
 
 <body>
   <nav class="navbar">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <img src="assets/logo.png" alt="Mevrick Logo"
-        style="height: 60px; width: 60px; object-fit: contain; background: white; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-      <a class="logo" href="index.html">MEVTENCIA</a>
-    </div>
+    <a class="logo" href="index.html">
+      <img src="assets/logo.png" alt="Mevrick Logo" />
+      MEVTENCIA
+    </a>
     <div class="nav-right">
-      <ul class="nav-links">
-        <li><a href="Profile.html">Profile</a></li>
-        <li><a href="SalaryHistory.html"> Salary</a></li>
-        <li><a href="#" id="navAdminBtn" style="display:none;background:rgba(124,58,237,0.3);" onclick="goToAdminDashboard()"> Admin</a></li>
-        <li><a href="mev.html" onclick="logout()">Logout</a></li>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="AttendanceTracker.html" class="active">📊 Dashboard</a></li>
+        <!-- Salary link - hidden for Super Admin -->
+        <li id="navSalary"><a href="SalaryHistory.html">💰 Salary</a></li>
+        <!-- Contact link - hidden for Super Admin -->
+        <li id="navContact"><a href="ContactPage.html">📞 Contact</a></li>
+        <!-- Profile link - hidden for Super Admin -->
+        <li id="navProfile"><a href="EmployeeProfile.html">👤 Profile</a></li>
+        <li><a href="index.html" onclick="logout()">🚪 Logout</a></li>
       </ul>
     </div>
   </nav>
@@ -293,14 +967,15 @@
         <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
       </div>
       <div class="profile-info">
-        <h3 id="empName">Employee</h3>
-        <p id="empMeta">—</p>
+        <h3 id="empName">Welcome to MEVTENCIA</h3>
+        <p id="empMeta">Employee</p>
         <div class="profile-location" id="empLocation" style="display:none;"></div>
-        <div id="adminBadge" style="display:none;margin-top:6px;">
-          <span onclick="goToAdminDashboard()" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;">
-            🛡️ Admin — Click to open Dashboard
-          </span>
-        </div>
+      </div>
+      <div class="profile-actions" id="profileActions">
+        <!-- Profile button - hidden for Super Admin -->
+        <!-- <a href="EmployeeProfile.html" class="btn-sm btn-sm-primary" id="btnProfile">👤 Profile</a>
+        <!-- Contact button - hidden for Super Admin -->
+        <!-- <a href="ContactPage.html" class="btn-sm btn-sm-success" id="btnContact">📞 Contact</a>  -->
       </div>
     </div>
 
@@ -334,9 +1009,10 @@
       <div class="sum-card"><div class="num" id="sumHours">0h</div><div class="lbl">Total Hours</div></div>
     </div>
 
-    <div class="insights-card">
+    <!-- Insights Card - Salary hidden for Super Admin -->
+    <div class="insights-card" id="insightsCard">
       <div class="chart-container"><canvas id="attendanceChart"></canvas></div>
-      <div class="salary-payout-box">
+      <div class="salary-payout-box" id="salaryBox">
         <h4>💰 Estimated Payout (Current Month)</h4>
         <div class="payout-amount" id="salaryPayout">₹0</div>
         <div class="salary-details" id="salaryDetails">
@@ -395,48 +1071,81 @@
   </div>
 
   <script>
-    const HALF_IN_H = 11, HALF_IN_M = 30;
-    const HALF_OUT_H = 16, HALF_OUT_M = 30;
-    const AUTO_CLOCKOUT_H = 23, AUTO_CLOCKOUT_M = 0;
+    const HALF_IN_H = 11,
+      HALF_IN_M = 30;
+    const HALF_OUT_H = 16,
+      HALF_OUT_M = 30;
+    const AUTO_CLOCKOUT_H = 23,
+      AUTO_CLOCKOUT_M = 0;
 
     let session = null;
     let clockInTime = null;
     let autoClockoutTimer = null;
     let taskCount = 0;
+    let isSuperAdmin = false;
 
-    window.onload = async function () {
-      // Support both session keys
-      session = JSON.parse(localStorage.getItem('mev_session') || 'null');
+    window.onload = async function() {
+      // Check for employee session
+      session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
+
+      // If no session, try admin session fallback
       if (!session) {
-        const empSession = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
-        if (empSession) {
+        const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+        if (adminSession) {
+          // Check if super admin
+          isSuperAdmin = adminSession.type === 'super' || adminSession.type === 'superadmin';
+          
+          // Create employee session from admin data
           session = {
-            type:    'employee',
-            id:      empSession.empId,
-            name:    empSession.empName,
-            photo:   empSession.photo || '',
-            city:    empSession.location?.city || '',
-            dept:    'Employee',
-            loginAt: empSession.loginAt
+            id: adminSession.id || adminSession.admin_id,
+            name: adminSession.name || adminSession.employeeName || 'Admin',
+            dept: 'Admin',
+            city: '',
+            type: 'employee',
+            isSuperAdmin: isSuperAdmin
           };
-          localStorage.setItem('mev_session', JSON.stringify(session));
+          localStorage.setItem('mev_employeeSession', JSON.stringify(session));
         }
       }
-      if (!session || session.type !== 'employee') { window.location.href = 'mev.html'; return; }
 
-      document.getElementById('empName').textContent = session.name;
+      // Check if user is Super Admin from session
+      if (session && session.isSuperAdmin) {
+        isSuperAdmin = true;
+      }
+
+      // If still no session, redirect to login
+      if (!session) {
+        window.location.href = 'mev.html';
+        return;
+      }
+
+      // Apply Super Admin restrictions
+      applySuperAdminRestrictions();
+
+      document.getElementById('empName').textContent = session.name || 'Welcome to MEVTENCIA';
+      
+      // Add Super Admin badge
+      if (isSuperAdmin) {
+        document.getElementById('empName').innerHTML = session.name + ' <span class="super-admin-badge">⭐ Super Admin</span>';
+      }
+      
       const city = (session.city && session.city !== 'undefined' && session.city !== 'null') ? session.city : '';
       const dept = (session.dept && session.dept !== 'undefined') ? session.dept : 'Employee';
       const metaParts = [session.id, dept];
       if (city) metaParts.push(city);
       document.getElementById('empMeta').textContent = metaParts.join(' · ');
 
-      const photo = localStorage.getItem('mev_capturedPhoto');
+      // Load profile photo
+      const photo = session.photo || localStorage.getItem('mev_capturedPhoto');
       if (photo) {
-        const img = document.createElement('img'); img.src = photo;
-        const wrap = document.getElementById('profileImg'); wrap.innerHTML = ''; wrap.appendChild(img);
+        const img = document.createElement('img');
+        img.src = photo;
+        const wrap = document.getElementById('profileImg');
+        wrap.innerHTML = '';
+        wrap.appendChild(img);
       }
 
+      // Load location
       const loc = localStorage.getItem('mev_capturedLocation');
       if (loc) {
         try {
@@ -448,10 +1157,8 @@
         } catch (e) {}
       }
 
-      // Check if this employee is an Admin
-      await checkAndShowAdminBadge(session.id);
-
-      setInterval(tickClock, 1000); tickClock();
+      setInterval(tickClock, 1000);
+      tickClock();
       loadTodayState();
       renderHistory();
       updateSummary();
@@ -467,6 +1174,7 @@
         }
       }
 
+      // Sync with backend
       (async () => {
         try {
           const backendRecords = await getRecordsFromBackend();
@@ -483,11 +1191,44 @@
               return db2.localeCompare(da);
             });
             localStorage.setItem(getKey(), JSON.stringify(merged));
-            renderHistory(); updateSummary(); initAnalytics();
+            renderHistory();
+            updateSummary();
+            initAnalytics();
           }
-        } catch (e) { console.warn('Background sync failed:', e); }
+        } catch (e) {
+          console.warn('Background sync failed:', e);
+        }
       })();
     };
+
+    // ===================== SUPER ADMIN RESTRICTIONS =====================
+    function applySuperAdminRestrictions() {
+      if (isSuperAdmin) {
+        // Hide Salary
+        document.getElementById('navSalary').style.display = 'none';
+        document.getElementById('salaryBox').style.display = 'none';
+        
+        // Hide Contact
+        document.getElementById('navContact').style.display = 'none';
+        document.getElementById('btnContact').style.display = 'none';
+        
+        // Hide Profile
+        document.getElementById('navProfile').style.display = 'none';
+        document.getElementById('btnProfile').style.display = 'none';
+        
+        // Hide insights card completely
+        document.getElementById('insightsCard').style.display = 'none';
+      } else {
+        // Show everything for normal employees
+        document.getElementById('navSalary').style.display = '';
+        document.getElementById('navContact').style.display = '';
+        document.getElementById('navProfile').style.display = '';
+        document.getElementById('btnProfile').style.display = '';
+        document.getElementById('btnContact').style.display = '';
+        document.getElementById('salaryBox').style.display = '';
+        document.getElementById('insightsCard').style.display = 'grid';
+      }
+    }
 
     // ===================== POPUP FUNCTIONS =====================
 
@@ -495,7 +1236,7 @@
       taskCount = 0;
       document.getElementById('taskList').innerHTML = '';
       document.getElementById('popupNote').value = '';
-      addTaskRow(); // Start with 1 task row
+      addTaskRow();
       document.getElementById('clockoutPopup').classList.add('active');
       document.body.style.overflow = 'hidden';
     }
@@ -505,7 +1246,6 @@
       document.body.style.overflow = '';
     }
 
-    // Close popup if clicking outside
     document.addEventListener('click', function(e) {
       const popup = document.getElementById('clockoutPopup');
       if (e.target === popup) closeClockoutPopup();
@@ -557,7 +1297,7 @@
       rows.forEach(row => {
         const id = row.id.replace('task-row-', '');
         const desc = (document.getElementById(`task-desc-${id}`)?.value || '').trim();
-        if (!desc) return; // Skip empty tasks
+        if (!desc) return;
         tasks.push({
           desc,
           category: document.getElementById(`task-cat-${id}`)?.value || '',
@@ -571,9 +1311,10 @@
     function submitClockout() {
       const tasks = collectTasks();
       if (tasks.length === 0) {
-        // Highlight first task field
         const firstDesc = document.querySelector('.task-desc');
-        if (firstDesc) { firstDesc.style.borderColor = '#f43f5e'; firstDesc.focus(); setTimeout(() => firstDesc.style.borderColor = '', 2000); }
+        if (firstDesc) { firstDesc.style.borderColor = '#f43f5e';
+          firstDesc.focus();
+          setTimeout(() => firstDesc.style.borderColor = '', 2000); }
         showToast('⚠️ Please add at least one task!');
         return;
       }
@@ -602,112 +1343,127 @@
     let attChart = null;
 
     async function initAnalytics() {
-  if (!document.getElementById('monthDays') ||
-      !document.getElementById('salaryPayout') ||
-      !document.getElementById('workDaysCount') ||
-      !document.getElementById('absentDaysCount') ||
-      !document.getElementById('salaryDetails') ||
-      !document.getElementById('attendanceChart')) return;
+      // Skip analytics for Super Admin
+      if (isSuperAdmin) return;
+      
+      if (!document.getElementById('monthDays') ||
+        !document.getElementById('salaryPayout') ||
+        !document.getElementById('workDaysCount') ||
+        !document.getElementById('absentDaysCount') ||
+        !document.getElementById('salaryDetails') ||
+        !document.getElementById('attendanceChart')) return;
       const records = getRecords();
       const now = new Date();
       const totalMonthDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-      // document.getElementById('monthDays').textContent = totalMonthDays;
       document.getElementById('monthDays').textContent = totalMonthDays;
 
-      const thisMonthRecs = records.filter(r => r.date && r.date.endsWith(String(now.getMonth() + 1).padStart(2, '0') + '/' + now.getFullYear()));
+      const thisMonthRecs = records.filter(r => r.date && r.date.endsWith(String(now.getMonth() + 1).padStart(2, '0') + '/' +
+        now.getFullYear()));
       const attMap = {};
-      thisMonthRecs.forEach(r => { const day = parseInt(r.date.split('/')[0]); attMap[day] = r.attendance_type; });
+      thisMonthRecs.forEach(r => { const day = parseInt(r.date.split('/')[0]);
+        attMap[day] = r.attendance_type; });
 
-      let payableDays = 0, absentDays = 0, holidays = 0, sandwiches = 0, presentFull = 0, presentHalf = 0;
+      let payableDays = 0,
+        absentDays = 0,
+        holidays = 0,
+        sandwiches = 0,
+        presentFull = 0,
+        presentHalf = 0;
       for (let day = 1; day <= totalMonthDays; day++) {
         if (day > now.getDate()) continue;
         const d = new Date(now.getFullYear(), now.getMonth(), day);
         const isSunday = d.getDay() === 0;
         const status = attMap[day];
-        if (status === 'Full Day') { payableDays += 1; presentFull += 1; }
-        else if (status && status.includes('Half')) { payableDays += 0.5; absentDays += 0.5; presentHalf += 1; }
-        else if (isSunday) {
-          const satDay = day - 1, monDay = day + 1;
+        if (status === 'Full Day') { payableDays += 1;
+          presentFull += 1; } else if (status && status.includes('Half')) { payableDays += 0.5;
+          absentDays += 0.5;
+          presentHalf += 1; } else if (isSunday) {
+          const satDay = day - 1,
+            monDay = day + 1;
           const satStatus = satDay >= 1 ? attMap[satDay] : null;
           const monStatus = monDay <= now.getDate() ? attMap[monDay] : null;
           const satAbsent = !satStatus || satStatus === 'Absent' || satStatus === 'In Progress';
-          const monAbsent = monDay <= now.getDate() ? (!monStatus || monStatus === 'Absent' || monStatus === 'In Progress') : false;
-          if (satAbsent && monAbsent) { sandwiches += 1; absentDays += 1; }
-          else { payableDays += 1; holidays += 1; }
+          const monAbsent = monDay <= now.getDate() ? (!monStatus || monStatus === 'Absent' || monStatus ===
+            'In Progress') : false;
+          if (satAbsent && monAbsent) { sandwiches += 1;
+            absentDays += 1; } else { payableDays += 1;
+            holidays += 1; }
         } else { absentDays += 1; }
       }
 
       let monthlySalary = 15000;
       try {
-        const lsDB = JSON.parse(localStorage.getItem('mevtencia_employeeDatabase') || '{}');
-        let localEmp = lsDB[session.id] || Object.values(lsDB).find(e => e.id === session.id || e.employeeId === session.id || e.email === session.email);
+        const lsDB = JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
+        let localEmp = lsDB[session.id] || Object.values(lsDB).find(e => e.id === session.id || e.employeeId === session
+          .id || e.email === session.email);
         if (localEmp && localEmp.salary) monthlySalary = parseInt(localEmp.salary);
       } catch (e) {}
       try {
         const resp = await fetch('/api/employees');
-        if (resp.ok) { const emps = await resp.json(); const me = emps.find(e => e.emp_id === session.id); if (me && me.salary) monthlySalary = parseInt(me.salary); }
+        if (resp.ok) { const emps = await resp.json();
+          const me = emps.find(e => e.emp_id === session.id); if (me && me.salary) monthlySalary = parseInt(me
+              .salary); }
       } catch (e) {}
 
       const dailyRate = monthlySalary / totalMonthDays;
-      if(document.getElementById('salaryPayout')) document.getElementById('salaryPayout').textContent = '₹' + Math.round(payableDays * dailyRate).toLocaleString('en-IN');
-      if(document.getElementById('workDaysCount')) document.getElementById('workDaysCount').textContent = payableDays;
-     if(document.getElementById('absentDaysCount')) document.getElementById('absentDaysCount').textContent= absentDays.toFixed(1);
-      if(document.getElementById('salaryDetails')) document.getElementById('salaryDetails').innerHTML = `Base Salary: <strong>₹${monthlySalary.toLocaleString('en-IN')}</strong><br>Paid Days (YTD): <strong>${payableDays}</strong> / ${now.getDate()}<br>Sundays (Paid): <strong>${holidays}</strong> | Sandwiches (Unpaid): <strong style="color:red;">${sandwiches}</strong><br><small>(Formula: Paid Days × Daily Rate of Current Month)</small>`;
+      if (document.getElementById('salaryPayout')) document.getElementById('salaryPayout').textContent = '₹' + Math
+        .round(payableDays * dailyRate).toLocaleString('en-IN');
+      if (document.getElementById('workDaysCount')) document.getElementById('workDaysCount').textContent = payableDays;
+      if (document.getElementById('absentDaysCount')) document.getElementById('absentDaysCount').textContent = absentDays
+        .toFixed(1);
+      if (document.getElementById('salaryDetails')) document.getElementById('salaryDetails').innerHTML =
+        `Base Salary: <strong>₹${monthlySalary.toLocaleString('en-IN')}</strong><br>Paid Days (YTD): <strong>${payableDays}</strong> / ${now.getDate()}<br>Sundays (Paid): <strong>${holidays}</strong> | Sandwiches (Unpaid): <strong style="color:red;">${sandwiches}</strong><br><small>(Formula: Paid Days × Daily Rate of Current Month)</small>`;
 
       const ctx = document.getElementById('attendanceChart').getContext('2d');
       if (attChart) attChart.destroy();
       attChart = new Chart(ctx, {
         type: 'doughnut',
-        data: { labels: ['Full Day', 'Half Day', 'Absent (incl. Sandwiches)'], datasets: [{ data: [presentFull, presentHalf, absentDays], backgroundColor: ['#10b981', '#fbbf24', '#f43f5e'], borderWidth: 0, hoverOffset: 4 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } }, title: { display: true, text: 'Attendance Share (Current Month)', font: { size: 13, weight: 'bold' }, color: '#3f51b5' } }, cutout: '65%' }
+        data: {
+          labels: ['Full Day', 'Half Day', 'Absent (incl. Sandwiches)'],
+          datasets: [{ data: [presentFull, presentHalf, absentDays], backgroundColor: ['#10b981', '#fbbf24',
+              '#f43f5e'
+            ], borderWidth: 0, hoverOffset: 4 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { size: 11 } } },
+            title: { display: true, text: 'Attendance Share (Current Month)', font: { size: 13,
+                weight: 'bold' }, color: '#3f51b5' }
+          },
+          cutout: '65%'
+        }
       });
     }
 
-    // async function getRecordsFromBackend() {
-    //   const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
-    //   if (!response.ok) throw new Error('Failed');
-    //   return await response.json();
-    // }
     async function getRecordsFromBackend() {
       const response = await fetch(`/api/employee-attendance?id=${encodeURIComponent(session.id)}`);
       if (!response.ok) throw new Error('Failed');
       return await response.json();
     }
 
-    // async function syncToBackend(record) {
-    //   if (!record) return;
-    //   try {
-    //     const data = {
-    //       emp_id: session.id, emp_name: session.name, dept: session.dept || 'Employee', city: session.city,
-    //       date: record.date, clock_in: record.clock_in, clock_out: record.clock_out || '',
-    //       work_hours: record.work_hours || '', attendance_type: record.attendance_type || 'In Progress',
-    //       location: record.location, lat: record.lat || null, lng: record.lng || null, photo: record.photo
-    //     };
-    //     await fetch('/api/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    //   } catch (e) { console.error('Sync failed:', e); }
-    // }
-
     async function syncToBackend(record) {
       if (!record || !session) return;
       try {
-        const loc   = JSON.parse(localStorage.getItem('mev_capturedLocation') || '{}');
+        const loc = JSON.parse(localStorage.getItem('mev_capturedLocation') || '{}');
         const photo = localStorage.getItem('mev_capturedPhoto') || '';
         const data = {
-          emp_id:          session.id,
-          emp_name:        session.name,
-          dept:            session.dept || 'Employee',
-          city:            session.city || loc.city || '',
-          date:            record.date,
-          clock_in:        record.clock_in  || '',
-          clock_out:       record.clock_out || '',
-          work_hours:      record.work_hours || '',
+          emp_id: session.id,
+          emp_name: session.name,
+          dept: session.dept || 'Employee',
+          city: session.city || loc.city || '',
+          date: record.date,
+          clock_in: record.clock_in || '',
+          clock_out: record.clock_out || '',
+          work_hours: record.work_hours || '',
           attendance_type: record.attendance_type || 'In Progress',
-          location:        record.location || loc.address || 'Unknown',
-          lat:             record.lat || loc.lat || null,
-          lng:             record.lng || loc.lng || null,
-          photo:           record.photo || photo || '',
-          tasks:           record.tasks || [],
-          note:            record.note  || ''
+          location: record.location || loc.address || 'Unknown',
+          lat: record.lat || loc.lat || null,
+          lng: record.lng || loc.lng || null,
+          photo: record.photo || photo || '',
+          tasks: record.tasks || [],
+          note: record.note || ''
         };
         const resp = await fetch('/api/attendance', {
           method: 'POST',
@@ -720,19 +1476,24 @@
       }
     }
 
-
     function getToday() {
       const d = new Date();
       return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
     }
-    function fmtTimeShort(d) { return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }); }
-    function diffHM(ms) { const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000); return `${h}h ${m}m`; }
+
+    function fmtTimeShort(d) { return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit',
+        hour12: true }); }
+
+    function diffHM(ms) { const h = Math.floor(ms / 3600000),
+        m = Math.floor((ms % 3600000) / 60000); return `${h}h ${m}m`; }
 
     function tickClock() {
       const now = new Date();
       document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-IN', { hour12: false });
-      document.getElementById('currentDate').textContent = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-      const h = now.getHours(), m = now.getMinutes();
+      document.getElementById('currentDate').textContent = now.toLocaleDateString('en-IN', { weekday: 'long',
+        day: 'numeric', month: 'long', year: 'numeric' });
+      const h = now.getHours(),
+        m = now.getMinutes();
       const lateIn = h > HALF_IN_H || (h === HALF_IN_H && m >= HALF_IN_M);
       const shiftTag = document.getElementById('shiftTag');
       if (!clockInTime && lateIn) {
@@ -747,46 +1508,8 @@
       }
     }
 
-    // ── ADMIN CHECK ──────────────────────────────────────────
-    async function checkAndShowAdminBadge(empId) {
-      try {
-        const res    = await fetch('https://hrms-2-n4kt.onrender.com/api/admins');
-        if (!res.ok) return;
-        const admins = await res.json();
-        const admin  = admins.find(a =>
-          a.employee_id === empId || a.admin_id === empId
-        );
-
-        if (admin) {
-          // Save admin session
-          localStorage.setItem('mev_adminSession', JSON.stringify({
-            type:               'normal',
-            id:                 admin.admin_id || admin.id,
-            name:               admin.employee_name || admin.employeeName,
-            assigned_employees: admin.assigned_employees || admin.assignedEmpIds || [],
-            assignedEmpIds:     admin.assigned_employees || admin.assignedEmpIds || [],
-            permissions:        admin.permissions || { attendance: true, leave: false, salary: false },
-            loginAt:            new Date().toISOString()
-          }));
-
-          // Show Admin badge in profile
-          const badge = document.getElementById('adminBadge');
-          if (badge) badge.style.display = 'block';
-
-          // Show Admin button in navbar
-          const navBtn = document.getElementById('navAdminBtn');
-          if (navBtn) navBtn.style.display = '';
-        }
-      } catch (e) {
-        console.warn('Admin check failed:', e);
-      }
-    }
-
-    function goToAdminDashboard() {
-      window.location.href = 'AdminDashboard.html';
-    }
-
     function getKey() { return `mev_att_${session.id}`; }
+
     function getRecords() { return JSON.parse(localStorage.getItem(getKey()) || '[]'); }
 
     function saveRecords(recs, syncIdx = 0) {
@@ -803,15 +1526,21 @@
       const photo = localStorage.getItem('mev_capturedPhoto') || '';
       recs.forEach(r => {
         const existingIdx = all.findIndex(item => item.emp_id === session.id && item.date === r.date);
-        const recordData = { emp_id: session.id, emp_name: session.name, dept: session.dept, city: session.city, date: r.date, clock_in: r.clock_in, clock_out: r.clock_out || '', work_hours: r.work_hours || '', attendance_type: r.attendance_type || 'In Progress', location: loc.address || 'Unknown', photo: photo || r.photo || '' };
-        if (existingIdx !== -1) all[existingIdx] = recordData; else all.push(recordData);
+        const recordData = { emp_id: session.id, emp_name: session.name, dept: session.dept, city: session
+            .city, date: r.date, clock_in: r.clock_in, clock_out: r.clock_out || '', work_hours: r
+            .work_hours || '', attendance_type: r.attendance_type || 'In Progress', location: loc
+            .address || 'Unknown', photo: photo || r.photo || '' };
+        if (existingIdx !== -1) all[existingIdx] = recordData;
+        else all.push(recordData);
       });
       localStorage.setItem('mev_adminLog', JSON.stringify(all));
     }
 
     function determineType(inTime, outTime) {
-      const ih = inTime.getHours(), im = inTime.getMinutes();
-      const oh = outTime.getHours(), om = outTime.getMinutes();
+      const ih = inTime.getHours(),
+        im = inTime.getMinutes();
+      const oh = outTime.getHours(),
+        om = outTime.getMinutes();
       const lateIn = ih > HALF_IN_H || (ih === HALF_IN_H && im >= HALF_IN_M);
       const earlyOut = oh < HALF_OUT_H || (oh === HALF_OUT_H && om < HALF_OUT_M);
       return (lateIn || earlyOut) ? 'Half Day' : 'Full Day';
@@ -841,12 +1570,28 @@
       const rec = getRecord();
       if (rec) { showToast('Already clocked in today!'); return; }
       const now = timeOverride || new Date();
-      const ih = now.getHours(), im = now.getMinutes();
+      const ih = now.getHours(),
+        im = now.getMinutes();
       const lateIn = ih > HALF_IN_H || (ih === HALF_IN_H && im >= HALF_IN_M);
       const loc = JSON.parse(localStorage.getItem('mev_capturedLocation') || '{}');
       const photo = localStorage.getItem('mev_capturedPhoto') || '';
-      const record = { date: getToday(), clock_in: fmtTimeShort(now), clock_in_iso: now.toISOString(), clock_out: null, work_hours: null, attendance_type: lateIn ? 'Half Day' : 'In Progress', location: loc.address || 'Unknown', lat: loc.lat || null, lng: loc.lng || null, photo, tasks: [], note: '' };
-      const recs = getRecords(); recs.unshift(record); saveRecords(recs);
+      const record = {
+        date: getToday(),
+        clock_in: fmtTimeShort(now),
+        clock_in_iso: now.toISOString(),
+        clock_out: null,
+        work_hours: null,
+        attendance_type: lateIn ? 'Half Day' : 'In Progress',
+        location: loc.address || 'Unknown',
+        lat: loc.lat || null,
+        lng: loc.lng || null,
+        photo,
+        tasks: [],
+        note: ''
+      };
+      const recs = getRecords();
+      recs.unshift(record);
+      saveRecords(recs);
       clockInTime = now;
       document.getElementById('statIn').textContent = record.clock_in;
       document.getElementById('statStatus').textContent = 'Working';
@@ -855,18 +1600,19 @@
       document.getElementById('btnOut').disabled = false;
       showToast(lateIn ? '⚠️ Clocked In — Half Day (after 11:30 AM)' : '✅ Clocked In successfully!');
       schedule11PMClockout();
-      renderHistory(); updateSummary();
+      renderHistory();
+      updateSummary();
     }
 
-    // ✅ MODIFIED: accepts tasks and note
     function doClockout(auto = false, tasks = [], note = '') {
       if (!clockInTime) return;
       const rec = getRecord();
       if (!rec || rec.clock_out) return;
 
-      const now = auto
-        ? (() => { const t = new Date(); t.setHours(23, 0, 0, 0); return t; })()
-        : new Date();
+      const now = auto ?
+        (() => { const t = new Date();
+          t.setHours(23, 0, 0, 0); return t; })() :
+        new Date();
 
       const type = determineType(clockInTime, now);
       rec.clock_out = fmtTimeShort(now);
@@ -878,7 +1624,8 @@
 
       const recs = getRecords();
       const idx = recs.findIndex(r => r.date === getToday());
-      if (idx !== -1) { recs[idx] = rec; saveRecords(recs, idx); }
+      if (idx !== -1) { recs[idx] = rec;
+        saveRecords(recs, idx); }
 
       document.getElementById('statOut').textContent = rec.clock_out;
       document.getElementById('statHours').textContent = rec.work_hours;
@@ -886,26 +1633,32 @@
       document.getElementById('btnOut').disabled = true;
       clockInTime = null;
 
-      if (autoClockoutTimer) { clearTimeout(autoClockoutTimer); autoClockoutTimer = null; }
+      if (autoClockoutTimer) { clearTimeout(autoClockoutTimer);
+        autoClockoutTimer = null; }
 
       const taskMsg = tasks.length > 0 ? ` · ${tasks.length} task(s) logged` : '';
       showToast(auto ? `⏰ Auto Clocked Out at 11 PM · ${type}` : `✅ Clocked Out · ${type}${taskMsg}`);
-      renderHistory(); updateSummary(); initAnalytics();
+      renderHistory();
+      updateSummary();
+      if (!isSuperAdmin) initAnalytics();
     }
 
     function setStatusBadge(type) {
       const el = document.getElementById('statStatus');
       const badge = document.getElementById('statBadge');
-      if (type === 'Full Day') { el.textContent = 'Full Day'; badge.innerHTML = '<div class="badge-full">✓ FULL DAY</div>'; }
-      else if (type === 'Half Day') { el.textContent = 'Half Day'; badge.innerHTML = '<div class="badge-half">½ HALF DAY</div>'; }
-      else { el.textContent = 'Working'; badge.innerHTML = '<div class="badge-live">● IN PROGRESS</div>'; }
+      if (type === 'Full Day') { el.textContent = 'Full Day';
+        badge.innerHTML = '<div class="badge-full">✓ FULL DAY</div>'; } else if (type === 'Half Day') { el.textContent =
+          'Half Day';
+        badge.innerHTML = '<div class="badge-half">½ HALF DAY</div>'; } else { el.textContent = 'Working';
+        badge.innerHTML = '<div class="badge-live">● IN PROGRESS</div>'; }
     }
 
     function renderHistory() {
       const body = document.getElementById('historyBody');
       const recs = getRecords();
       if (!recs.length) {
-        body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px;">No attendance records yet.</td></tr>';
+        body.innerHTML =
+          '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px;">No attendance records yet.</td></tr>';
         return;
       }
       body.innerHTML = recs.slice(0, 30).map(r => {
@@ -914,26 +1667,32 @@
         const isError = !isDone && r.date !== getToday() && r.clock_in;
 
         let statusClass, statusText;
-        if (isError) { statusClass = 'status-error'; statusText = '⚠️ Missed Clock Out'; }
-        else if (isDone) { statusClass = isHalf ? 'status-half' : 'status-present'; statusText = isHalf ? 'Half Day' : 'Present'; }
-        else { statusClass = 'status-wip'; statusText = 'In Progress'; }
+        if (isError) { statusClass = 'status-error';
+          statusText = '⚠️ Missed Clock Out'; } else if (isDone) { statusClass = isHalf ? 'status-half' :
+            'status-present';
+          statusText = isHalf ? 'Half Day' : 'Present'; } else { statusClass = 'status-wip';
+          statusText = 'In Progress'; }
 
         const locText = r.location && r.location !== 'Unknown' ? r.location : null;
-        const mapLink = r.lat && r.lng ? `<a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" class="map-btn">📍 Map</a>` : '';
-        const locationCell = locText
-          ? `<div class="loc-cell"><div class="loc-short" title="${locText}">${locText}</div>${mapLink}</div>`
-          : `<div class="loc-cell" style="color:#bbb;">Unknown ${mapLink}</div>`;
+        const mapLink = r.lat && r.lng ?
+          `<a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" class="map-btn">📍 Map</a>` :
+          '';
+        const locationCell = locText ?
+          `<div class="loc-cell"><div class="loc-short" title="${locText}">${locText}</div>${mapLink}</div>` :
+          `<div class="loc-cell" style="color:#bbb;">Unknown ${mapLink}</div>`;
 
-        const clockOutDisplay = isError
-          ? '<span style="color:#e53e3e;font-size:11px;">⚠️ Not recorded</span>'
-          : (r.clock_out || '--:--');
+        const clockOutDisplay = isError ?
+          '<span style="color:#e53e3e;font-size:11px;">⚠️ Not recorded</span>' :
+          (r.clock_out || '--:--');
 
-        // ✅ Tasks cell
         let tasksCell = '<span style="color:#cbd5e1;font-size:11px;">—</span>';
         if (r.tasks && r.tasks.length > 0) {
           const tags = r.tasks.map(t => `<span class="task-tag">${t.category || '📌'}</span>`).join('');
-          const taskList = r.tasks.map(t => `• ${t.desc}${t.hours ? ` (${t.hours}h)` : ''} <em style="color:#94a3b8;">[${t.status}]</em>`).join('<br>');
-          tasksCell = `<div class="task-summary-cell">${tags}<br><small style="color:#64748b;">${taskList}</small>${r.note ? `<br><small style="color:#94a3b8;font-style:italic;">📝 ${r.note}</small>` : ''}</div>`;
+          const taskList = r.tasks.map(t =>
+              `• ${t.desc}${t.hours ? ` (${t.hours}h)` : ''} <em style="color:#94a3b8;">[${t.status}]</em>`
+              ).join('<br>');
+          tasksCell =
+            `<div class="task-summary-cell">${tags}<br><small style="color:#64748b;">${taskList}</small>${r.note ? `<br><small style="color:#94a3b8;font-style:italic;">📝 ${r.note}</small>` : ''}</div>`;
         }
 
         return `<tr>
@@ -951,28 +1710,34 @@
     function updateSummary() {
       const recs = getRecords();
       document.getElementById('sumTotal').textContent = recs.length;
-      document.getElementById('sumPresent').textContent = recs.filter(r => r.clock_out && r.attendance_type === 'Full Day').length;
+      document.getElementById('sumPresent').textContent = recs.filter(r => r.clock_out && r.attendance_type === 'Full Day')
+        .length;
       document.getElementById('sumHalf').textContent = recs.filter(r => (r.attendance_type || '').includes('Half')).length;
       let mins = 0;
-      recs.forEach(r => { if (r.work_hours) { const m = r.work_hours.match(/(\d+)h (\d+)m/); if (m) mins += parseInt(m[1]) * 60 + parseInt(m[2]); } });
+      recs.forEach(r => { if (r.work_hours) { const m = r.work_hours.match(/(\d+)h (\d+)m/); if (m) mins += parseInt(m[
+              1]) * 60 + parseInt(m[2]); } });
       document.getElementById('sumHours').textContent = Math.floor(mins / 60) + 'h';
     }
 
     let toastTimer;
+
     function showToast(msg) {
-      const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
-      clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
     }
 
     function logout() {
-      localStorage.removeItem('mev_session');
       localStorage.removeItem('mev_employeeSession');
       localStorage.removeItem('mev_adminSession');
       localStorage.removeItem('mev_capturedPhoto');
       localStorage.removeItem('mev_capturedLocation');
       localStorage.removeItem('mev_captureAt');
-      window.location.href = 'mev.html';
+      window.location.href = 'index.html';
     }
   </script>
 </body>
+
 </html>
