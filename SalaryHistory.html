@@ -85,25 +85,50 @@
 
   <script>
     const DAILY_RATE = 500;
-    
+
     window.onload = async function() {
-      const session = JSON.parse(localStorage.getItem('mev_session') || 'null');
-      if (!session || session.type !== 'employee') { window.location.href = 'index.html'; return; }
-      
-      document.getElementById('empName').textContent = session.name;
-      document.getElementById('empMeta').textContent = session.id + ' · ' + (session.dept || 'Employee');
-      
-      const photo = localStorage.getItem('mev_capturedPhoto');
+      // FIX: the employee login (mev.html) and AttendanceTracker.html both
+      // save the session under the key 'mev_employeeSession' — this page
+      // was reading a different key ('mev_session') and also required a
+      // 'type' field that a normal employee session never has, so
+      // `session` was always null and it bounced straight to index.html.
+      let session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
+
+      // Fallback: allow a Super Admin session to view this page too,
+      // same pattern used in AttendanceTracker.html.
+      if (!session) {
+        const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+        if (adminSession) {
+          session = {
+            id: adminSession.id || adminSession.admin_id,
+            name: adminSession.name || adminSession.employeeName || 'Admin',
+            dept: 'Admin',
+            city: ''
+          };
+        }
+      }
+
+      if (!session) { window.location.href = 'mev.html'; return; }
+
+      document.getElementById('empName').textContent = session.name || 'Employee';
+      document.getElementById('empMeta').textContent = (session.id || '') + ' · ' + (session.dept || 'Employee');
+
+      const photo = session.photo || localStorage.getItem('mev_capturedPhoto');
       if (photo) {
         const img = document.createElement('img'); img.src = photo;
         const wrap = document.getElementById('profileImg'); wrap.innerHTML = ''; wrap.appendChild(img);
       }
-      
+
       await calculateSalaryHistory(session.id);
     };
 
     function logout() {
-      localStorage.removeItem('mev_session');
+      // FIX: clear the actual keys used by mev.html / AttendanceTracker.html
+      localStorage.removeItem('mev_employeeSession');
+      localStorage.removeItem('mev_adminSession');
+      localStorage.removeItem('mev_capturedPhoto');
+      localStorage.removeItem('mev_capturedLocation');
+      localStorage.removeItem('mev_captureAt');
     }
 
     async function calculateSalaryHistory(empId) {
@@ -124,7 +149,7 @@
       
       // Look up manual salary set from AddEmployee or Registration locally
       try {
-        const lsDB = JSON.parse(localStorage.getItem('mevtencia_employeeDatabase') || '{}');
+        const lsDB = JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
         let localEmp = lsDB[empId];
         // Alternatively it might be under a different key but having the correct ID
         if (!localEmp) {
