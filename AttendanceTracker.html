@@ -973,9 +973,9 @@
       </div>
       <div class="profile-actions" id="profileActions">
         <!-- Profile button - hidden for Super Admin -->
-        <!-- <a href="EmployeeProfile.html" class="btn-sm btn-sm-primary" id="btnProfile">👤 Profile</a>
+        <a href="EmployeeProfile.html" class="btn-sm btn-sm-primary" id="btnProfile">👤 Profile</a>
         <!-- Contact button - hidden for Super Admin -->
-        <!-- <a href="ContactPage.html" class="btn-sm btn-sm-success" id="btnContact">📞 Contact</a>  -->
+        <a href="ContactPage.html" class="btn-sm btn-sm-success" id="btnContact">📞 Contact</a>
       </div>
     </div>
 
@@ -1094,7 +1094,7 @@
         if (adminSession) {
           // Check if super admin
           isSuperAdmin = adminSession.type === 'super' || adminSession.type === 'superadmin';
-          
+
           // Create employee session from admin data
           session = {
             id: adminSession.id || adminSession.admin_id,
@@ -1119,42 +1119,47 @@
         return;
       }
 
-      // Apply Super Admin restrictions
+      // Apply Super Admin restrictions (null-safe — won't crash even if
+      // some nav/profile elements are missing/commented out in the DOM)
       applySuperAdminRestrictions();
 
-      document.getElementById('empName').textContent = session.name || 'Welcome to MEVTENCIA';
-      
-      // Add Super Admin badge
+      // Name / photo / designation block — Super Admin gets a generic
+      // "Welcome MEVTENCIA" greeting (no name, no badge, no photo, no
+      // location). Everything else on the page stays exactly the same.
       if (isSuperAdmin) {
-        document.getElementById('empName').innerHTML = session.name + ' <span class="super-admin-badge">⭐ Super Admin</span>';
-      }
-      
-      const city = (session.city && session.city !== 'undefined' && session.city !== 'null') ? session.city : '';
-      const dept = (session.dept && session.dept !== 'undefined') ? session.dept : 'Employee';
-      const metaParts = [session.id, dept];
-      if (city) metaParts.push(city);
-      document.getElementById('empMeta').textContent = metaParts.join(' · ');
+        document.getElementById('empName').textContent = 'Welcome MEVTENCIA';
+        document.getElementById('empMeta').textContent = '';
+        document.getElementById('empLocation').style.display = 'none';
+      } else {
+        document.getElementById('empName').textContent = session.name || 'Welcome to MEVTENCIA';
 
-      // Load profile photo
-      const photo = session.photo || localStorage.getItem('mev_capturedPhoto');
-      if (photo) {
-        const img = document.createElement('img');
-        img.src = photo;
-        const wrap = document.getElementById('profileImg');
-        wrap.innerHTML = '';
-        wrap.appendChild(img);
-      }
+        const city = (session.city && session.city !== 'undefined' && session.city !== 'null') ? session.city : '';
+        const dept = (session.dept && session.dept !== 'undefined') ? session.dept : 'Employee';
+        const metaParts = [session.id, dept];
+        if (city) metaParts.push(city);
+        document.getElementById('empMeta').textContent = metaParts.join(' · ');
 
-      // Load location
-      const loc = localStorage.getItem('mev_capturedLocation');
-      if (loc) {
-        try {
-          const d = JSON.parse(loc);
-          if (d.address && d.address !== 'Unknown') {
-            document.getElementById('empLocation').textContent = '📍 ' + d.address;
-            document.getElementById('empLocation').style.display = 'inline-block';
-          }
-        } catch (e) {}
+        // Load profile photo
+        const photo = session.photo || localStorage.getItem('mev_capturedPhoto');
+        if (photo) {
+          const img = document.createElement('img');
+          img.src = photo;
+          const wrap = document.getElementById('profileImg');
+          wrap.innerHTML = '';
+          wrap.appendChild(img);
+        }
+
+        // Load location
+        const loc = localStorage.getItem('mev_capturedLocation');
+        if (loc) {
+          try {
+            const d = JSON.parse(loc);
+            if (d.address && d.address !== 'Unknown') {
+              document.getElementById('empLocation').textContent = '📍 ' + d.address;
+              document.getElementById('empLocation').style.display = 'inline-block';
+            }
+          } catch (e) {}
+        }
       }
 
       setInterval(tickClock, 1000);
@@ -1202,31 +1207,45 @@
     };
 
     // ===================== SUPER ADMIN RESTRICTIONS =====================
+    // FIX: made fully null-safe. Previously this function called
+    // document.getElementById('btnProfile').style.display directly, but
+    // #btnProfile / #btnContact could be missing from the DOM (e.g. if
+    // those elements are commented out in the HTML). Accessing .style on
+    // null threw a TypeError, which silently aborted window.onload BEFORE
+    // empName, setInterval(tickClock,...), loadTodayState(), and
+    // renderHistory() ever ran — this is exactly why the name showed
+    // "Unknown"/default text and the clock stayed frozen at 00:00:00 /
+    // "Loading...".
     function applySuperAdminRestrictions() {
+      const safeSetDisplay = (id, display) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = display;
+      };
+
       if (isSuperAdmin) {
         // Hide Salary
-        document.getElementById('navSalary').style.display = 'none';
-        document.getElementById('salaryBox').style.display = 'none';
-        
+        safeSetDisplay('navSalary', 'none');
+        safeSetDisplay('salaryBox', 'none');
+
         // Hide Contact
-        document.getElementById('navContact').style.display = 'none';
-        document.getElementById('btnContact').style.display = 'none';
-        
+        safeSetDisplay('navContact', 'none');
+        safeSetDisplay('btnContact', 'none');
+
         // Hide Profile
-        document.getElementById('navProfile').style.display = 'none';
-        document.getElementById('btnProfile').style.display = 'none';
-        
+        safeSetDisplay('navProfile', 'none');
+        safeSetDisplay('btnProfile', 'none');
+
         // Hide insights card completely
-        document.getElementById('insightsCard').style.display = 'none';
+        safeSetDisplay('insightsCard', 'none');
       } else {
         // Show everything for normal employees
-        document.getElementById('navSalary').style.display = '';
-        document.getElementById('navContact').style.display = '';
-        document.getElementById('navProfile').style.display = '';
-        document.getElementById('btnProfile').style.display = '';
-        document.getElementById('btnContact').style.display = '';
-        document.getElementById('salaryBox').style.display = '';
-        document.getElementById('insightsCard').style.display = 'grid';
+        safeSetDisplay('navSalary', '');
+        safeSetDisplay('navContact', '');
+        safeSetDisplay('navProfile', '');
+        safeSetDisplay('btnProfile', '');
+        safeSetDisplay('btnContact', '');
+        safeSetDisplay('salaryBox', '');
+        safeSetDisplay('insightsCard', 'grid');
       }
     }
 
@@ -1345,7 +1364,7 @@
     async function initAnalytics() {
       // Skip analytics for Super Admin
       if (isSuperAdmin) return;
-      
+
       if (!document.getElementById('monthDays') ||
         !document.getElementById('salaryPayout') ||
         !document.getElementById('workDaysCount') ||
