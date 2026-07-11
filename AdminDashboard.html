@@ -814,12 +814,35 @@
       renderRecords();
     }
 
+    // ── NAME / DEPT RESOLUTION (falls back to Credentials DB via emp_id) ──
+    function resolveEmpName(r) {
+      if (r && r.emp_name) return r.emp_name;
+      if (r && r.emp_id) {
+        try {
+          const db = credGetDB();
+          if (db[r.emp_id] && db[r.emp_id].name) return db[r.emp_id].name;
+        } catch (e) {}
+      }
+      return 'Unknown';
+    }
+
+    function resolveEmpDept(r) {
+      if (r && r.dept) return r.dept;
+      if (r && r.emp_id) {
+        try {
+          const db = credGetDB();
+          if (db[r.emp_id] && db[r.emp_id].dept) return db[r.emp_id].dept;
+        } catch (e) {}
+      }
+      return '';
+    }
+
     // ── SANDWICH DETECTION ─────────────────────────────────
     function detectSandwichLeaves(allRecords) {
       const byEmp = {};
       allRecords.forEach(r => {
         const key = r.emp_id || r.emp_name || 'unknown';
-        if (!byEmp[key]) byEmp[key] = { name: r.emp_name, id: r.emp_id, dates: new Set() };
+        if (!byEmp[key]) byEmp[key] = { name: resolveEmpName(r), id: r.emp_id, dates: new Set() };
         const d = parseDate(r.date);
         if (d) byEmp[key].dates.add(d);
       });
@@ -904,9 +927,9 @@
       return `<tr class="${isSandwich ? 'row-sandwich' : ''}">
         <td>${photoEl(r)}</td>
         <td>
-          <div class="emp-name">${r.emp_name||'—'}</div>
+          <div class="emp-name">${resolveEmpName(r)}</div>
           <div class="emp-id">${r.emp_id||''}</div>
-          <div class="emp-dept">${r.dept||''}</div>
+          <div class="emp-dept">${resolveEmpDept(r)}</div>
         </td>
         <td>${r.city||'—'}</td>
         <td>${r.date||'—'}</td>
@@ -1053,7 +1076,7 @@
           const grouped = {};
           filtered.forEach(r => {
             const key = r.emp_id || r.emp_name || 'unknown';
-            if (!grouped[key]) grouped[key] = { name: r.emp_name, id: r.emp_id, dept: r.dept, city: r.city, rows: [] };
+            if (!grouped[key]) grouped[key] = { name: resolveEmpName(r), id: r.emp_id, dept: resolveEmpDept(r), city: r.city, rows: [] };
             grouped[key].rows.push(r);
           });
 
@@ -1084,8 +1107,8 @@
             <div class="mob-top">
               ${photoEl(r)}
               <div class="mob-info">
-                <div class="mob-name">${r.emp_name||'Unknown'}</div>
-                <div class="mob-meta">${r.emp_id||''} · ${r.dept||''} · ${r.city||''}</div>
+                <div class="mob-name">${resolveEmpName(r)}</div>
+                <div class="mob-meta">${r.emp_id||''} · ${resolveEmpDept(r)} · ${r.city||''}</div>
               </div>
               ${getBadge(r.attendance_type)}
             </div>
@@ -1128,9 +1151,9 @@
         const dayName = isoDate ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(isoDate+'T00:00:00').getDay()] : '';
         const isSw    = sandwichKeys.has(sandwichKey(r));
         allRows.push([
-          r.emp_name   || '',
+          resolveEmpName(r),
           r.emp_id     || '',
-          r.dept       || '',
+          resolveEmpDept(r),
           r.city       || '',
           r.date       || '',
           dayName,
@@ -1215,7 +1238,7 @@
       const byEmp = {};
       lastFilteredData.forEach(r => {
         const key = r.emp_id || r.emp_name || 'unknown';
-        if (!byEmp[key]) byEmp[key] = { name:r.emp_name, id:r.emp_id, dept:r.dept, city:r.city, rows:[] };
+        if (!byEmp[key]) byEmp[key] = { name:resolveEmpName(r), id:r.emp_id, dept:resolveEmpDept(r), city:r.city, rows:[] };
         byEmp[key].rows.push(r);
       });
 
@@ -1962,7 +1985,7 @@
       allRecords.forEach(r => {
         const key = r.emp_id || r.emp_name || 'unknown';
         if (scopedEmpIds && r.emp_id && !scopedEmpIds.includes(r.emp_id)) return;
-        if (!map[key]) map[key] = { name: r.emp_name, id: r.emp_id, dept: r.dept, city: r.city };
+        if (!map[key]) map[key] = { name: resolveEmpName(r), id: r.emp_id, dept: resolveEmpDept(r), city: r.city };
       });
       return map;
     }
