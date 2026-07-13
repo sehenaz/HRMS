@@ -87,26 +87,6 @@
       background: rgba(255, 255, 255, 0.3);
     }
 
-    /* Admin Badge Button - Golden Color */
-    .admin-badge-btn {
-      background: linear-gradient(135deg, #ffd700, #ffb300) !important;
-      color: #1a237e !important;
-      font-weight: 800 !important;
-      border: 1px solid #ffd700 !important;
-      display: none;
-      box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
-    }
-
-    .admin-badge-btn:hover {
-      background: linear-gradient(135deg, #ffed4a, #ffc107) !important;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-    }
-
-    .admin-badge-btn.show {
-      display: inline-block;
-    }
-
     .container {
       max-width: 700px;
       margin: 0 auto;
@@ -177,18 +157,6 @@
       display: inline-block;
     }
 
-    /* Admin Badge in Profile Info */
-    .admin-role-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #ffd700, #ffb300);
-      color: #1a237e;
-      padding: 2px 12px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 800;
-      margin-left: 8px;
-    }
-
     .profile-actions {
       display: flex;
       gap: 8px;
@@ -235,15 +203,6 @@
     }
     .btn-sm-danger:hover {
       background: #d32f2f;
-    }
-
-    .btn-sm-admin {
-      background: linear-gradient(135deg, #ffd700, #ffb300);
-      color: #1a237e;
-      font-weight: 700;
-    }
-    .btn-sm-admin:hover {
-      background: linear-gradient(135deg, #ffed4a, #ffc107);
     }
 
     .clock-section {
@@ -943,6 +902,18 @@
       margin: 1px 2px 1px 0;
     }
 
+    /* Super Admin Badge */
+    .super-admin-badge {
+      display: inline-block;
+      background: #fce4ec;
+      color: #c62828;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 8px;
+    }
+
     /* Responsive */
     @media (max-width: 600px) {
       .profile-bar {
@@ -978,13 +949,14 @@
     </a>
     <div class="nav-right">
       <ul class="nav-links" id="navLinks">
-        <li><a href="AttendanceTracker.html" class="active">📊 Dashboard</a></li>
-        <li id="navSalary"><a href="SalaryHistory.html">💰 Salary</a></li>
-        <li id="navContact"><a href="ContactPage.html">📞 Contact</a></li>
-        <li id="navProfile"><a href="EmployeeProfile.html">👤 Profile</a></li>
-        <!-- Admin Badge Button - Shows only for Admin users -->
-        <li><a href="#" id="adminNavBtn" class="admin-badge-btn" onclick="goToAdminDashboard()">🛡️ Admin</a></li>
-        <li><a href="index.html" onclick="logout()">🚪 Logout</a></li>
+        <!-- <li><a href="AttendanceTracker.html" class="active"> Dashboard</a></li> -->
+        <!-- Salary link - hidden for Super Admin -->
+        <li id="navSalary"><a href="SalaryHistory.html"> Salary</a></li>
+        <!-- Contact link - hidden for Super Admin -->
+        <li id="navContact"><a href="ContactPage.html"> Contact</a></li>
+        <!-- Profile link - hidden for Super Admin -->
+        <li id="navProfile"><a href="Profile.html">Profile</a></li>
+        <li><a href="index.html" onclick="logout()"> Logout</a></li>
       </ul>
     </div>
   </nav>
@@ -1000,10 +972,8 @@
         <div class="profile-location" id="empLocation" style="display:none;"></div>
       </div>
       <div class="profile-actions" id="profileActions">
-        <a href="EmployeeProfile.html" class="btn-sm btn-sm-primary" id="btnProfile">👤 Profile</a>
-        <a href="ContactPage.html" class="btn-sm btn-sm-success" id="btnContact">📞 Contact</a>
-        <!-- Admin button in profile actions - golden color -->
-        <a href="#" class="btn-sm btn-sm-admin" id="btnAdminProfile" style="display:none;" onclick="goToAdminDashboard()">🛡️ Admin</a>
+        <!-- Profile & Contact quick buttons removed per request — only the
+             employee name/meta (in .profile-info above) is shown here now. -->
       </div>
     </div>
 
@@ -1037,6 +1007,7 @@
       <div class="sum-card"><div class="num" id="sumHours">0h</div><div class="lbl">Total Hours</div></div>
     </div>
 
+    <!-- Insights Card - Salary hidden for Super Admin -->
     <div class="insights-card" id="insightsCard">
       <div class="chart-container"><canvas id="attendanceChart"></canvas></div>
       <div class="salary-payout-box" id="salaryBox">
@@ -1109,7 +1080,7 @@
     let clockInTime = null;
     let autoClockoutTimer = null;
     let taskCount = 0;
-    let isAdminUser = false;
+    let isSuperAdmin = false;
 
     window.onload = async function() {
       // Check for employee session
@@ -1119,9 +1090,9 @@
       if (!session) {
         const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
         if (adminSession) {
-          // Check if admin (normal admin)
-          isAdminUser = adminSession.type === 'normal';
-          
+          // Check if super admin
+          isSuperAdmin = adminSession.type === 'super' || adminSession.type === 'superadmin';
+
           // Create employee session from admin data
           session = {
             id: adminSession.id || adminSession.admin_id,
@@ -1129,15 +1100,15 @@
             dept: 'Admin',
             city: '',
             type: 'employee',
-            isAdmin: isAdminUser
+            isSuperAdmin: isSuperAdmin
           };
           localStorage.setItem('mev_employeeSession', JSON.stringify(session));
         }
       }
 
-      // Check if user is Admin from session
-      if (session && session.isAdmin) {
-        isAdminUser = true;
+      // Check if user is Super Admin from session
+      if (session && session.isSuperAdmin) {
+        isSuperAdmin = true;
       }
 
       // If still no session, redirect to login
@@ -1146,42 +1117,47 @@
         return;
       }
 
-      // Show Admin badge if user is Admin
-      if (isAdminUser) {
-        document.getElementById('adminNavBtn').classList.add('show');
-        document.getElementById('btnAdminProfile').style.display = 'inline-flex';
-        // Add Admin badge next to name
-        document.getElementById('empName').innerHTML = session.name + ' <span class="admin-role-badge">🛡️ ADMIN</span>';
-      }
+      // Apply Super Admin restrictions (null-safe — won't crash even if
+      // some nav/profile elements are missing/commented out in the DOM)
+      applySuperAdminRestrictions();
 
-      document.getElementById('empName').textContent = session.name || 'Welcome to MEVTENCIA';
-      
-      const city = (session.city && session.city !== 'undefined' && session.city !== 'null') ? session.city : '';
-      const dept = (session.dept && session.dept !== 'undefined') ? session.dept : 'Employee';
-      const metaParts = [session.id, dept];
-      if (city) metaParts.push(city);
-      document.getElementById('empMeta').textContent = metaParts.join(' · ');
+      // Name / photo / designation block — Super Admin gets a generic
+      // "Welcome MEVTENCIA" greeting (no name, no badge, no photo, no
+      // location). Everything else on the page stays exactly the same.
+      if (isSuperAdmin) {
+        document.getElementById('empName').textContent = 'Welcome MEVTENCIA';
+        document.getElementById('empMeta').textContent = '';
+        document.getElementById('empLocation').style.display = 'none';
+      } else {
+        document.getElementById('empName').textContent = session.name || 'Welcome to MEVTENCIA';
 
-      // Load profile photo
-      const photo = session.photo || localStorage.getItem('mev_capturedPhoto');
-      if (photo) {
-        const img = document.createElement('img');
-        img.src = photo;
-        const wrap = document.getElementById('profileImg');
-        wrap.innerHTML = '';
-        wrap.appendChild(img);
-      }
+        const city = (session.city && session.city !== 'undefined' && session.city !== 'null') ? session.city : '';
+        const dept = (session.dept && session.dept !== 'undefined') ? session.dept : 'Employee';
+        const metaParts = [session.id, dept];
+        if (city) metaParts.push(city);
+        document.getElementById('empMeta').textContent = metaParts.join(' · ');
 
-      // Load location
-      const loc = localStorage.getItem('mev_capturedLocation');
-      if (loc) {
-        try {
-          const d = JSON.parse(loc);
-          if (d.address && d.address !== 'Unknown') {
-            document.getElementById('empLocation').textContent = '📍 ' + d.address;
-            document.getElementById('empLocation').style.display = 'inline-block';
-          }
-        } catch (e) {}
+        // Load profile photo
+        const photo = session.photo || localStorage.getItem('mev_capturedPhoto');
+        if (photo) {
+          const img = document.createElement('img');
+          img.src = photo;
+          const wrap = document.getElementById('profileImg');
+          wrap.innerHTML = '';
+          wrap.appendChild(img);
+        }
+
+        // Load location
+        const loc = localStorage.getItem('mev_capturedLocation');
+        if (loc) {
+          try {
+            const d = JSON.parse(loc);
+            if (d.address && d.address !== 'Unknown') {
+              document.getElementById('empLocation').textContent = '📍 ' + d.address;
+              document.getElementById('empLocation').style.display = 'inline-block';
+            }
+          } catch (e) {}
+        }
       }
 
       setInterval(tickClock, 1000);
@@ -1228,25 +1204,47 @@
       })();
     };
 
-    // ===================== GO TO ADMIN DASHBOARD =====================
-    function goToAdminDashboard() {
-      // Make sure admin session is set
-      if (isAdminUser) {
-        // Check if we have admin session data
-        const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
-        if (!adminSession) {
-          // Create admin session from current session
-          localStorage.setItem('mev_adminSession', JSON.stringify({
-            type: 'normal',
-            id: session.id,
-            name: session.name,
-            assigned_employees: session.assigned_employees || [],
-            assignedEmpIds: session.assigned_employees || [],
-            loginAt: new Date().toISOString()
-          }));
-        }
+    // ===================== SUPER ADMIN RESTRICTIONS =====================
+    // FIX: made fully null-safe. Previously this function called
+    // document.getElementById('btnProfile').style.display directly, but
+    // #btnProfile / #btnContact could be missing from the DOM (e.g. if
+    // those elements are commented out in the HTML). Accessing .style on
+    // null threw a TypeError, which silently aborted window.onload BEFORE
+    // empName, setInterval(tickClock,...), loadTodayState(), and
+    // renderHistory() ever ran — this is exactly why the name showed
+    // "Unknown"/default text and the clock stayed frozen at 00:00:00 /
+    // "Loading...".
+    function applySuperAdminRestrictions() {
+      const safeSetDisplay = (id, display) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = display;
+      };
+
+      if (isSuperAdmin) {
+        // Hide Salary
+        safeSetDisplay('navSalary', 'none');
+        safeSetDisplay('salaryBox', 'none');
+
+        // Hide Contact
+        safeSetDisplay('navContact', 'none');
+        safeSetDisplay('btnContact', 'none');
+
+        // Hide Profile
+        safeSetDisplay('navProfile', 'none');
+        safeSetDisplay('btnProfile', 'none');
+
+        // Hide insights card completely
+        safeSetDisplay('insightsCard', 'none');
+      } else {
+        // Show everything for normal employees
+        safeSetDisplay('navSalary', '');
+        safeSetDisplay('navContact', '');
+        safeSetDisplay('navProfile', '');
+        safeSetDisplay('btnProfile', '');
+        safeSetDisplay('btnContact', '');
+        safeSetDisplay('salaryBox', '');
+        safeSetDisplay('insightsCard', 'grid');
       }
-      window.location.href = 'AdminDashboard.html';
     }
 
     // ===================== POPUP FUNCTIONS =====================
@@ -1362,6 +1360,9 @@
     let attChart = null;
 
     async function initAnalytics() {
+      // Skip analytics for Super Admin
+      if (isSuperAdmin) return;
+
       if (!document.getElementById('monthDays') ||
         !document.getElementById('salaryPayout') ||
         !document.getElementById('workDaysCount') ||
@@ -1656,7 +1657,7 @@
       showToast(auto ? `⏰ Auto Clocked Out at 11 PM · ${type}` : `✅ Clocked Out · ${type}${taskMsg}`);
       renderHistory();
       updateSummary();
-      initAnalytics();
+      if (!isSuperAdmin) initAnalytics();
     }
 
     function setStatusBadge(type) {
