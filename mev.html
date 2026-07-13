@@ -718,7 +718,7 @@
       const lastLoginDate = lastSession.loginAt ? new Date(lastSession.loginAt).toISOString().split('T')[0] : '';
 
       // If same employee logged in today with photo, skip camera
-      if (lastSession.empId === empId && lastSession.photo && lastLoginDate === today) {
+      if ((lastSession.id === empId || lastSession.empId === empId) && lastSession.photo && lastLoginDate === today) {
         showMsg('✅ Welcome back! Redirecting to dashboard...', 'success');
         capturedData = lastSession.photo;
         locationData = lastSession.location || { address: 'Unknown', lat: 0, lng: 0 };
@@ -925,8 +925,12 @@
 
       // Store session
       const sessionData = {
+        id: verifiedEmployee.id,
         empId: verifiedEmployee.id,
+        name: verifiedEmployee.name,
         empName: verifiedEmployee.name,
+        dept: verifiedEmployee.dept || '',
+        city: verifiedEmployee.city || '',
         photo: capturedData,
         location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
         loginAt: new Date().toISOString(),

@@ -69,10 +69,21 @@ const adminSchema = new mongoose.Schema({
   created_at:         { type: Date, default: Date.now }
 });
 
+const salarySchema = new mongoose.Schema({
+  emp_id:     { type: String, required: true },
+  date:       { type: String, required: true },
+  amount:     { type: Number, required: true },
+  note:       String,
+  empName:    String,
+  addedBy:    String,
+  updated_at: { type: Date, default: Date.now }
+});
+
 const Employee   = mongoose.model('Employee',   employeeSchema);
 const Attendance = mongoose.model('Attendance', attendanceSchema);
 const Leave      = mongoose.model('Leave',      leaveSchema);
 const Admin      = mongoose.model('Admin',      adminSchema);
+const Salary     = mongoose.model('Salary',     salarySchema);
 
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '10mb' }));
@@ -244,6 +255,48 @@ app.post('/api/leaves', async (req, res) => {
     } else {
       await Leave.findOneAndUpdate({ key }, { ...data, key, updated_at: new Date() }, { upsert: true });
     }
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ════════════════════════════════════════════════════════
+//  SALARIES
+// ════════════════════════════════════════════════════════
+
+app.get('/api/salary', async (req, res) => {
+  try {
+    const { emp_id } = req.query;
+    const filter = emp_id ? { emp_id } : {};
+    const entries = await Salary.find(filter).sort({ date: -1 });
+    res.json(entries);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/salary', async (req, res) => {
+  try {
+    const { emp_id, date, amount, note, empName, addedBy } = req.body;
+    if (!emp_id || !date || !amount) {
+      return res.status(400).json({ error: 'emp_id, date and amount required' });
+    }
+    const data = {
+      emp_id,
+      date,
+      amount,
+      note: note || '',
+      empName: empName || '',
+      addedBy: addedBy || 'admin',
+      updated_at: new Date()
+    };
+    const entry = new Salary(data);
+    await entry.save();
+    res.json(entry);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/salary/:id', async (req, res) => {
+  try {
+    const result = await Salary.findByIdAndDelete(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Salary entry not found' });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
