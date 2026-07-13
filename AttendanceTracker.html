@@ -87,38 +87,6 @@
       background: rgba(255, 255, 255, 0.3);
     }
 
-    /* Admin Badge Button - Golden Color */
-    .admin-badge-btn {
-      background: linear-gradient(135deg, #ffd700, #ffb300) !important;
-      color: #1a237e !important;
-      font-weight: 800 !important;
-      border: 1px solid #ffd700 !important;
-      display: none;
-      box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
-    }
-
-    .admin-badge-btn:hover {
-      background: linear-gradient(135deg, #ffed4a, #ffc107) !important;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-    }
-
-    .admin-badge-btn.show {
-      display: inline-block;
-    }
-
-    /* Admin Badge in Profile Info */
-    .admin-role-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #ffd700, #ffb300);
-      color: #1a237e;
-      padding: 2px 12px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 800;
-      margin-left: 8px;
-    }
-
     .container {
       max-width: 700px;
       margin: 0 auto;
@@ -235,15 +203,6 @@
     }
     .btn-sm-danger:hover {
       background: #d32f2f;
-    }
-
-    .btn-sm-admin {
-      background: linear-gradient(135deg, #ffd700, #ffb300);
-      color: #1a237e;
-      font-weight: 700;
-    }
-    .btn-sm-admin:hover {
-      background: linear-gradient(135deg, #ffed4a, #ffc107);
     }
 
     .clock-section {
@@ -990,15 +949,14 @@
     </a>
     <div class="nav-right">
       <ul class="nav-links" id="navLinks">
+        <!-- <li><a href="AttendanceTracker.html" class="active"> Dashboard</a></li> -->
         <!-- Salary link - hidden for Super Admin -->
-        <li id="navSalary"><a href="SalaryHistory.html">💰 Salary</a></li>
+        <li id="navSalary"><a href="SalaryHistory.html"> Salary</a></li>
         <!-- Contact link - hidden for Super Admin -->
-        <li id="navContact"><a href="ContactPage.html">📞 Contact</a></li>
+        <li id="navContact"><a href="ContactPage.html"> Contact</a></li>
         <!-- Profile link - hidden for Super Admin -->
-        <li id="navProfile"><a href="Profile.html">👤 Profile</a></li>
-        <!-- Admin Badge Button - Shows only for Admin users -->
-        <li><a href="#" id="adminNavBtn" class="admin-badge-btn" onclick="goToAdminDashboard()">🛡️ Admin</a></li>
-        <li><a href="index.html" onclick="logout()">🚪 Logout</a></li>
+        <li id="navProfile"><a href="Profile.html">Profile</a></li>
+        <li><a href="index.html" onclick="logout()"> Logout</a></li>
       </ul>
     </div>
   </nav>
@@ -1014,8 +972,8 @@
         <div class="profile-location" id="empLocation" style="display:none;"></div>
       </div>
       <div class="profile-actions" id="profileActions">
-        <!-- Admin button in profile actions - golden color -->
-        <a href="#" class="btn-sm btn-sm-admin" id="btnAdminProfile" style="display:none;" onclick="goToAdminDashboard()">🛡️ Admin</a>
+        <!-- Profile & Contact quick buttons removed per request — only the
+             employee name/meta (in .profile-info above) is shown here now. -->
       </div>
     </div>
 
@@ -1123,7 +1081,6 @@
     let autoClockoutTimer = null;
     let taskCount = 0;
     let isSuperAdmin = false;
-    let isAdminUser = false;
 
     window.onload = async function() {
       // Check for employee session
@@ -1133,8 +1090,7 @@
       if (!session) {
         const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
         if (adminSession) {
-          // Check if admin (normal admin)
-          isAdminUser = adminSession.type === 'normal';
+          // Check if super admin
           isSuperAdmin = adminSession.type === 'super' || adminSession.type === 'superadmin';
 
           // Create employee session from admin data
@@ -1144,8 +1100,7 @@
             dept: 'Admin',
             city: '',
             type: 'employee',
-            isSuperAdmin: isSuperAdmin,
-            isAdmin: isAdminUser
+            isSuperAdmin: isSuperAdmin
           };
           localStorage.setItem('mev_employeeSession', JSON.stringify(session));
         }
@@ -1156,26 +1111,14 @@
         isSuperAdmin = true;
       }
 
-      // Check if user is Admin from session
-      if (session && session.isAdmin) {
-        isAdminUser = true;
-      }
-
       // If still no session, redirect to login
       if (!session) {
         window.location.href = 'mev.html';
         return;
       }
 
-      // Show Admin badge if user is Admin (not Super Admin)
-      if (isAdminUser && !isSuperAdmin) {
-        document.getElementById('adminNavBtn').classList.add('show');
-        document.getElementById('btnAdminProfile').style.display = 'inline-flex';
-        // Add Admin badge next to name
-        document.getElementById('empName').innerHTML = session.name + ' <span class="admin-role-badge">🛡️ ADMIN</span>';
-      }
-
-      // Apply Super Admin restrictions (null-safe)
+      // Apply Super Admin restrictions (null-safe — won't crash even if
+      // some nav/profile elements are missing/commented out in the DOM)
       applySuperAdminRestrictions();
 
       // Name / photo / designation block — Super Admin gets a generic
@@ -1186,10 +1129,7 @@
         document.getElementById('empMeta').textContent = '';
         document.getElementById('empLocation').style.display = 'none';
       } else {
-        // If not Super Admin, show name (already set above)
-        if (!isAdminUser) {
-          document.getElementById('empName').textContent = session.name || 'Welcome to MEVTENCIA';
-        }
+        document.getElementById('empName').textContent = session.name || 'Welcome to MEVTENCIA';
 
         const city = (session.city && session.city !== 'undefined' && session.city !== 'null') ? session.city : '';
         const dept = (session.dept && session.dept !== 'undefined') ? session.dept : 'Employee';
@@ -1264,28 +1204,16 @@
       })();
     };
 
-    // ===================== GO TO ADMIN DASHBOARD =====================
-    function goToAdminDashboard() {
-      // Make sure admin session is set
-      if (isAdminUser) {
-        // Check if we have admin session data
-        const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
-        if (!adminSession) {
-          // Create admin session from current session
-          localStorage.setItem('mev_adminSession', JSON.stringify({
-            type: 'normal',
-            id: session.id,
-            name: session.name,
-            assigned_employees: session.assigned_employees || [],
-            assignedEmpIds: session.assigned_employees || [],
-            loginAt: new Date().toISOString()
-          }));
-        }
-      }
-      window.location.href = 'AdminDashboard.html';
-    }
-
     // ===================== SUPER ADMIN RESTRICTIONS =====================
+    // FIX: made fully null-safe. Previously this function called
+    // document.getElementById('btnProfile').style.display directly, but
+    // #btnProfile / #btnContact could be missing from the DOM (e.g. if
+    // those elements are commented out in the HTML). Accessing .style on
+    // null threw a TypeError, which silently aborted window.onload BEFORE
+    // empName, setInterval(tickClock,...), loadTodayState(), and
+    // renderHistory() ever ran — this is exactly why the name showed
+    // "Unknown"/default text and the clock stayed frozen at 00:00:00 /
+    // "Loading...".
     function applySuperAdminRestrictions() {
       const safeSetDisplay = (id, display) => {
         const el = document.getElementById(id);
