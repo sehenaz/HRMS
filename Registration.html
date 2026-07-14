@@ -651,6 +651,11 @@
                 const doc  = await generateAppointmentLetter(textFormData);
                 doc.save(`Appointment_Letter_${employeeId.replace(/\//g,'_')}.pdf`);
 
+                // ── FIX: capture the appointment letter itself as base64 so it
+                // can be stored/served later — previously it was only ever
+                // pushed to the browser download and never persisted anywhere.
+                const appointmentLetterB64 = doc.output('datauristring');
+
                 // Files to base64
                 const [cvB64, idB64, bankB64, markB64] = await Promise.all([
                     fileToBase64(cvFile), fileToBase64(idFile),
@@ -668,14 +673,16 @@
                     cvResume:      cvB64,
                     idProof:       idB64,
                     bankPassbook:  bankB64,
-                    marksheet:     markB64
+                    marksheet:     markB64,
+                    appointmentLetter: appointmentLetterB64
                 };
 
                 try {
                     localStorage.setItem(LS_DB, JSON.stringify(empDB));
                 } catch(se) {
                     empDB[employeeId].cvResume = empDB[employeeId].idProof =
-                    empDB[employeeId].bankPassbook = empDB[employeeId].marksheet = null;
+                    empDB[employeeId].bankPassbook = empDB[employeeId].marksheet =
+                    empDB[employeeId].appointmentLetter = null;
                     localStorage.setItem(LS_DB, JSON.stringify(empDB));
                 }
 
@@ -694,63 +701,145 @@
                 };
                 localStorage.setItem('mev_employeeDB', JSON.stringify(credDB));
                 // ══════════════════════════════════════════
-                /////////////////////////////////////////////////////////////////////////////////////
+
                 // ── Save to MongoDB Atlas ──
-try {
-    const mongoPayload = {
-        employeeId:      employeeId,
-        employeeName:    textFormData.employeeName    || '',
-        employeeEmail:   textFormData.employeeEmail   || '',
-        phoneNumber:     textFormData.phoneNumber     || '',
-        alternativePhone: textFormData.alternativePhone || '',
-        dob:             textFormData.dob             || '',
-        age:             textFormData.age             || '',
-        maritalStatus:   textFormData.maritalStatus   || '',
-        bloodGroup:      textFormData.bloodGroup      || '',
-        address:         textFormData.address         || '',
-        nomineeName:     textFormData.nomineeName     || '',
-        nomineePhone:    textFormData.nomineePhone    || '',
-        bankName:        textFormData.bankName        || '',
-        branchName:      textFormData.branchName      || '',
-        accountNumber:   textFormData.accountNumber   || '',
-        ifscCode:        textFormData.ifscCode        || '',
-        branchCode:      textFormData.branchCode      || '',
-        upiId:           textFormData.upiId           || '',
-        employeeType:    textFormData.employeeType    || '',
-        salary:          textFormData.salary          || '',
-        designation:     textFormData.designation     || '',
-        joiningDate:     textFormData.joiningDate     || '',
-        workLocation:    textFormData.workLocation    || '',
-        loginPassword:   loginPassword,
-        dept:            textFormData.designation     || '',
-        city:            textFormData.workLocation    || '',
-        work_location:   textFormData.workLocation    || '',
-        password:        loginPassword
-    };
+                // FIX (previously the bug you hit): this payload used to only
+                // contain text fields — the 4 uploaded documents and the
+                // appointment letter were generated but never sent here, so
+                // the profile page always showed "N/A" for them.
+                //
+                // FIX: since the exact field names your profile/backend reads
+                // weren't available to check against, every value below is
+                // sent under BOTH the camelCase name (as this form uses) AND
+                // the snake_case name (as seen in your SuperAdminDashboard.html,
+                // e.g. employee_email, phone_number, joining_date). This makes
+                // the payload work regardless of which convention the backend
+                // expects. Once you confirm the backend/profile-page field
+                // names, this can be trimmed down to just the correct ones.
+                try {
+                    const nowIso = new Date().toISOString();
+                    const mongoPayload = {
+                        // Identity
+                        employeeId: employeeId,
+                        emp_id: employeeId,
+                        id: employeeId,
 
-    const mongoResp = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mongoPayload)
-    });
+                        employeeName: textFormData.employeeName || '',
+                        employee_name: textFormData.employeeName || '',
+                        name: textFormData.employeeName || '',
 
-    if (mongoResp.ok) {
-        console.log('✅ Saved to MongoDB Atlas!');
-    } else {
-        console.warn('MongoDB save failed:', await mongoResp.text());
-    }
-} catch(mongoErr) {
-    console.warn('MongoDB error (offline?):', mongoErr.message);
-}
-// ── End MongoDB Save ──
+                        employeeEmail: textFormData.employeeEmail || '',
+                        employee_email: textFormData.employeeEmail || '',
+                        email: textFormData.employeeEmail || '',
+
+                        phoneNumber: textFormData.phoneNumber || '',
+                        phone_number: textFormData.phoneNumber || '',
+                        phone: textFormData.phoneNumber || '',
+
+                        alternativePhone: textFormData.alternativePhone || '',
+                        alternative_phone: textFormData.alternativePhone || '',
+
+                        dob: textFormData.dob || '',
+                        date_of_birth: textFormData.dob || '',
+
+                        age: textFormData.age || '',
+
+                        maritalStatus: textFormData.maritalStatus || '',
+                        marital_status: textFormData.maritalStatus || '',
+
+                        bloodGroup: textFormData.bloodGroup || '',
+                        blood_group: textFormData.bloodGroup || '',
+
+                        address: textFormData.address || '',
+
+                        // Nominee
+                        nomineeName: textFormData.nomineeName || '',
+                        nominee_name: textFormData.nomineeName || '',
+
+                        nomineePhone: textFormData.nomineePhone || '',
+                        nominee_phone: textFormData.nomineePhone || '',
+
+                        // Bank
+                        bankName: textFormData.bankName || '',
+                        bank_name: textFormData.bankName || '',
+
+                        branchName: textFormData.branchName || '',
+                        branch_name: textFormData.branchName || '',
+
+                        accountNumber: textFormData.accountNumber || '',
+                        account_number: textFormData.accountNumber || '',
+
+                        ifscCode: textFormData.ifscCode || '',
+                        ifsc_code: textFormData.ifscCode || '',
+
+                        branchCode: textFormData.branchCode || '',
+                        branch_code: textFormData.branchCode || '',
+
+                        upiId: textFormData.upiId || '',
+                        upi_id: textFormData.upiId || '',
+
+                        // Job
+                        employeeType: textFormData.employeeType || '',
+                        employee_type: textFormData.employeeType || '',
+
+                        salary: textFormData.salary || '',
+
+                        designation: textFormData.designation || '',
+                        dept: textFormData.designation || '',
+                        department: textFormData.designation || '',
+
+                        joiningDate: textFormData.joiningDate || '',
+                        joining_date: textFormData.joiningDate || '',
+
+                        workLocation: textFormData.workLocation || '',
+                        work_location: textFormData.workLocation || '',
+                        city: textFormData.workLocation || '',
+
+                        // Credentials
+                        loginPassword: loginPassword,
+                        password: loginPassword,
+
+                        // Documents (base64 data URIs) — this is the fix for
+                        // the "N/A" Documents section on the profile page
+                        cvResume: cvB64 || '',
+                        cv_resume: cvB64 || '',
+
+                        idProof: idB64 || '',
+                        id_proof: idB64 || '',
+
+                        bankPassbook: bankB64 || '',
+                        bank_passbook: bankB64 || '',
+
+                        marksheet: markB64 || '',
+
+                        appointmentLetter: appointmentLetterB64 || '',
+                        appointment_letter: appointmentLetterB64 || '',
+
+                        registeredAt: nowIso,
+                        registered_at: nowIso
+                    };
+
+                    const mongoResp = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(mongoPayload)
+                    });
+
+                    if (mongoResp.ok) {
+                        console.log('✅ Saved to MongoDB Atlas (with documents)!');
+                    } else {
+                        console.warn('MongoDB save failed:', await mongoResp.text());
+                    }
+                } catch(mongoErr) {
+                    console.warn('MongoDB error (offline?):', mongoErr.message);
+                }
+                // ── End MongoDB Save ──
 
                 // Excel log
                 let existingData = [];
                 const existingFile = localStorage.getItem('mevrickEmployeeRegistrations');
                 if (existingFile) {
                     try {
-                        // const wb2 = XLSX.read(existingFile, { type:'string' });
-
                         const wb2 = XLSX.read(existingFile, { type:'base64' });
                         existingData = XLSX.utils.sheet_to_json(wb2.Sheets[wb2.SheetNames[0]]);
                     } catch(ex) {}
@@ -768,8 +857,6 @@ try {
                 const ws = XLSX.utils.json_to_sheet(existingData);
                 const wbk = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wbk, ws, 'Employees');
-                // localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wbk, { bookType:'xlsx', type:'string' }));
-
                 localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wbk, { bookType:'xlsx', type:'base64' }));
 
                 // ── Success message with credentials ──
