@@ -171,18 +171,20 @@
     };
 
     // ─────────────────────────────────────────────────────────────────────
-    // localStorage se employee data normalize karo
-    // Registration.html camelCase mein save karta hai (cvResume, idProof etc.)
-    // Yahan hum dono formats support karte hain
+    // localStorage / backend se aane wale employee object ko ek consistent
+    // snake_case shape mein normalize karo. Registration.html camelCase AND
+    // snake_case dono naam se fields bhejta hai (deliberately, taaki backend
+    // schema chahe jo bhi ho, match ho jaye) — is liye yahan dono try karte
+    // hain, jo bhi mile use karte hain.
     // ─────────────────────────────────────────────────────────────────────
     function normalizeEmployee(obj) {
       return {
         emp_id:           obj.employeeId   || obj.emp_id   || obj.id,
-        employee_name:    obj.employeeName || obj.employee_name,
-        employee_email:   obj.employeeEmail|| obj.employee_email,
-        phone_number:     obj.phoneNumber  || obj.phone_number,
+        employee_name:    obj.employeeName || obj.employee_name || obj.name,
+        employee_email:   obj.employeeEmail|| obj.employee_email|| obj.email,
+        phone_number:     obj.phoneNumber  || obj.phone_number  || obj.phone,
         alternative_phone:obj.alternativePhone || obj.alternative_phone,
-        dob:              obj.dob,
+        dob:              obj.dob || obj.date_of_birth,
         age:              obj.age,
         marital_status:   obj.maritalStatus|| obj.marital_status,
         blood_group:      obj.bloodGroup   || obj.blood_group,
@@ -197,9 +199,9 @@
         upi_id:           obj.upiId        || obj.upi_id,
         employee_type:    obj.employeeType || obj.employee_type,
         salary:           obj.salary,
-        designation:      obj.designation,
+        designation:      obj.designation  || obj.dept || obj.department,
         joining_date:     obj.joiningDate  || obj.joining_date,
-        work_location:    obj.workLocation || obj.work_location,
+        work_location:    obj.workLocation || obj.work_location || obj.city,
         // ✅ Documents — camelCase aur snake_case dono check karo
         cv_resume:        obj.cvResume     || obj.cv_resume     || null,
         id_proof:         obj.idProof      || obj.id_proof      || null,
@@ -210,12 +212,32 @@
       };
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Ek employee ke do partial records (jaise backend wala aur local
+    // wala) ko FIELD-BY-FIELD merge karo — poore object ko overwrite mat
+    // karo. Jis field mein value maujood hai wahi jeetegi; agar dono mein
+    // value hai to 'preferNew' wala priority lega (fresher data).
+    // Isse pehle bug fix hota tha: agar backend record mein sirf Name/
+    // Salary/City the (Nominee/Bank/Documents missing), to poora local
+    // record (jisme sab kuch bhara tha) discard ho jata tha.
+    // ─────────────────────────────────────────────────────────────────────
+    function mergeEmployeeRecords(base, incoming) {
+      const merged = { ...base };
+      Object.keys(incoming).forEach(key => {
+        const val = incoming[key];
+        if (val !== undefined && val !== null && val !== '') {
+          merged[key] = val;
+        }
+      });
+      return merged;
+    }
+
     async function loadData() {
-      let backendData = [];
+      let backendRaw = [];
       try {
         const resp = await fetch('/api/employees');
         if (resp.ok) {
-          backendData = await resp.json();
+          backendRaw = await resp.json();
           document.getElementById('serverStatus').textContent = '✓ Server Online';
           document.getElementById('serverStatus').style.background = '#e8f5e9';
           document.getElementById('serverStatus').style.color = '#2e7d32';
@@ -223,6 +245,11 @@
       } catch (e) {
         document.getElementById('serverStatus').textContent = '✕ Server Offline';
       }
+
+      // Normalize backend records too — previously these were used raw,
+      // so if the backend stored camelCase fields (e.g. from Registration.html's
+      // payload), r.emp_id / r.employee_name etc. would all read as undefined.
+      const backendData = backendRaw.map(normalizeEmployee);
 
       let localData = [];
       try {
@@ -234,12 +261,19 @@
         console.warn('Local storage load failed:', e);
       }
 
+      // Start from local data (this is where the full registration form —
+      // including Nominee/Bank/DOB/Documents — actually gets saved on submit),
+      // then merge in the backend copy per-field so the backend's copy wins
+      // wherever it actually has a value (keeping things in sync across
+      // devices) but never blanks out a field the backend simply doesn't have.
       const mergedMap = new Map();
-      backendData.forEach(r => mergedMap.set(r.emp_id, r));
       localData.forEach(r => {
-        if (r.emp_id && !mergedMap.has(r.emp_id)) {
-          mergedMap.set(r.emp_id, r);
-        }
+        if (r.emp_id) mergedMap.set(r.emp_id, { ...r });
+      });
+      backendData.forEach(r => {
+        if (!r.emp_id) return;
+        const existing = mergedMap.get(r.emp_id) || {};
+        mergedMap.set(r.emp_id, mergeEmployeeRecords(existing, r));
       });
 
       allData = Array.from(mergedMap.values());
