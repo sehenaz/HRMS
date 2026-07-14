@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#3f51b5" />
   <title>MEVTENCIA — Admin Dashboard</title>
-  <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -14,7 +13,6 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -25,106 +23,51 @@
     }
 
     .navbar {
-      background: #3f51b5;
-      color: white;
-      padding: 14px 20px;
+      background-color: #3f51b5;
+      padding: 14px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
       position: sticky;
       top: 0;
-      z-index: 100;
-      flex-wrap: wrap;
-      gap: 10px;
+      z-index: 10;
     }
 
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-area img {
-      height: 45px;
-      width: 45px;
-      object-fit: contain;
-      background: white;
-      border-radius: 50%;
-      padding: 4px;
-    }
-
-    .nav-title {
+    .logo {
+      color: white;
+      font-size: 20px;
       font-weight: 800;
-      font-size: 1.05rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .admin-role-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #ffd700, #ffb300);
-      color: #1a237e;
-      padding: 2px 12px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 800;
-    }
-
-    .nav-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .nav-actions .btn {
-      padding: 6px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
       text-decoration: none;
-      font-size: 0.85rem;
-      border: none;
-      transition: all 0.2s;
-      display: inline-block;
     }
 
-    .btn-outline-light {
-      background: rgba(255, 255, 255, 0.15);
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-links a {
       color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .btn-outline-light:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
-
-    .btn-danger-outline {
-      background: rgba(244, 67, 54, 0.15);
-      color: white;
-      border: 1px solid rgba(244, 67, 54, 0.4);
-    }
-
-    .btn-danger-outline:hover {
-      background: rgba(244, 67, 54, 0.3);
+      text-decoration: none;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
     }
 
     .container {
-      max-width: 1300px;
-      margin: 20px auto 50px;
+      max-width: 1200px;
+      margin: 25px auto 50px;
       padding: 0 18px;
     }
 
-    /* Welcome */
-    .welcome-card {
+    .header-card {
       background: white;
-      padding: 22px 25px;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      border-radius: 20px;
+      padding: 25px 28px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
       margin-bottom: 22px;
-      border-left: 5px solid #3f51b5;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -132,179 +75,225 @@
       gap: 14px;
     }
 
-    .welcome-card h2 {
+    .header-card h2 {
       color: #3f51b5;
-      margin-bottom: 5px;
       font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
     }
 
-    .welcome-card p {
+    .header-card p {
       color: #666;
       font-size: 13px;
-      line-height: 1.6;
     }
 
-    .perm-badges {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .perm-badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .perm-on-attendance { background: #e8f5e9; color: #2e7d32; }
-    .perm-on-leave { background: #e3f2fd; color: #1565c0; }
-    .perm-on-salary { background: #fff3e0; color: #e65100; }
-    .perm-off { background: #f1f5f9; color: #94a3b8; }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 20px;
-      background: white;
-      padding: 6px;
-      border-radius: 14px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
-      flex-wrap: wrap;
-    }
-
-    .tab-btn {
-      padding: 10px 22px;
+    .logout-btn {
+      background: #f44336;
+      color: white;
+      padding: 10px 18px;
       border: none;
       border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
-      background: transparent;
-      color: #888;
+      font-weight: 600;
+      font-size: 13px;
+      text-decoration: none;
+      display: inline-block;
     }
 
-    .tab-btn:hover {
-      background: #f0f0f0;
-    }
-
-    .tab-btn.active {
-      background: #3f51b5;
-      color: white;
-      box-shadow: 0 2px 10px rgba(63, 81, 181, 0.3);
-    }
-
-    .tab-btn.locked {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .no-access-card {
-      background: white;
-      border-radius: 16px;
-      padding: 50px 25px;
-      text-align: center;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-      color: #94a3b8;
-    }
-
-    .no-access-card .icon {
-      font-size: 42px;
-      margin-bottom: 10px;
-    }
-
-    .no-access-card h3 {
-      color: #64748b;
-      margin-bottom: 6px;
-      font-size: 16px;
-    }
+    .logout-btn:hover { background: #d32f2f; }
 
     /* Stats */
     .stats-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    @media(min-width: 600px) {
+      .stats-row { grid-template-columns: repeat(5, 1fr); }
     }
 
     .stat-card {
       background: white;
       border-radius: 14px;
-      padding: 16px;
+      padding: 18px;
       box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
       text-align: center;
     }
 
-    .stat-card .num {
-      font-size: 28px;
-      font-weight: bold;
-      color: #3f51b5;
-      margin-bottom: 4px;
+    .stat-card.sandwich-stat {
+      background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+      border: 2px solid #f59e0b;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
     }
 
-    .stat-card .num.green { color: #4caf50; }
-    .stat-card .num.orange { color: #ff9800; }
-    .stat-card .num.blue { color: #2196f3; }
-    .stat-card .num.red { color: #f44336; }
+    .stat-card.sandwich-stat:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(245, 158, 11, 0.25);
+    }
 
-    .stat-card .lbl {
+    .stat-card .num {
+      font-size: 32px;
+      font-weight: bold;
+      color: #3f51b5;
+      margin-bottom: 6px;
+    }
+
+    .stat-card .num.green  { color: #4caf50; }
+    .stat-card .num.orange { color: #ff9800; }
+    .stat-card .num.blue   { color: #2196f3; }
+    .stat-card .num.amber  { color: #f59e0b; }
+    .stat-card .lbl { color: #888; font-size: 12px; }
+
+    /* Sandwich Panel */
+    .sandwich-panel {
+      background: white;
+      border-radius: 20px;
+      padding: 22px 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      margin-bottom: 22px;
+      border-left: 5px solid #f59e0b;
+      display: none;
+    }
+
+    .sandwich-panel.visible { display: block; }
+
+    .sandwich-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .sandwich-panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sandwich-panel-sub {
+      font-size: 12px;
+      color: #b45309;
+      margin-top: 2px;
+    }
+
+    .sandwich-toggle-btn {
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sandwich-list {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .sandwich-list.open { display: flex; }
+
+    .sandwich-case-card {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .sc-left .sc-name { font-weight: 700; color: #333; font-size: 14px; }
+    .sc-left .sc-id   { font-size: 11px; color: #888; font-family: monospace; }
+    .sc-right         { text-align: right; }
+    .sc-absent        { font-size: 12px; color: #b45309; font-weight: 600; }
+    .sc-range         { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+    .sc-tag {
+      display: inline-block;
+      background: #fde68a;
+      color: #92400e;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    /* ── VIEW TOGGLE (Daily / Employee) ── */
+    .view-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      background: white;
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      width: fit-content;
+    }
+
+    .vt-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
       color: #888;
-      font-size: 11px;
+      transition: all 0.2s;
+    }
+
+    .vt-btn.active {
+      background: #3f51b5;
+      color: white;
+      box-shadow: 0 2px 8px rgba(63,81,181,0.3);
     }
 
     /* Filters */
     .filters {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       margin-bottom: 18px;
       flex-wrap: wrap;
-      background: white;
-      padding: 14px 18px;
-      border-radius: 14px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-      align-items: center;
     }
 
     .filters input,
     .filters select {
-      padding: 8px 12px;
-      border-radius: 8px;
+      padding: 10px 15px;
+      border-radius: 10px;
       border: 2px solid #e0e0e0;
-      font-size: 13px;
+      font-size: 14px;
       outline: none;
       transition: border-color 0.2s;
       font-family: 'Segoe UI', sans-serif;
       background: white;
-      min-width: 120px;
     }
 
     .filters input:focus,
-    .filters select:focus {
-      border-color: #3f51b5;
-    }
+    .filters select:focus { border-color: #3f51b5; }
 
-    .filters input {
-      flex: 1;
-      min-width: 180px;
-    }
+    .filters input { flex: 1; min-width: 200px; }
 
     .filter-btn {
-      padding: 8px 14px;
+      padding: 10px 16px;
       background: white;
       border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 12px;
+      border-radius: 10px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       color: #555;
@@ -312,51 +301,90 @@
       white-space: nowrap;
     }
 
-    .filter-btn:hover {
-      border-color: #3f51b5;
-      color: #3f51b5;
-    }
+    .filter-btn:hover { border-color: #3f51b5; color: #3f51b5; }
 
-    .btn-excel {
-      padding: 8px 16px;
+    /* ── EXCEL EXPORT BUTTON ── */
+    .excel-btn {
+      padding: 10px 18px;
       background: #1d6f42;
       color: white;
       border: none;
-      border-radius: 8px;
-      font-size: 12px;
+      border-radius: 10px;
+      font-size: 13px;
       font-weight: 700;
       cursor: pointer;
+      transition: all 0.2s;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       white-space: nowrap;
-      transition: all 0.2s;
     }
 
-    .btn-excel:hover {
+    .excel-btn:hover {
       background: #145232;
+      box-shadow: 0 4px 16px rgba(29,111,66,0.35);
       transform: translateY(-1px);
     }
 
-    .btn-excel .icon {
+    .excel-btn-icon {
+      width: 18px;
+      height: 18px;
       background: white;
-      color: #1d6f42;
       border-radius: 3px;
-      width: 16px;
-      height: 16px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 900;
+      color: #1d6f42;
+    }
+
+    /* ── DAILY VIEW TABLE ── */
+    .daily-group {
+      background: white;
+      border-radius: 20px;
+      padding: 22px 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 18px;
+    }
+
+    .daily-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .daily-date-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: #3f51b5;
+    }
+
+    .daily-day-label {
+      font-size: 12px;
+      color: #888;
+      margin-left: 8px;
+      font-weight: 400;
+    }
+
+    .daily-count-badge {
+      background: #e8eef5;
+      color: #3f51b5;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
     }
 
     /* Table */
     .table-container {
       background: white;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
       overflow-x: auto;
     }
 
@@ -364,56 +392,40 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: 18px;
       flex-wrap: wrap;
       gap: 10px;
     }
 
-    .table-header h3 {
-      color: #3f51b5;
-      font-size: 16px;
-      font-weight: 700;
-    }
+    .table-header h3 { color: #3f51b5; font-size: 16px; font-weight: 700; }
+    .record-count    { color: #888; font-size: 13px; }
 
-    .record-count {
-      color: #888;
-      font-size: 12px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
+    table { width: 100%; border-collapse: collapse; min-width: 780px; }
 
     th {
       background: #3f51b5;
       color: white;
-      padding: 10px 12px;
+      padding: 12px 14px;
       text-align: left;
       font-weight: 600;
-      font-size: 12px;
-      white-space: nowrap;
+      font-size: 13px;
     }
 
     td {
-      padding: 10px 12px;
+      padding: 12px 14px;
       border-bottom: 1px solid #e0e7ff;
-      font-size: 12px;
+      font-size: 13px;
       vertical-align: middle;
     }
 
-    tr:hover {
-      background: #f5f7fa;
-    }
+    tr:hover { background: #f5f7fa; }
+    tr:last-child td { border-bottom: none; }
 
-    tr:last-child td {
-      border-bottom: none;
-    }
+    tr.row-sandwich             { background: #fffbeb !important; }
+    tr.row-sandwich:hover       { background: #fef3c7 !important; }
 
     .emp-photo {
-      width: 34px;
-      height: 34px;
+      width: 38px; height: 38px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid #e0e7ff;
@@ -421,377 +433,261 @@
     }
 
     .emp-photo-placeholder {
-      width: 34px;
-      height: 34px;
+      width: 38px; height: 38px;
       border-radius: 50%;
       background: #e8eef5;
       border: 2px solid #e0e7ff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
     }
 
-    .emp-photo-placeholder svg {
-      width: 16px;
-      height: 16px;
-      fill: #aaa;
-    }
+    .emp-photo-placeholder svg { width: 18px; height: 18px; fill: #aaa; }
 
-    .emp-name {
-      font-weight: 700;
-      color: #333;
-      font-size: 13px;
-    }
-
-    .emp-id {
-      font-size: 10px;
-      color: #888;
-      font-family: monospace;
-    }
-
-    .emp-dept {
-      font-size: 10px;
-      color: #888;
-    }
-
-    .time-val {
-      font-family: monospace;
-      font-size: 12px;
-    }
+    .emp-name { font-weight: 700; color: #333; }
+    .emp-id   { font-size: 11px; color: #888; font-family: monospace; }
+    .emp-dept { font-size: 11px; color: #888; }
+    .time-val { font-family: monospace; font-size: 13px; }
 
     .loc-val {
-      font-size: 10px;
-      color: #777;
-      max-width: 200px;
-      line-height: 1.3;
+      font-size: 11px; color: #777;
+      max-width: 250px; line-height: 1.4;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
+      -webkit-line-clamp: 2; line-clamp: 2;
+      -webkit-box-orient: vertical; overflow: hidden;
     }
 
     .map-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      color: #3f51b5;
-      text-decoration: none;
-      font-size: 10px;
-      font-weight: 600;
-      margin-top: 3px;
+      display: inline-flex; align-items: center; gap: 4px;
+      color: #3f51b5; text-decoration: none;
+      font-size: 11px; font-weight: 600; margin-top: 4px;
     }
 
-    .map-link:hover {
-      text-decoration: underline;
-    }
+    .map-link:hover { text-decoration: underline; }
 
     .status-badge {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 10px;
-      display: inline-block;
-      text-align: center;
-      white-space: nowrap;
+      padding: 5px 12px; border-radius: 20px;
+      font-weight: 700; font-size: 11px;
+      display: inline-block; text-align: center;
     }
 
-    .badge-fullday { background: #d4edda; color: #155724; }
-    .badge-halfday { background: #fff3cd; color: #856404; }
-    .badge-working { background: #cce5ff; color: #004085; }
-    .badge-absent { background: #f8d7da; color: #721c24; }
-    .badge-leave { background: #e8d5ff; color: #3f51b5; }
+    .badge-fullday  { background: #d4edda; color: #155724; }
+    .badge-halfday  { background: #fff3cd; color: #856404; }
+    .badge-working  { background: #cce5ff; color: #004085; }
+
+    .badge-sandwich {
+      background: #fde68a; color: #92400e;
+      padding: 4px 10px; border-radius: 20px;
+      font-weight: 700; font-size: 10px;
+      display: inline-block; margin-top: 5px;
+      border: 1px solid #f59e0b; white-space: nowrap;
+    }
 
     .empty-row td {
-      text-align: center;
-      padding: 40px 20px;
-      color: #aaa;
-      font-size: 14px;
+      text-align: center; padding: 40px 20px;
+      color: #aaa; font-size: 14px;
     }
 
-    /* Employee grid (used in Leave / Salary tabs) */
-    .emp-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-      gap: 14px;
+    /* Mobile */
+    .mobile-list { display: none; flex-direction: column; gap: 12px; }
+
+    @media(max-width: 767px) {
+      .table-container { display: none; }
+      .mobile-list { display: flex; }
     }
 
-    .emp-mini-card {
-      background: white;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-    }
+    .mob-card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+    .mob-card.mob-sandwich { border: 2px solid #f59e0b; background: #fffbeb; }
 
-    .emp-mini-card .emp-mini-name {
-      font-weight: 700;
-      color: #1e293b;
-      font-size: 13px;
-    }
+    .mob-top { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .mob-info { flex: 1; }
+    .mob-name { font-weight: 700; color: #333; font-size: 15px; }
+    .mob-meta { font-size: 12px; color: #888; }
 
-    .emp-mini-card .emp-mini-id {
-      font-size: 10px;
-      color: #94a3b8;
-      font-family: monospace;
-      margin-bottom: 10px;
-    }
-
-    .emp-mini-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: #475569;
-      padding: 4px 0;
-      border-top: 1px dashed #eef1f6;
-    }
-
-    .emp-mini-row:first-of-type {
-      border-top: none;
-    }
+    .mob-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .mob-item label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mob-item .v { font-size: 14px; font-family: monospace; color: #333; margin-top: 2px; }
+    .mob-loc { font-size: 11px; color: #888; margin-top: 8px; }
 
     /* Modal */
     .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200; display: none;
+      align-items: center; justify-content: center; padding: 20px;
     }
 
-    .modal-overlay.show {
-      display: flex;
+    .modal-overlay.show { display: flex; }
+
+    .modal-img { max-width: 300px; width: 100%; border-radius: 16px; border: 3px solid white; }
+
+    .modal-close {
+      position: absolute; top: 20px; right: 20px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.15); border: none;
+      color: white; font-size: 20px; cursor: pointer;
     }
 
-    .modal-img {
-      max-width: 300px;
-      width: 100%;
-      border-radius: 16px;
-      border: 3px solid white;
-    }
-
-    .modal-close-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-    }
-
-    /* Toast */
+    /* Toast notification */
     .toast {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background: #2d3748;
-      color: white;
-      padding: 14px 22px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-      z-index: 999;
-      opacity: 0;
+      position: fixed; bottom: 30px; right: 30px;
+      background: #1d6f42; color: white;
+      padding: 14px 22px; border-radius: 12px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+      z-index: 999; opacity: 0;
       transform: translateY(20px);
       transition: all 0.3s;
       pointer-events: none;
     }
 
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 768px) {
-      .navbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .nav-actions {
-        justify-content: center;
-      }
-      .tabs {
-        justify-content: center;
-      }
-      .tab-btn {
-        font-size: 12px;
-        padding: 8px 14px;
-      }
-      .filters {
-        flex-direction: column;
-      }
-      .filters input,
-      .filters select {
-        width: 100%;
-      }
-      .filter-btn {
-        width: 100%;
-        text-align: center;
-      }
-      .stats-row {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .welcome-card {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
+    .toast.show { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 
 <body>
   <nav class="navbar">
-    <div class="logo-area">
-      <img src="assets/logo.png" alt="Logo" />
-      <span class="nav-title">MEVTENCIA <span class="admin-role-badge">🛡️ ADMIN</span></span>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <img src="assets/logo.png" alt="Mevrick Logo"
+        style="height:60px;width:60px;object-fit:contain;background:white;border-radius:50%;padding:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+      <a class="logo" href="index.html">MEVTENCIA</a>
     </div>
-    <div class="nav-actions">
-      <span id="adminName" style="font-weight:600;font-size:0.9rem;">Admin</span>
-      <a href="AttendanceTracker.html" class="btn btn-outline-light">👤 My Attendance</a>
-      <a href="index.html" class="btn btn-danger-outline" onclick="logout()">Logout</a>
-    </div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <!-- <li id="navEmpDb"><a href="EmployeeHistory.html">Employee Database</a></li> -->
+      <!-- <li><a href="AddEmployee.html">Edit Employee</a></li> -->
+      <!-- <li id="navReg"><a href="EmployeeHistory.html">Registration</a></li> -->
+      <!-- <li id="navCred"><a href="#" onclick="openCredModal()" style="background:rgba(255,200,0,0.18);">🔑 Credentials</a></li> -->
+      <!-- <li id="navManageAdmins"><a href="#" onclick="openAdminMgrModal()" style="background:rgba(139,92,246,0.25);">🛠️ Manage Admins</a></li>
+      <li><a href="Profile.html">👤 My Profile</a></li>
+      <li><a href="#dailySheetSection" onclick="openDailySheet()">📸 Daily Sheet</a></li> -->
+      <li><a href="index.html" onclick="adminLogout()">Logout</a></li>
+    </ul>
   </nav>
 
   <div class="container">
-    <!-- Welcome -->
-    <div class="welcome-card">
+
+    <div class="header-card">
       <div>
-        <h2 id="welcomeText">Welcome, Admin</h2>
-        <p>You can view attendance and details for the employees assigned to you by the Super Admin.</p>
+        <h2 id="dashTitle">Admin Dashboard — Attendance Monitoring</h2>
+        <p id="dashSubtitle">Real-time Pan India Monitoring · View all employee logs · Mevrick Solution Pvt. Ltd.</p>
       </div>
-      <div class="perm-badges" id="permBadgesRow"></div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="tabs" id="tabsRow">
-      <button class="tab-btn active" id="tabBtnAttendance" onclick="switchTab('attendance')">📊 Attendance</button>
-      <button class="tab-btn" id="tabBtnLeave" onclick="switchTab('leave')">📅 Leave</button>
-      <button class="tab-btn" id="tabBtnSalary" onclick="switchTab('salary')">💰 Salary</button>
-    </div>
-
-    <!-- ========== TAB: ATTENDANCE ========== -->
-    <div class="tab-content active" id="tabAttendance">
-      <div id="attendanceNoAccess" class="no-access-card" style="display:none;">
-        <div class="icon">🔒</div>
-        <h3>No Attendance Access</h3>
-        <p>Ask your Super Admin to enable Attendance permission for your account.</p>
-      </div>
-
-      <div id="attendanceContent">
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="num" id="statAssigned">0</div>
-            <div class="lbl">Assigned Employees</div>
-          </div>
-          <div class="stat-card">
-            <div class="num green" id="statFull">0</div>
-            <div class="lbl">Full Day (Today)</div>
-          </div>
-          <div class="stat-card">
-            <div class="num orange" id="statHalf">0</div>
-            <div class="lbl">Half Day (Today)</div>
-          </div>
-          <div class="stat-card">
-            <div class="num blue" id="statLive">0</div>
-            <div class="lbl">In Progress (Today)</div>
-          </div>
-          <div class="stat-card">
-            <div class="num red" id="statAbsent">0</div>
-            <div class="lbl">Absent (Today)</div>
-          </div>
-        </div>
-
-        <div class="filters">
-          <input type="text" id="searchFilter" placeholder="🔍 Search by Name, ID, City..." oninput="renderRecords()" />
-          <input type="date" id="dateFilter" onchange="renderRecords()" />
-          <select id="typeFilter" onchange="renderRecords()">
-            <option value="">All Types</option>
-            <option value="Full Day">Full Day</option>
-            <option value="Half Day">Half Day</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Absent">Absent</option>
-          </select>
-          <button class="filter-btn" onclick="clearFilters()">✕ Clear</button>
-          <button class="filter-btn" onclick="renderRecords()">⟳ Refresh</button>
-          <button class="btn-excel" onclick="exportToExcel()">
-            <span class="icon">X</span> Export Excel
-          </button>
-        </div>
-
-        <div class="table-container">
-          <div class="table-header">
-            <h3>Attendance Records</h3>
-            <span class="record-count" id="recordCount">— records</span>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Photo</th>
-                <th>Employee</th>
-                <th>City</th>
-                <th>Date</th>
-                <th>Clock In</th>
-                <th>Clock Out</th>
-                <th>Work Hours</th>
-                <th>Location</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr><td colspan="9" style="text-align:center;padding:40px;color:#aaa;">Loading records...</td></tr>
-            </tbody>
-          </table>
-        </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <!-- <a href="AddEmployee.html"
+          style="background:#4caf50;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">+
+          Edit Employee</a> -->
+          <a href="EmployeeHistory.html" id="hdrEmpDbBtn"
+  style="background:#4caf50;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">👥
+  Employee Database</a>
+        <a href="EmployeeHistory.html" id="hdrRegBtn"
+          style="background:#3f51b5;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">👥
+          Registration</a>
+        <a class="logout-btn" href="index.html" onclick="adminLogout()">Logout</a>
       </div>
     </div>
 
-    <!-- ========== TAB: LEAVE ========== -->
-    <div class="tab-content" id="tabLeave">
-      <div id="leaveNoAccess" class="no-access-card" style="display:none;">
-        <div class="icon">🔒</div>
-        <h3>No Leave Access</h3>
-        <p>Ask your Super Admin to enable Leave permission for your account.</p>
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="num" id="statTotal">0</div>
+        <div class="lbl">Total Records</div>
       </div>
-      <div id="leaveContent">
-        <div class="table-container" style="margin-bottom:16px;">
-          <div class="table-header">
-            <h3>Absent Today (Assigned Employees)</h3>
-            <span class="record-count" id="leaveCount">— employees</span>
-          </div>
-          <div class="emp-grid" id="leaveGrid"></div>
-        </div>
+      <div class="stat-card">
+        <div class="num green" id="statFull">0</div>
+        <div class="lbl">Full Day</div>
+      </div>
+      <div class="stat-card">
+        <div class="num orange" id="statHalf">0</div>
+        <div class="lbl">Half Day</div>
+      </div>
+      <div class="stat-card">
+        <div class="num blue" id="statLive">0</div>
+        <div class="lbl">In Progress</div>
+      </div>
+      <div class="stat-card sandwich-stat" onclick="scrollToSandwichPanel()" title="Click to view sandwich cases">
+        <div class="num amber" id="statSandwich">0</div>
+        <div class="lbl">🥪 Sandwich Leaves</div>
       </div>
     </div>
 
-    <!-- ========== TAB: SALARY ========== -->
-    <div class="tab-content" id="tabSalary">
-      <div id="salaryNoAccess" class="no-access-card" style="display:none;">
-        <div class="icon">🔒</div>
-        <h3>No Salary Access</h3>
-        <p>Ask your Super Admin to enable Salary permission for your account.</p>
-      </div>
-      <div id="salaryContent">
-        <div class="table-container">
-          <div class="table-header">
-            <h3>Assigned Employees — Salary Overview</h3>
-            <span class="record-count" id="salaryEmpCount">— employees</span>
+    <!-- Sandwich Alert Panel -->
+    <div class="sandwich-panel" id="sandwichPanel">
+      <div class="sandwich-panel-header">
+        <div>
+          <div class="sandwich-panel-title">🥪 Sandwich Leave Alert</div>
+          <div class="sandwich-panel-sub">
+            These employees took leave on a working day adjacent to a weekend — extending their break.
           </div>
-          <div class="emp-grid" id="salaryGrid"></div>
         </div>
+        <button class="sandwich-toggle-btn" onclick="toggleSandwichList()">▼ Show Details</button>
       </div>
+      <div class="sandwich-list" id="sandwichList"></div>
     </div>
+
+    View Toggle
+    <!-- <div class="view-toggle">
+      <button class="vt-btn active" id="btnViewAll"    onclick="setView('all')">📋 All Records</button>
+      <button class="vt-btn"        id="btnViewDaily"  onclick="setView('daily')">📅 Daily View</button>
+      <button class="vt-btn"        id="btnViewEmp"    onclick="setView('employee')">👤 By Employee</button>
+    </div> -->
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="text" id="searchFilter" placeholder="🔍 Search by Name, ID, City, Dept..."
+        oninput="renderRecords()" />
+      <input type="date" id="dateFilter" onchange="renderRecords()" />
+      <select id="typeFilter" onchange="renderRecords()" style="max-width:160px;">
+        <option value="">All Types</option>
+        <option value="Full Day">Full Day</option>
+        <option value="Half Day">Half Day</option>
+        <option value="In Progress">In Progress</option>
+      </select>
+      <button class="filter-btn" onclick="clearFilters()">✕ Clear</button>
+      <button class="filter-btn" onclick="renderRecords()">⟳ Refresh</button>
+
+      <!-- EXCEL EXPORT BUTTON -->
+      <button class="excel-btn" onclick="exportToExcel()">
+        <span class="excel-btn-icon">X</span>
+        Export Excel
+      </button>
+    </div>
+
+    <!-- Desktop Table (All / Employee view) -->
+    <div class="table-container" id="tableContainer">
+      <div class="table-header">
+        <h3 id="tableTitle">Attendance Records</h3>
+        <span class="record-count" id="recordCount">— records</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Employee</th>
+            <th>City</th>
+            <th>Date</th>
+            <th>Clock In</th>
+            <th>Clock Out</th>
+            <th>Work Hours</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Salary</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="10" style="text-align:center;padding:40px;color:#aaa;">Loading records...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Daily View Container -->
+    <div id="dailyContainer"></div>
+
+    <!-- Mobile Cards -->
+    <div class="mobile-list" id="mobileList"></div>
+
   </div>
 
   <!-- Photo Modal -->
   <div class="modal-overlay" id="photoModal" onclick="closeModal()">
-    <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    <button class="modal-close" onclick="closeModal()">✕</button>
     <img class="modal-img" id="modalImg" alt="Employee Photo" />
   </div>
 
@@ -799,109 +695,90 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const SERVER_URL = 'https://hrms-2-n4kt.onrender.com';
-
-    // ========== AUTH CHECK ==========
-    let session = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
-    if (!session || session.type !== 'normal') {
-      window.location.href = 'mev.html';
-    }
-
-    let permissions = { attendance: true, leave: false, salary: false };
-    let assignedEmpIds = (session && (session.assigned_employees || session.assignedEmpIds)) || [];
-    let allEmployeesData = [];   // from /api/employees
-    let lastAllData = [];
+    // ── STATE ──────────────────────────────────────────────
+    let currentView = 'all';   // 'all' | 'daily' | 'employee'
     let lastFilteredData = [];
+    let lastAllData = [];
 
-    document.getElementById('adminName').textContent = (session && session.name) || 'Admin';
-    document.getElementById('welcomeText').textContent = `Welcome, ${(session && session.name) || 'Admin'}`;
+    // ── ROLE / SCOPE STATE ───────────────────────────────────
+    // currentSession.type: 'superadmin' (sees everyone) or 'admin' (scoped to assignedEmpIds)
+    let currentSession = null;
+    let scopedEmpIds = null; // null = no restriction (superadmin), array = restricted (admin)
 
-    function logout() {
-      localStorage.removeItem('mev_adminSession');
+    function loadSession() {
+      currentSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+      if (!currentSession) return;
+      if (currentSession.type === 'admin') {
+        scopedEmpIds = Array.isArray(currentSession.assignedEmpIds) ? currentSession.assignedEmpIds : [];
+      } else {
+        scopedEmpIds = null; // superadmin — unrestricted
+      }
+      applyRoleUI();
     }
 
-    function showToast(msg, bg = '#2d3748') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.style.background = bg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3500);
-    }
-
-    // ========== TAB SWITCHING ==========
-    function switchTab(tab) {
-      if (tab === 'leave' && !permissions.leave) return;
-      if (tab === 'salary' && !permissions.salary) return;
-      if (tab === 'attendance' && !permissions.attendance) return;
-
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-
-      document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-      document.getElementById('tabBtn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
-
-      if (tab === 'leave') renderLeaveTab();
-      if (tab === 'salary') renderSalaryTab();
-    }
-
-    function applyPermissions() {
-      const row = document.getElementById('permBadgesRow');
-      row.innerHTML = `
-        <span class="perm-badge ${permissions.attendance ? 'perm-on-attendance' : 'perm-off'}">📋 Attendance ${permissions.attendance ? '' : '(off)'}</span>
-        <span class="perm-badge ${permissions.leave ? 'perm-on-leave' : 'perm-off'}">📅 Leave ${permissions.leave ? '' : '(off)'}</span>
-        <span class="perm-badge ${permissions.salary ? 'perm-on-salary' : 'perm-off'}">💰 Salary ${permissions.salary ? '' : '(off)'}</span>
-      `;
-
-      document.getElementById('tabBtnLeave').classList.toggle('locked', !permissions.leave);
-      document.getElementById('tabBtnSalary').classList.toggle('locked', !permissions.salary);
-
-      document.getElementById('attendanceContent').style.display = permissions.attendance ? '' : 'none';
-      document.getElementById('attendanceNoAccess').style.display = permissions.attendance ? 'none' : 'block';
-
-      document.getElementById('leaveContent').style.display = permissions.leave ? '' : 'none';
-      document.getElementById('leaveNoAccess').style.display = permissions.leave ? 'none' : 'block';
-
-      document.getElementById('salaryContent').style.display = permissions.salary ? '' : 'none';
-      document.getElementById('salaryNoAccess').style.display = permissions.salary ? 'none' : 'block';
-
-      // If attendance is off, land on the first tab that IS permitted
-      if (!permissions.attendance) {
-        document.getElementById('tabAttendance').classList.remove('active');
-        document.getElementById('tabBtnAttendance').classList.remove('active');
-        if (permissions.leave) { switchTab('leave'); }
-        else if (permissions.salary) { switchTab('salary'); }
+    function applyRoleUI() {
+      const isSuper = !currentSession || currentSession.type === 'superadmin';
+      // Only superadmin manages other admins, bulk registration & the full employee database page.
+      // Credentials modal stays visible for scoped admins too — it auto-filters to their
+      // assigned employees and lets them edit (not add/delete) those records.
+      ['navManageAdmins','navReg','navEmpDb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isSuper ? '' : 'none';
+      });
+      ['hdrRegBtn','hdrEmpDbBtn'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isSuper ? '' : 'none';
+      });
+      const credLink = document.getElementById('navCred');
+      if (credLink) credLink.querySelector('a').innerHTML = isSuper ? '🔑 Credentials' : '🔑 My Employees';
+      if (!isSuper) {
+        document.getElementById('dashTitle').textContent = `Admin Dashboard — ${currentSession.name || currentSession.id}`;
+        document.getElementById('dashSubtitle').textContent =
+          `Scoped view · ${(scopedEmpIds||[]).length} employee(s) assigned · you can view & edit their attendance, leave and salary · Mevrick Solution Pvt. Ltd.`;
       }
     }
 
-    // ========== DATA LOADING ==========
-    function getEmployeeDB() {
-      try { return JSON.parse(localStorage.getItem('mev_employeeDB') || '{}'); } catch { return {}; }
+    function filterByScope(records) {
+      if (!scopedEmpIds) return records; // superadmin sees all
+      const allowed = new Set(scopedEmpIds);
+      return records.filter(r => allowed.has(r.emp_id));
     }
 
-    async function loadAdminInfo() {
+    // ── INIT ───────────────────────────────────────────────
+    window.onload = function () {
+      if (!localStorage.getItem('mev_adminSession')) { window.location.href = 'AdminLogin.html'; return; }
+      loadSession();
+      renderRecords();
+      setInterval(renderRecords, 30000);
+    };
+
+    // ── DATA ───────────────────────────────────────────────
+    // async function getAllRecords() {
+    //   try {
+    //     const response = await fetch('/api/attendance');
+    //     if (response.ok) return await response.json();
+    //   } catch (e) { console.error('Fetch failed:', e); }
+    //   return JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+    // }
+
+    async function getAllRecords() {
+      let merged;
       try {
-        const res = await fetch(`${SERVER_URL}/api/admins`);
-        if (res.ok) {
-          const admins = await res.json();
-          const me = admins.find(a => (a.admin_id || a.id) === session.id);
-          if (me) {
-            permissions = me.permissions || permissions;
-            assignedEmpIds = me.assigned_employees || me.assignedEmpIds || assignedEmpIds;
-          }
+        const response = await fetch('/api/attendance');
+        if (response.ok) {
+          const serverData = await response.json();
+          const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+          merged = [...serverData];
+          localData.forEach(lr => {
+            const exists = merged.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
+            if (!exists) merged.push(lr);
+          });
         }
       } catch (e) {
-        console.warn('Could not refresh admin info, using cached session:', e.message);
+        console.warn('Server offline:', e.message);
       }
-      applyPermissions();
-    }
-
-    async function loadEmployees() {
-      try {
-        const res = await fetch(`${SERVER_URL}/api/employees`);
-        if (res.ok) allEmployeesData = await res.json();
-      } catch (e) {
-        console.warn('Could not load employees from server:', e.message);
-      }
+      if (!merged) merged = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+      return filterByScope(merged);
     }
 
     function parseDate(dateStr) {
@@ -913,113 +790,525 @@
       return dateStr;
     }
 
+    function formatDateLabel(isoDate) {
+      if (!isoDate) return '—';
+      const d = new Date(isoDate + 'T00:00:00');
+      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      return `${d.toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })} · ${days[d.getDay()]}`;
+    }
+
     function getBadge(type) {
       if (!type || type === 'In Progress') return '<span class="status-badge badge-working">● In Progress</span>';
-      if (type === 'Full Day') return '<span class="status-badge badge-fullday">✓ Full Day</span>';
-      if (type === 'Absent') return '<span class="status-badge badge-absent">✗ Absent</span>';
-      if (type === 'On Leave') return '<span class="status-badge badge-leave">📅 On Leave</span>';
-      if (type.includes('Half')) return '<span class="status-badge badge-halfday">½ Half Day</span>';
+      if (type === 'Full Day')              return '<span class="status-badge badge-fullday">✓ Full Day</span>';
+      if (type.includes('Half'))            return '<span class="status-badge badge-halfday">½ Half Day</span>';
       return `<span class="status-badge badge-working">${type}</span>`;
     }
 
-    function photoEl(r) {
-      return r.photo ?
-        `<img class="emp-photo" src="${r.photo}" alt="" onclick="openModal('${r.photo.replace(/'/g, "\\'")}')"/>` :
-        `<div class="emp-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`;
+    // ── VIEW TOGGLE ────────────────────────────────────────
+    function setView(v) {
+      currentView = v;
+      ['all','daily','employee'].forEach(x => {
+        document.getElementById(`btnView${x.charAt(0).toUpperCase()+x.slice(1)}`)
+          .classList.toggle('active', x === v);
+      });
+      renderRecords();
     }
 
-    async function getAllRecords() {
-      let records = [];
-      try {
-        const response = await fetch(`${SERVER_URL}/api/attendance`);
-        if (response.ok) records = await response.json();
-      } catch (e) {
-        console.warn('Server offline:', e.message);
+    // ── NAME / DEPT RESOLUTION (falls back to Credentials DB via emp_id) ──
+    function resolveEmpName(r) {
+      if (r && r.emp_name) return r.emp_name;
+      if (r && r.emp_id) {
+        try {
+          const db = credGetDB();
+          if (db[r.emp_id] && db[r.emp_id].name) return db[r.emp_id].name;
+        } catch (e) {}
       }
-      // Merge in any local-only records (e.g. this device's own attendance log)
-      try {
-        const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
-        localData.forEach(lr => {
-          const exists = records.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
-          if (!exists) records.push(lr);
-        });
-      } catch (e) {}
-
-      // Scope to only the employees assigned to this admin
-      return records.filter(r => assignedEmpIds.includes(r.emp_id));
+      return 'Unknown';
     }
 
-    function buildRow(r) {
-      return `<tr>
+    function resolveEmpDept(r) {
+      if (r && r.dept) return r.dept;
+      if (r && r.emp_id) {
+        try {
+          const db = credGetDB();
+          if (db[r.emp_id] && db[r.emp_id].dept) return db[r.emp_id].dept;
+        } catch (e) {}
+      }
+      return '';
+    }
+
+    // ── SANDWICH DETECTION ─────────────────────────────────
+    function detectSandwichLeaves(allRecords) {
+      const byEmp = {};
+      allRecords.forEach(r => {
+        const key = r.emp_id || r.emp_name || 'unknown';
+        if (!byEmp[key]) byEmp[key] = { name: resolveEmpName(r), id: r.emp_id, dates: new Set() };
+        const d = parseDate(r.date);
+        if (d) byEmp[key].dates.add(d);
+      });
+
+      const sandwichKeys  = new Set();
+      const sandwichCases = [];
+
+      for (const [empKey, emp] of Object.entries(byEmp)) {
+        const sortedDates = Array.from(emp.dates).sort();
+        if (sortedDates.length < 2) continue;
+
+        for (let i = 0; i < sortedDates.length - 1; i++) {
+          const d1 = new Date(sortedDates[i]);
+          const d2 = new Date(sortedDates[i + 1]);
+          const diffDays = Math.round((d2 - d1) / 86400000);
+          if (diffDays <= 1) continue;
+
+          const gapDays = [];
+          for (let j = 1; j < diffDays; j++) {
+            const g = new Date(d1); g.setDate(g.getDate() + j);
+            const dow = g.getDay();
+            gapDays.push({ date: g, isWeekend: dow === 0 });
+          }
+
+          const hasWeekendInGap   = gapDays.some(g => g.isWeekend);
+          const absentWorkingDays = gapDays.filter(g => !g.isWeekend);
+          if (!hasWeekendInGap || absentWorkingDays.length === 0) continue;
+
+          const trulySandwiched = absentWorkingDays.filter(({ date }) => {
+            const prev = new Date(date); prev.setDate(prev.getDate() - 1);
+            const next = new Date(date); next.setDate(next.getDate() + 1);
+            const prevDow = prev.getDay(), nextDow = next.getDay();
+            return prevDow === 0 || nextDow === 0;
+          });
+          if (trulySandwiched.length === 0) continue;
+
+          sandwichKeys.add(`${empKey}|${sortedDates[i]}`);
+          sandwichKeys.add(`${empKey}|${sortedDates[i + 1]}`);
+
+          const absentLabels = trulySandwiched.map(({ date }) => {
+            const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            return `${days[date.getDay()]} ${date.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}`;
+          });
+
+          sandwichCases.push({ empName: emp.name||'Unknown', empId: emp.id||'', from: sortedDates[i], to: sortedDates[i+1], absentLabels });
+        }
+      }
+      return { sandwichKeys, sandwichCases };
+    }
+
+    function sandwichKey(r) {
+      const empKey = r.emp_id || r.emp_name || 'unknown';
+      return `${empKey}|${parseDate(r.date)}`;
+    }
+
+    function toggleSandwichList() {
+      const list = document.getElementById('sandwichList');
+      const btn  = document.querySelector('.sandwich-toggle-btn');
+      const open = list.classList.toggle('open');
+      btn.textContent = open ? '▲ Hide Details' : '▼ Show Details';
+    }
+
+    function scrollToSandwichPanel() {
+      const panel = document.getElementById('sandwichPanel');
+      if (panel.classList.contains('visible')) {
+        panel.scrollIntoView({ behavior:'smooth', block:'start' });
+        document.getElementById('sandwichList').classList.add('open');
+        document.querySelector('.sandwich-toggle-btn').textContent = '▲ Hide Details';
+      }
+    }
+
+    // ── PHOTO HELPERS ──────────────────────────────────────
+    function photoEl(r) {
+      return r.photo
+        ? `<img class="emp-photo" src="${r.photo}" alt="" onclick="openModal('${r.photo.replace(/'/g,"\\'")}')"/>`
+        : `<div class="emp-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`;
+    }
+
+    // ── TABLE ROW HTML ─────────────────────────────────────
+    function buildRow(r, isSandwich) {
+      const sandwichBadge = isSandwich ? `<div><span class="badge-sandwich">🥪 Sandwich Leave</span></div>` : '';
+      return `<tr class="${isSandwich ? 'row-sandwich' : ''}">
         <td>${photoEl(r)}</td>
         <td>
-          <div class="emp-name">${r.emp_name || '—'}</div>
-          <div class="emp-id">${r.emp_id || ''}</div>
-          <div class="emp-dept">${r.dept || ''}</div>
+          <div class="emp-name">${resolveEmpName(r)}</div>
+          <div class="emp-id">${r.emp_id||''}</div>
+          <div class="emp-dept">${resolveEmpDept(r)}</div>
         </td>
-        <td>${r.city || '—'}</td>
-        <td>${r.date || '—'}</td>
-        <td class="time-val">${r.clock_in || '—'}</td>
-        <td class="time-val">${r.clock_out || '<span style="color:#ccc">—</span>'}</td>
-        <td class="time-val">${r.work_hours || '<span style="color:#ccc">—</span>'}</td>
+        <td>${r.city||'—'}</td>
+        <td>${r.date||'—'}</td>
+        <td class="time-val">${r.clock_in||'—'}</td>
+        <td class="time-val">${r.clock_out||'<span style="color:#ccc">—</span>'}</td>
+        <td class="time-val">${r.work_hours||'<span style="color:#ccc">—</span>'}</td>
         <td>
-          <div class="loc-val" title="${r.location || ''}">${r.location || 'Unknown'}</div>
-          ${r.lat && r.lng ? `<a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank">📍 View Map</a>` : ''}
+          <div class="loc-val" title="${r.location||''}">${r.location||'Unknown'}</div>
+          ${r.lat&&r.lng?`<a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank">
+            <svg style="width:12px;height:12px" viewBox="0 0 24 24"><path fill="currentColor" d="M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13c0,-3.87,-3.13,-7,-7,-7zm0,9.5c-1.38,0,-2.5,-1.12,-2.5,-2.5s1.12,-2.5 2.5,-2.5 2.5,1.12 2.5,2.5,-1.12,2.5,-2.5,2.5z"/></svg>
+            View Map</a>`:''}
         </td>
-        <td>${getBadge(r.attendance_type)}</td>
+        <td>${getBadge(r.attendance_type)}${sandwichBadge}</td>
+        <td>
+          <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
+            style="padding:5px 10px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
+            💰 Salary
+          </button>
+        </td>
       </tr>`;
     }
 
-    async function renderRecords() {
-      if (!permissions.attendance) return;
+    // ── MINI TABLE inside daily/employee groups ────────────
+    function buildMiniTable(rows, sandwichKeys) {
+      const thead = `<thead><tr>
+        <th>Photo</th><th>Employee</th><th>City</th><th>Date</th>
+        <th>Clock In</th><th>Clock Out</th><th>Work Hours</th><th>Location</th><th>Status</th><th>Salary</th>
+      </tr></thead>`;
+      const tbody = rows.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
+      return `<div style="overflow-x:auto;"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
+    }
 
+    // ── RENDER ─────────────────────────────────────────────
+    async function renderRecords() {
       const all = await getAllRecords();
       lastAllData = all;
 
-      const today = (() => {
-        const d = new Date();
-        return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-      })();
-      const todaysRecs = all.filter(r => r.date === today);
-      const presentTodayIds = new Set(todaysRecs.map(r => r.emp_id));
+      const { sandwichKeys, sandwichCases } = detectSandwichLeaves(all);
 
-      document.getElementById('statAssigned').textContent = assignedEmpIds.length;
-      document.getElementById('statFull').textContent = todaysRecs.filter(r => r.attendance_type === 'Full Day').length;
-      document.getElementById('statHalf').textContent = todaysRecs.filter(r => (r.attendance_type || '').includes('Half')).length;
-      document.getElementById('statLive').textContent = todaysRecs.filter(r => !r.clock_out || r.attendance_type === 'In Progress').length;
-      document.getElementById('statAbsent').textContent = Math.max(assignedEmpIds.length - presentTodayIds.size, 0);
+      // Sandwich panel
+      const panel = document.getElementById('sandwichPanel');
+      const list  = document.getElementById('sandwichList');
+      document.getElementById('statSandwich').textContent = sandwichCases.length;
+
+      if (sandwichCases.length > 0) {
+        panel.classList.add('visible');
+        list.innerHTML = sandwichCases.map(c => `
+          <div class="sandwich-case-card">
+            <div class="sc-left">
+              <div class="sc-name">${c.empName}</div>
+              <div class="sc-id">${c.empId}</div>
+              <span class="sc-tag">🥪 Sandwich Leave</span>
+            </div>
+            <div class="sc-right">
+              <div class="sc-absent">Absent: ${c.absentLabels.join(', ')}</div>
+              <div class="sc-range">Between ${c.from} → ${c.to}</div>
+            </div>
+          </div>`).join('');
+      } else {
+        panel.classList.remove('visible');
+        list.innerHTML = '';
+      }
 
       // Filters
-      const search = document.getElementById('searchFilter').value.toLowerCase();
+      const search  = document.getElementById('searchFilter').value.toLowerCase();
       const dateVal = document.getElementById('dateFilter').value;
       const typeVal = document.getElementById('typeFilter').value;
 
       let filtered = all.filter(r => {
-        const matchS = !search || [r.emp_name, r.emp_id, r.city, r.dept, r.location].some(v => (v || '').toLowerCase().includes(search));
+        const matchS = !search  || [r.emp_name,r.emp_id,r.city,r.dept,r.location].some(v=>(v||'').toLowerCase().includes(search));
         const matchD = !dateVal || parseDate(r.date) === dateVal;
-        const matchT = !typeVal || (r.attendance_type || 'In Progress').includes(typeVal);
+        const matchT = !typeVal || (r.attendance_type||'In Progress').includes(typeVal);
         return matchS && matchD && matchT;
       });
 
       filtered.sort((a, b) => parseDate(b.date).localeCompare(parseDate(a.date)));
       lastFilteredData = filtered;
 
-      document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
+      // Stats
+      document.getElementById('statTotal').textContent = all.length;
+      document.getElementById('statFull').textContent  = all.filter(r=>r.attendance_type==='Full Day').length;
+      document.getElementById('statHalf').textContent  = all.filter(r=>(r.attendance_type||'').includes('Half')).length;
+      document.getElementById('statLive').textContent  = all.filter(r=>!r.clock_out||r.attendance_type==='In Progress').length;
+      document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length!==1?'s':''}`;
 
-      const tbody = document.getElementById('tableBody');
-      if (!assignedEmpIds.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="empty-row">No employees are assigned to you yet. Ask your Super Admin to assign employees.</td></tr>`;
-      } else if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="empty-row">${all.length ? 'No records match your filters.' : 'No attendance records yet for your employees.'}</td></tr>`;
+      const tc = document.getElementById('tableContainer');
+      const dc = document.getElementById('dailyContainer');
+
+      // ── ALL RECORDS VIEW ──────────────────────────────────
+      if (currentView === 'all') {
+        tc.style.display = ''; dc.style.display = 'none';
+        document.getElementById('tableTitle').textContent = 'Attendance Records';
+
+        const tbody = document.getElementById('tableBody');
+        if (!filtered.length) {
+          tbody.innerHTML = `<tr><td colspan="10" class="empty-row">${all.length?'No records match your filters.':'No attendance records yet.'}</td></tr>`;
+        } else {
+          tbody.innerHTML = filtered.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
+        }
+      }
+
+      // ── DAILY VIEW ────────────────────────────────────────
+      else if (currentView === 'daily') {
+        tc.style.display = 'none'; dc.style.display = '';
+
+        if (!filtered.length) {
+          dc.innerHTML = `<div style="text-align:center;padding:60px;color:#aaa;background:white;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.1);">
+            ${all.length?'No records match filters.':'No attendance records yet.'}</div>`;
+        } else {
+          // Group by date
+          const grouped = {};
+          filtered.forEach(r => {
+            const d = parseDate(r.date) || r.date || 'Unknown';
+            if (!grouped[d]) grouped[d] = [];
+            grouped[d].push(r);
+          });
+
+          const sortedDates = Object.keys(grouped).sort().reverse();
+
+          dc.innerHTML = sortedDates.map(d => {
+            const rows = grouped[d];
+            return `<div class="daily-group">
+              <div class="daily-group-header">
+                <div>
+                  <span class="daily-date-label">📅 ${formatDateLabel(d)}</span>
+                </div>
+                <span class="daily-count-badge">${rows.length} employee${rows.length!==1?'s':''}</span>
+              </div>
+              ${buildMiniTable(rows, sandwichKeys)}
+            </div>`;
+          }).join('');
+        }
+      }
+
+      // ── EMPLOYEE VIEW ─────────────────────────────────────
+      else if (currentView === 'employee') {
+        tc.style.display = 'none'; dc.style.display = '';
+
+        if (!filtered.length) {
+          dc.innerHTML = `<div style="text-align:center;padding:60px;color:#aaa;background:white;border-radius:20px;box-shadow:0 10px 40px rgba(0,0,0,0.1);">
+            ${all.length?'No records match filters.':'No attendance records yet.'}</div>`;
+        } else {
+          // Group by employee
+          const grouped = {};
+          filtered.forEach(r => {
+            const key = r.emp_id || r.emp_name || 'unknown';
+            if (!grouped[key]) grouped[key] = { name: resolveEmpName(r), id: r.emp_id, dept: resolveEmpDept(r), city: r.city, rows: [] };
+            grouped[key].rows.push(r);
+          });
+
+          dc.innerHTML = Object.values(grouped).map(emp => `
+            <div class="daily-group">
+              <div class="daily-group-header">
+                <div>
+                  <span class="daily-date-label">👤 ${emp.name||'Unknown'}</span>
+                  <span style="font-size:12px;color:#888;margin-left:8px;">${emp.id||''} · ${emp.dept||''} · ${emp.city||''}</span>
+                </div>
+                <span class="daily-count-badge">${emp.rows.length} day${emp.rows.length!==1?'s':''}</span>
+              </div>
+              ${buildMiniTable(emp.rows, sandwichKeys)}
+            </div>`).join('');
+        }
+      }
+
+      // ── Mobile Cards ──────────────────────────────────────
+      const mob = document.getElementById('mobileList');
+      if (!filtered.length) {
+        mob.innerHTML = `<div style="text-align:center;padding:40px;color:#aaa;font-size:14px;">
+          ${all.length?'No records match filters.':'No records yet.'}</div>`;
       } else {
-        tbody.innerHTML = filtered.map(buildRow).join('');
+        mob.innerHTML = filtered.map(r => {
+          const isSw = sandwichKeys.has(sandwichKey(r));
+          const swBadge = isSw ? `<div style="margin-top:8px;"><span class="badge-sandwich">🥪 Sandwich Leave</span></div>` : '';
+          return `<div class="mob-card${isSw?' mob-sandwich':''}">
+            <div class="mob-top">
+              ${photoEl(r)}
+              <div class="mob-info">
+                <div class="mob-name">${resolveEmpName(r)}</div>
+                <div class="mob-meta">${r.emp_id||''} · ${resolveEmpDept(r)} · ${r.city||''}</div>
+              </div>
+              ${getBadge(r.attendance_type)}
+            </div>
+            <div class="mob-rows">
+              <div class="mob-item"><label>Date</label><div class="v">${r.date||'—'}</div></div>
+              <div class="mob-item"><label>Clock In</label><div class="v">${r.clock_in||'—'}</div></div>
+              <div class="mob-item"><label>Clock Out</label><div class="v">${r.clock_out||'—'}</div></div>
+              <div class="mob-item"><label>Hours</label><div class="v">${r.work_hours||'—'}</div></div>
+            </div>
+            ${swBadge}
+            <div class="mob-loc">
+              📍 ${r.location||'Unknown location'}
+              ${r.lat&&r.lng?`<br/><a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" style="margin-top:8px;font-size:12px">View Exact Location on Map</a>`:''}
+            </div>
+            <div style="margin-top:10px;">
+              <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
+                style="width:100%;padding:8px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+                💰 Salary History
+              </button>
+            </div>
+          </div>`;
+        }).join('');
       }
     }
 
+    // ── EXPORT TO EXCEL (.xlsx) ────────────────────────────
+    async function exportToExcel() {
+      if (!lastFilteredData.length) { showToast('⚠️ No records to export!', '#e53935'); return; }
+      await salarySyncAllFromServer();
+
+      const { sandwichKeys } = detectSandwichLeaves(lastAllData);
+
+      // ── Sheet 1: All Records ──────────────────────────────
+      const allRows = [
+        ['Employee Name','Employee ID','Department','City','Date','Day','Clock In','Clock Out','Work Hours','Location','Status','Sandwich Leave']
+      ];
+
+      lastFilteredData.forEach(r => {
+        const isoDate = parseDate(r.date);
+        const dayName = isoDate ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(isoDate+'T00:00:00').getDay()] : '';
+        const isSw    = sandwichKeys.has(sandwichKey(r));
+        allRows.push([
+          resolveEmpName(r),
+          r.emp_id     || '',
+          resolveEmpDept(r),
+          r.city       || '',
+          r.date       || '',
+          dayName,
+          r.clock_in   || '',
+          r.clock_out  || '',
+          r.work_hours || '',
+          r.location   || '',
+          r.attendance_type || 'In Progress',
+          isSw ? 'Yes' : 'No'
+        ]);
+      });
+
+      const ws1 = XLSX.utils.aoa_to_sheet(allRows);
+
+      // Column widths
+      ws1['!cols'] = [22,15,18,15,12,12,10,10,12,40,14,16].map(w=>({wch:w}));
+
+      // Style header row
+      const headerRange = XLSX.utils.decode_range(ws1['!ref']);
+      for (let C = headerRange.s.c; C <= headerRange.e.c; C++) {
+        const cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+        if (!ws1[cellAddr]) continue;
+        ws1[cellAddr].s = {
+          font:      { bold: true, color: { rgb: 'FFFFFF' } },
+          fill:      { fgColor: { rgb: '3F51B5' } },
+          alignment: { horizontal: 'center', vertical: 'center' },
+          border:    { bottom: { style: 'thin', color: { rgb: 'FFFFFF' } } }
+        };
+      }
+
+      // Color data rows
+      const statusColors = { 'Full Day':'C8E6C9', 'Half Day':'FFF9C4', 'In Progress':'BBDEFB' };
+      for (let R = 1; R <= lastFilteredData.length; R++) {
+        const r = lastFilteredData[R - 1];
+        const isSw    = sandwichKeys.has(sandwichKey(r));
+        const bgColor = isSw ? 'FFF3CD' : (statusColors[r.attendance_type] || 'FFFFFF');
+        for (let C = headerRange.s.c; C <= headerRange.e.c; C++) {
+          const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws1[cellAddr]) ws1[cellAddr] = { v: '', t: 's' };
+          ws1[cellAddr].s = {
+            fill:      { fgColor: { rgb: bgColor } },
+            alignment: { vertical: 'center' },
+            border:    { bottom: { style: 'thin', color: { rgb: 'E0E0E0' } } }
+          };
+        }
+      }
+
+      // ── Sheet 2: Daily Summary ────────────────────────────
+      const grouped = {};
+      lastFilteredData.forEach(r => {
+        const d = parseDate(r.date) || r.date || 'Unknown';
+        if (!grouped[d]) grouped[d] = [];
+        grouped[d].push(r);
+      });
+
+      const dailyRows = [['Date','Day','Total Employees','Full Day','Half Day','In Progress','Sandwich Leaves']];
+      Object.keys(grouped).sort().reverse().forEach(d => {
+        const rows   = grouped[d];
+        const dayName = d !== 'Unknown' ? ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date(d+'T00:00:00').getDay()] : '';
+        dailyRows.push([
+          d,
+          dayName,
+          rows.length,
+          rows.filter(r=>r.attendance_type==='Full Day').length,
+          rows.filter(r=>(r.attendance_type||'').includes('Half')).length,
+          rows.filter(r=>!r.clock_out||r.attendance_type==='In Progress').length,
+          rows.filter(r=>sandwichKeys.has(sandwichKey(r))).length
+        ]);
+      });
+
+      const ws2 = XLSX.utils.aoa_to_sheet(dailyRows);
+      ws2['!cols'] = [14,12,18,12,12,14,18].map(w=>({wch:w}));
+
+      // Header style for sheet 2
+      for (let C = 0; C <= 6; C++) {
+        const ca = XLSX.utils.encode_cell({ r:0, c:C });
+        if (!ws2[ca]) continue;
+        ws2[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'1565C0' }}, alignment:{ horizontal:'center' } };
+      }
+
+      // ── Sheet 3: Employee Summary ─────────────────────────
+      const byEmp = {};
+      lastFilteredData.forEach(r => {
+        const key = r.emp_id || r.emp_name || 'unknown';
+        if (!byEmp[key]) byEmp[key] = { name:resolveEmpName(r), id:r.emp_id, dept:resolveEmpDept(r), city:r.city, rows:[] };
+        byEmp[key].rows.push(r);
+      });
+
+      const empRows = [['Employee Name','Employee ID','Department','City','Total Days','Full Day','Half Day','In Progress','Sandwich Leaves']];
+      Object.values(byEmp).forEach(emp => {
+        empRows.push([
+          emp.name || '',
+          emp.id   || '',
+          emp.dept || '',
+          emp.city || '',
+          emp.rows.length,
+          emp.rows.filter(r=>r.attendance_type==='Full Day').length,
+          emp.rows.filter(r=>(r.attendance_type||'').includes('Half')).length,
+          emp.rows.filter(r=>!r.clock_out||r.attendance_type==='In Progress').length,
+          emp.rows.filter(r=>sandwichKeys.has(sandwichKey(r))).length
+        ]);
+      });
+
+      const ws3 = XLSX.utils.aoa_to_sheet(empRows);
+      ws3['!cols'] = [22,15,18,15,12,12,12,14,16].map(w=>({wch:w}));
+
+      for (let C = 0; C <= 8; C++) {
+        const ca = XLSX.utils.encode_cell({ r:0, c:C });
+        if (!ws3[ca]) continue;
+        ws3[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'2E7D32' }}, alignment:{ horizontal:'center' } };
+      }
+
+      // ── Sheet 4: Salary History (scoped to visible employees) ─
+      const salDB = salaryGetDB();
+      const visibleEmpIds = new Set(Object.values(byEmp).map(e=>e.id).filter(Boolean));
+      const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
+      Object.entries(salDB).forEach(([empId, entries]) => {
+        if (visibleEmpIds.size && !visibleEmpIds.has(empId)) return;
+        (entries||[]).forEach(e => {
+          salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
+        });
+      });
+      const ws4 = XLSX.utils.aoa_to_sheet(salRows);
+      ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
+      for (let C = 0; C <= 5; C++) {
+        const ca = XLSX.utils.encode_cell({ r:0, c:C });
+        if (!ws4[ca]) continue;
+        ws4[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'1D6F42' }}, alignment:{ horizontal:'center' } };
+      }
+
+      // ── Build Workbook ────────────────────────────────────
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws1, '📋 All Records');
+      XLSX.utils.book_append_sheet(wb, ws2, '📅 Daily Summary');
+      XLSX.utils.book_append_sheet(wb, ws3, '👤 Employee Summary');
+      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+
+      // Add metadata
+      wb.Props = {
+        Title:   'MEVTENCIA Attendance Report',
+        Subject: 'Employee Attendance',
+        Author:  'Mevrick Solution Pvt. Ltd.',
+        CreatedDate: new Date()
+      };
+
+      const fileName = `MEVTENCIA_Attendance_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+      showToast(`✅ Excel downloaded: ${fileName}`, '#1d6f42');
+    }
+
+    // ── HELPERS ────────────────────────────────────────────
     function clearFilters() {
       document.getElementById('searchFilter').value = '';
-      document.getElementById('dateFilter').value = '';
-      document.getElementById('typeFilter').value = '';
+      document.getElementById('dateFilter').value   = '';
+      document.getElementById('typeFilter').value   = '';
       renderRecords();
     }
 
@@ -1028,93 +1317,2070 @@
       document.getElementById('photoModal').classList.add('show');
     }
 
-    function closeModal() {
-      document.getElementById('photoModal').classList.remove('show');
+    function closeModal() { document.getElementById('photoModal').classList.remove('show'); }
+
+    function adminLogout() { localStorage.removeItem('mev_adminSession'); }
+
+    function showToast(msg, bg = '#1d6f42') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = bg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+  </script>
+  <!-- ═══════════════════════════════════════════════════════════
+       DAILY ATTENDANCE SHEET  —  Shows every (scoped) employee's
+       daily attendance with camera photo, leave status, clock
+       times, location, and salary. Excel export included.
+  ═══════════════════════════════════════════════════════════ -->
+  <style>
+    /* ── Daily Sheet Section ── */
+    #dailySheetSection {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+      z-index: 100;
+      overflow-y: auto;
     }
 
-    function exportToExcel() {
-      if (!lastFilteredData.length) {
-        showToast('⚠️ No records to export!', '#e53935');
+    #dailySheetSection.ds-open { display: block; }
+
+    .ds-navbar {
+      background: #1a237e;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+
+    .ds-navbar-title {
+      color: white;
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .ds-navbar-title span { font-size: 22px; }
+
+    .ds-close-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .ds-close-btn:hover { background: rgba(255,255,255,0.25); }
+
+    .ds-container { max-width: 1300px; margin: 0 auto; padding: 24px 18px 60px; }
+
+    /* Controls bar */
+    .ds-controls {
+      background: white;
+      border-radius: 16px;
+      padding: 18px 22px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .ds-controls input[type="date"] {
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Segoe UI', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+      background: white;
+    }
+
+    .ds-controls input[type="date"]:focus { border-color: #1a237e; }
+
+    .ds-controls input[type="text"] {
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: 'Segoe UI', sans-serif;
+      outline: none;
+      flex: 1;
+      min-width: 180px;
+      background: white;
+    }
+
+    .ds-controls input[type="text"]:focus { border-color: #1a237e; }
+
+    .ds-nav-btns { display: flex; gap: 6px; }
+
+    .ds-nav-btn {
+      padding: 10px 14px;
+      background: #e8eef5;
+      border: 2px solid #d0d8e8;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .ds-nav-btn:hover { background: #1a237e; color: white; border-color: #1a237e; }
+
+    .ds-today-btn {
+      padding: 10px 16px;
+      background: #1a237e;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+
+    .ds-today-btn:hover { background: #283593; }
+
+    .ds-excel-btn {
+      padding: 10px 18px;
+      background: #1d6f42;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s;
+      margin-left: auto;
+    }
+
+    .ds-excel-btn:hover { background: #145232; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(29,111,66,0.3); }
+
+    .ds-excel-icon {
+      background: white;
+      color: #1d6f42;
+      border-radius: 3px;
+      width: 18px; height: 18px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900;
+    }
+
+    /* Date heading */
+    .ds-date-heading {
+      background: white;
+      border-radius: 16px;
+      padding: 18px 24px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .ds-date-big {
+      font-size: 22px;
+      font-weight: 800;
+      color: #1a237e;
+    }
+
+    .ds-date-day {
+      font-size: 14px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .ds-date-stats {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .ds-stat-pill {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .dsp-total   { background: #e8eef5; color: #1a237e; }
+    .dsp-present { background: #d4edda; color: #155724; }
+    .dsp-absent  { background: #f8d7da; color: #721c24; }
+    .dsp-leave   { background: #fff3cd; color: #856404; }
+    .dsp-half    { background: #d1ecf1; color: #0c5460; }
+
+    /* Employee Cards Grid */
+    .ds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    @media(max-width:600px) { .ds-grid { grid-template-columns: 1fr; } }
+
+    /* Individual Employee Card */
+    .ds-emp-card {
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      transition: transform 0.15s, box-shadow 0.15s;
+      border: 2px solid transparent;
+    }
+
+    .ds-emp-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.13); }
+
+    .ds-emp-card.card-present  { border-color: #4caf50; }
+    .ds-emp-card.card-absent   { border-color: #f44336; background: #fff8f8; }
+    .ds-emp-card.card-half     { border-color: #ff9800; }
+    .ds-emp-card.card-leave    { border-color: #9c27b0; background: #fdf5ff; }
+    .ds-emp-card.card-sandwich { border-color: #f59e0b; background: #fffbeb; }
+
+    /* Card top bar */
+    .ds-card-top {
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ds-photo-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .ds-cam-photo {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #e0e7ff;
+      cursor: pointer;
+      display: block;
+    }
+
+    .ds-cam-photo:hover { border-color: #3f51b5; }
+
+    .ds-no-photo {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: #e8eef5;
+      border: 3px solid #d0d8e8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+
+    .ds-live-dot {
+      position: absolute;
+      bottom: 2px; right: 2px;
+      width: 13px; height: 13px;
+      background: #4caf50;
+      border-radius: 50%;
+      border: 2px solid white;
+      animation: ds-pulse 1.5s infinite;
+    }
+
+    @keyframes ds-pulse {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%      { transform: scale(1.3); opacity: 0.7; }
+    }
+
+    .ds-emp-info { flex: 1; min-width: 0; }
+
+    .ds-emp-name {
+      font-weight: 800;
+      color: #222;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ds-emp-meta { font-size: 11px; color: #888; margin-top: 2px; }
+
+    .ds-status-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .dsb-present  { background: #d4edda; color: #155724; }
+    .dsb-absent   { background: #f8d7da; color: #721c24; }
+    .dsb-half     { background: #fff3cd; color: #856404; }
+    .dsb-progress { background: #cce5ff; color: #004085; }
+    .dsb-leave    { background: #e8d5ff; color: #5b21b6; }
+    .dsb-sandwich { background: #fde68a; color: #92400e; }
+
+    /* Card body */
+    .ds-card-body { padding: 14px 16px; }
+
+    .ds-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .ds-info-item label {
+      font-size: 9px;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      display: block;
+    }
+
+    .ds-info-item .ds-val {
+      font-size: 14px;
+      font-family: monospace;
+      color: #333;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .ds-info-item .ds-val.na { color: #ccc; font-size: 12px; }
+
+    /* Camera snapshot strip */
+    .ds-photo-strip {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .ds-snap {
+      width: 64px; height: 64px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 2px solid #e0e7ff;
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .ds-snap:hover { border-color: #3f51b5; transform: scale(1.05); }
+
+    .ds-snap-label {
+      font-size: 9px;
+      color: #aaa;
+      text-align: center;
+      margin-top: 3px;
+    }
+
+    .ds-snap-wrap { text-align: center; }
+
+    /* Location line */
+    .ds-location {
+      background: #f8f9ff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: #666;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ds-loc-text { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+    .ds-map-link {
+      color: #3f51b5;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .ds-map-link:hover { text-decoration: underline; }
+
+    /* Leave badge inline */
+    .ds-leave-tag {
+      display: inline-block;
+      background: #e8d5ff;
+      color: #5b21b6;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 8px;
+      border: 1px solid #c4b5fd;
+    }
+
+    .ds-absent-msg {
+      text-align: center;
+      padding: 24px 0 10px;
+      color: #e53935;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* No data state */
+    .ds-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.07);
+    }
+
+    .ds-empty-icon { font-size: 48px; margin-bottom: 14px; }
+    .ds-empty h3   { color: #666; font-size: 16px; margin-bottom: 6px; }
+    .ds-empty p    { font-size: 13px; }
+
+    /* Leave Apply Modal */
+    .ds-leave-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .ds-leave-modal.open { display: flex; }
+
+    .ds-leave-box {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .ds-leave-box h3 {
+      color: #1a237e;
+      font-size: 17px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ds-leave-box label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+      margin-top: 14px;
+    }
+
+    .ds-leave-box select,
+    .ds-leave-box input,
+    .ds-leave-box textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 13px;
+      font-family: 'Segoe UI', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .ds-leave-box select:focus,
+    .ds-leave-box input:focus,
+    .ds-leave-box textarea:focus { border-color: #1a237e; }
+
+    .ds-leave-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    .ds-leave-save {
+      flex: 1;
+      padding: 11px;
+      background: #1a237e;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .ds-leave-save:hover { background: #283593; }
+
+    .ds-leave-cancel {
+      padding: 11px 18px;
+      background: #f5f5f5;
+      color: #555;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+
+  <!-- ── DAILY SHEET OVERLAY ────────────────────────────── -->
+  <div id="dailySheetSection">
+    <div class="ds-navbar">
+      <div class="ds-navbar-title">
+        <span>📸</span> Daily Attendance Sheet — Mevrick Solution Pvt. Ltd.
+      </div>
+      <button class="ds-close-btn" onclick="closeDailySheet()">✕ Close</button>
+    </div>
+
+    <div class="ds-container">
+
+      <!-- Controls -->
+      <div class="ds-controls">
+        <div class="ds-nav-btns">
+          <button class="ds-nav-btn" onclick="dsChangeDate(-1)" title="Previous Day">◀</button>
+          <button class="ds-nav-btn" onclick="dsChangeDate(1)"  title="Next Day">▶</button>
+        </div>
+        <input type="date" id="dsDatePicker" onchange="dsRender()" />
+        <button class="ds-today-btn" onclick="dsGoToday()">📅 Today</button>
+        <input type="text" id="dsSearch" placeholder="🔍 Search employee name / ID..." oninput="dsRender()" />
+        <select id="dsStatusFilter" onchange="dsRender()"
+          style="padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none;background:white;font-family:'Segoe UI',sans-serif;">
+          <option value="">All Status</option>
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
+          <option value="half">Half Day</option>
+          <option value="leave">On Leave</option>
+        </select>
+        <button class="ds-excel-btn" onclick="dsExportExcel()">
+          <span class="ds-excel-icon">X</span>
+          Download Excel
+        </button>
+      </div>
+
+      <!-- Date heading + stats -->
+      <div class="ds-date-heading" id="dsDateHeading">
+        <div>
+          <div class="ds-date-big" id="dsDateBig">—</div>
+          <div class="ds-date-day" id="dsDateDay">—</div>
+        </div>
+        <div class="ds-date-stats" id="dsDateStats"></div>
+      </div>
+
+      <!-- Employee Cards -->
+      <div class="ds-grid" id="dsGrid"></div>
+
+    </div>
+  </div>
+
+  <!-- Leave Apply Modal -->
+  <div class="ds-leave-modal" id="dsLeaveModal">
+    <div class="ds-leave-box">
+      <h3>🗓️ Mark / Edit Leave</h3>
+      <div id="dsLeaveEmpName" style="font-size:14px;font-weight:700;color:#333;margin-bottom:4px;"></div>
+      <div id="dsLeaveEmpId"   style="font-size:12px;color:#888;margin-bottom:12px;font-family:monospace;"></div>
+
+      <label>Leave Type</label>
+      <select id="dsLeaveType">
+        <option value="Casual Leave">Casual Leave</option>
+        <option value="Sick Leave">Sick Leave</option>
+        <option value="Earned Leave">Earned Leave</option>
+        <option value="Half Day Leave">Half Day Leave</option>
+        <option value="Work From Home">Work From Home</option>
+        <option value="On Duty">On Duty (Official Work)</option>
+        <option value="Unpaid Leave">Unpaid Leave</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" id="dsLeaveDate" />
+
+      <label>Reason</label>
+      <textarea id="dsLeaveReason" rows="3" placeholder="Optional reason..."></textarea>
+
+      <div class="ds-leave-actions">
+        <button class="ds-leave-save"   onclick="dsSaveLeave()">✓ Save Leave</button>
+        <button class="ds-leave-cancel" onclick="dsCloseLeaveModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo zoom modal (reuse existing #photoModal) -->
+
+  <script>
+    /* ══════════════════════════════════════════════════════
+       DAILY ATTENDANCE SHEET — JavaScript
+       (all variables/functions prefixed with ds_ to avoid
+        any collision with existing dashboard code)
+    ══════════════════════════════════════════════════════ */
+
+    let ds_currentDate = '';
+    let ds_leaveStore  = JSON.parse(localStorage.getItem('mev_leaveStore') || '{}');
+    // leaveStore: { "empId|YYYY-MM-DD": { type, reason, empName, empId } }
+
+    const DS_DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const DS_MONTH = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    async function openDailySheet() {
+      // Load leaves from MongoDB
+      try {
+        const resp = await fetch('/api/leaves');
+        if (resp.ok) {
+          const serverLeaves = await resp.json();
+          ds_leaveStore = { ...serverLeaves, ...ds_leaveStore };
+          localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
+        }
+      } catch(e) { console.warn('Leave fetch failed:', e); }
+
+      document.getElementById('dailySheetSection').classList.add('ds-open');
+      document.body.style.overflow = 'hidden';
+      if (!ds_currentDate) dsGoToday(); else dsRender();
+    }
+
+    function closeDailySheet() {
+      document.getElementById('dailySheetSection').classList.remove('ds-open');
+      document.body.style.overflow = '';
+    }
+
+    function dsGoToday() {
+      const today = new Date();
+      ds_currentDate = today.toISOString().split('T')[0];
+      document.getElementById('dsDatePicker').value = ds_currentDate;
+      dsRender();
+    }
+
+    function dsChangeDate(delta) {
+      const base = ds_currentDate || new Date().toISOString().split('T')[0];
+      const d    = new Date(base + 'T00:00:00');
+      d.setDate(d.getDate() + delta);
+      ds_currentDate = d.toISOString().split('T')[0];
+      document.getElementById('dsDatePicker').value = ds_currentDate;
+      dsRender();
+    }
+
+    // Union of employees this session is allowed to see.
+    // Superadmin: every employee in credentials DB + every employee seen in records.
+    // Scoped admin: only their assignedEmpIds.
+    function dsGetScopedEmployeeMap(allRecords) {
+      const map = {};
+      const credDB = credGetDB();
+      Object.values(credDB).forEach(e => {
+        if (scopedEmpIds && !scopedEmpIds.includes(e.id)) return;
+        map[e.id] = { name: e.name, id: e.id, dept: e.dept, city: e.city };
+      });
+      allRecords.forEach(r => {
+        const key = r.emp_id || r.emp_name || 'unknown';
+        if (scopedEmpIds && r.emp_id && !scopedEmpIds.includes(r.emp_id)) return;
+        if (!map[key]) map[key] = { name: resolveEmpName(r), id: r.emp_id, dept: resolveEmpDept(r), city: r.city };
+      });
+      return map;
+    }
+
+    async function dsRender() {
+      const picked = document.getElementById('dsDatePicker').value;
+      if (picked) ds_currentDate = picked;
+      if (!ds_currentDate) { dsGoToday(); return; }
+
+      // Date heading
+      const d    = new Date(ds_currentDate + 'T00:00:00');
+      const dBig = `${d.getDate()} ${DS_MONTH[d.getMonth()]} ${d.getFullYear()}`;
+      const dDay = DS_DAYS[d.getDay()];
+      document.getElementById('dsDateBig').textContent = dBig;
+      document.getElementById('dsDateDay').textContent = dDay + (d.getDay()===0?' 🏖️ Weekend':'');
+
+      const all    = await getAllRecords();           // already scope-filtered
+      const search = document.getElementById('dsSearch').value.toLowerCase();
+      const sfilt  = document.getElementById('dsStatusFilter').value;
+
+      // Records for this date
+      const todayRecs = {};
+      all.forEach(r => {
+        if (parseDate(r.date) === ds_currentDate) {
+          const key = r.emp_id || r.emp_name || 'unknown';
+          todayRecs[key] = r;
+        }
+      });
+
+      // All known (scoped) employees
+      const allEmps = dsGetScopedEmployeeMap(all);
+
+      // { sandwichKeys } for this date context
+      const { sandwichKeys } = detectSandwichLeaves(all);  // reuse existing
+
+      let empList = Object.entries(allEmps);
+
+      // Search filter
+      if (search) {
+        empList = empList.filter(([k, e]) =>
+          (e.name||'').toLowerCase().includes(search) ||
+          (e.id||'').toLowerCase().includes(search) ||
+          (e.dept||'').toLowerCase().includes(search)
+        );
+      }
+
+      // Build cards with status
+      let cards = empList.map(([key, emp]) => {
+        const rec     = todayRecs[key] || null;
+        const leaveKey= `${key}|${ds_currentDate}`;
+        const leaveInfo= ds_leaveStore[leaveKey] || null;
+        const isSw    = rec && sandwichKeys.has(`${key}|${ds_currentDate}`);
+
+        let status = 'absent';
+        if (leaveInfo) status = 'leave';
+        else if (rec) {
+          if (rec.attendance_type === 'Full Day') status = 'present';
+          else if ((rec.attendance_type||'').includes('Half')) status = 'half';
+          else status = 'progress';
+        }
+        return { key, emp, rec, leaveInfo, isSw, status };
+      });
+
+      // Status filter
+      if (sfilt) {
+        cards = cards.filter(c => {
+          if (sfilt==='present') return c.status==='present'||c.status==='progress';
+          if (sfilt==='absent')  return c.status==='absent';
+          if (sfilt==='half')    return c.status==='half';
+          if (sfilt==='leave')   return c.status==='leave';
+          return true;
+        });
+      }
+
+      // Sort: present first, then half, progress, leave, absent
+      const ORDER = { present:0, progress:1, half:2, leave:3, absent:4 };
+      cards.sort((a,b) => ORDER[a.status]-ORDER[b.status] || (a.emp.name||'').localeCompare(b.emp.name||''));
+
+      // Stats
+      const tot      = cards.length;
+      const nPresent = cards.filter(c=>c.status==='present'||c.status==='progress').length;
+      const nAbsent  = cards.filter(c=>c.status==='absent').length;
+      const nLeave   = cards.filter(c=>c.status==='leave').length;
+      const nHalf    = cards.filter(c=>c.status==='half').length;
+
+      document.getElementById('dsDateStats').innerHTML = `
+        <span class="ds-stat-pill dsp-total">👥 ${tot} Total</span>
+        <span class="ds-stat-pill dsp-present">✅ ${nPresent} Present</span>
+        <span class="ds-stat-pill dsp-absent">❌ ${nAbsent} Absent</span>
+        <span class="ds-stat-pill dsp-leave">🗓️ ${nLeave} On Leave</span>
+        <span class="ds-stat-pill dsp-half">½ ${nHalf} Half Day</span>
+      `;
+
+      const grid = document.getElementById('dsGrid');
+      if (!cards.length) {
+        grid.innerHTML = `<div class="ds-empty" style="grid-column:1/-1">
+          <div class="ds-empty-icon">📭</div>
+          <h3>No employees found</h3>
+          <p>${scopedEmpIds ? 'No employees are currently assigned to your admin account.' : 'No records match your search or filters.'}</p>
+        </div>`;
         return;
       }
-      const rows = [
-        ['Employee Name', 'Employee ID', 'Department', 'City', 'Date', 'Clock In', 'Clock Out', 'Work Hours', 'Location', 'Status']
-      ];
-      lastFilteredData.forEach(r => {
-        rows.push([
-          r.emp_name || '', r.emp_id || '', r.dept || '', r.city || '', r.date || '',
-          r.clock_in || '', r.clock_out || '', r.work_hours || '', r.location || '', r.attendance_type || 'In Progress'
+
+      grid.innerHTML = cards.map(({ key, emp, rec, leaveInfo, isSw, status }) => {
+        /* ── Status badge ── */
+        const badgeClass = { present:'dsb-present', progress:'dsb-progress', half:'dsb-half', absent:'dsb-absent', leave:'dsb-leave' }[status]||'dsb-absent';
+        const badgeText  = { present:'✅ Present', progress:'🔵 In Progress', half:'½ Half Day', absent:'❌ Absent', leave:'🗓️ On Leave' }[status]||'❌ Absent';
+
+        /* ── Card border class ── */
+        const cardClass = isSw ? 'card-sandwich' : { present:'card-present', progress:'card-present', half:'card-half', absent:'card-absent', leave:'card-leave' }[status]||'';
+
+        /* ── Clock-in photo (camera snap) ── */
+        const clockInPhoto  = rec?.photo || rec?.clock_in_photo || null;
+        const clockOutPhoto = rec?.clock_out_photo || null;
+
+        const photoHTML = clockInPhoto
+          ? `<div class="ds-photo-wrap">
+               <img class="ds-cam-photo" src="${clockInPhoto}" alt="Clock-in" onclick="openModal('${clockInPhoto.replace(/'/g,"\\'")}')"/>
+               ${status==='progress'?'<div class="ds-live-dot"></div>':''}
+             </div>`
+          : `<div class="ds-photo-wrap">
+               <div class="ds-no-photo" title="No camera photo">${status==='absent'?'😴':'📷'}</div>
+             </div>`;
+
+        /* ── Camera snapshots strip ── */
+        const snapHTML = (() => {
+          const snaps = [];
+          if (clockInPhoto)  snaps.push({ src: clockInPhoto,  label: 'Clock In'  });
+          if (clockOutPhoto) snaps.push({ src: clockOutPhoto, label: 'Clock Out' });
+          if (rec?.photo2)   snaps.push({ src: rec.photo2,    label: 'Selfie 2'  });
+          if (!snaps.length) return '';
+          return `<div class="ds-photo-strip">
+            ${snaps.map(s=>`
+              <div class="ds-snap-wrap">
+                <img class="ds-snap" src="${s.src}" alt="${s.label}" onclick="openModal('${s.src.replace(/'/g,"\\'")}')"/>
+                <div class="ds-snap-label">${s.label}</div>
+              </div>`).join('')}
+          </div>`;
+        })();
+
+        /* ── Location ── */
+        const locHTML = rec?.location ? `
+          <div class="ds-location">
+            <div class="ds-loc-text">📍 ${rec.location}</div>
+            ${rec.lat&&rec.lng
+              ? `<a class="ds-map-link" href="https://www.google.com/maps?q=${rec.lat},${rec.lng}" target="_blank">Map ↗</a>`
+              : ''}
+          </div>` : '';
+
+        /* ── Leave info ── */
+        const leaveHTML = leaveInfo
+          ? `<div class="ds-leave-tag">🗓️ ${leaveInfo.type}</div>
+             ${leaveInfo.reason?`<div style="font-size:11px;color:#888;margin-top:4px;">Reason: ${leaveInfo.reason}</div>`:''}`
+          : '';
+
+        /* ── Absent body ── */
+        const absentHTML = status==='absent' && !leaveInfo
+          ? `<div class="ds-absent-msg">No attendance recorded for this day</div>` : '';
+
+        /* ── Sandwich flag ── */
+        const swHTML = isSw ? `<div style="margin-top:6px;"><span class="badge-sandwich">🥪 Sandwich Leave</span></div>` : '';
+
+        return `
+        <div class="ds-emp-card ${cardClass}">
+          <div class="ds-card-top">
+            ${photoHTML}
+            <div class="ds-emp-info">
+              <div class="ds-emp-name">${emp.name||'Unknown'}</div>
+              <div class="ds-emp-meta">${emp.id||''} · ${emp.dept||''} · ${emp.city||''}</div>
+            </div>
+            <div>
+              <span class="ds-status-badge ${badgeClass}">${badgeText}</span>
+            </div>
+          </div>
+          <div class="ds-card-body">
+            ${rec ? `
+            <div class="ds-info-grid">
+              <div class="ds-info-item">
+                <label>Clock In</label>
+                <div class="ds-val">${rec.clock_in||'—'}</div>
+              </div>
+              <div class="ds-info-item">
+                <label>Clock Out</label>
+                <div class="ds-val ${!rec.clock_out?'na':''}">${rec.clock_out||'—'}</div>
+              </div>
+              <div class="ds-info-item">
+                <label>Hours</label>
+                <div class="ds-val ${!rec.work_hours?'na':''}">${rec.work_hours||'—'}</div>
+              </div>
+            </div>
+            ${snapHTML}
+            ${locHTML}
+            ` : ''}
+            ${absentHTML}
+            ${leaveHTML}
+            ${swHTML}
+            <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+              <button onclick="dsOpenLeaveModal('${key}','${(emp.name||'').replace(/'/g,"\\'")}','${emp.id||''}')"
+                style="padding:6px 12px;background:#e8d5ff;color:#5b21b6;border:1px solid #c4b5fd;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
+                🗓️ Mark Leave
+              </button>
+              <button onclick="openSalaryModal('${emp.id||''}','${(emp.name||'').replace(/'/g,"\\'")}')"
+                style="padding:6px 12px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
+                💰 Salary History
+              </button>
+              ${rec?.lat&&rec?.lng?`<a href="https://www.google.com/maps?q=${rec.lat},${rec.lng}" target="_blank"
+                style="padding:6px 12px;background:#e8eef5;color:#3f51b5;border:1px solid #c5cae9;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;">
+                📍 Live Location</a>`:''}
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    // ── LEAVE MODAL ──────────────────────────────────────
+    let ds_leaveTarget = null;
+
+    function dsOpenLeaveModal(key, name, id) {
+      ds_leaveTarget = key;
+      document.getElementById('dsLeaveEmpName').textContent = name;
+      document.getElementById('dsLeaveEmpId').textContent   = id;
+      document.getElementById('dsLeaveDate').value          = ds_currentDate;
+      const existing = ds_leaveStore[`${key}|${ds_currentDate}`];
+      if (existing) {
+        document.getElementById('dsLeaveType').value   = existing.type;
+        document.getElementById('dsLeaveReason').value = existing.reason || '';
+      } else {
+        document.getElementById('dsLeaveType').value   = 'Casual Leave';
+        document.getElementById('dsLeaveReason').value = '';
+      }
+      document.getElementById('dsLeaveModal').classList.add('open');
+    }
+
+    function dsCloseLeaveModal() {
+      document.getElementById('dsLeaveModal').classList.remove('open');
+      ds_leaveTarget = null;
+    }
+
+    async function dsSaveLeave() {
+      if (!ds_leaveTarget) return;
+      const date    = document.getElementById('dsLeaveDate').value   || ds_currentDate;
+      const type    = document.getElementById('dsLeaveType').value;
+      const reason  = document.getElementById('dsLeaveReason').value.trim();
+      const storeKey = `${ds_leaveTarget}|${date}`;
+      const nameEl   = document.getElementById('dsLeaveEmpName').textContent;
+      const idEl     = document.getElementById('dsLeaveEmpId').textContent;
+
+      const leaveData = { type, reason, empName: nameEl, empId: idEl, date };
+
+      // Local save
+      ds_leaveStore[storeKey] = leaveData;
+      localStorage.setItem('mev_leaveStore', JSON.stringify(ds_leaveStore));
+
+      // MongoDB save
+      try {
+        await fetch('/api/leaves', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: storeKey, data: leaveData })
+        });
+        console.log('✅ Leave saved to MongoDB!');
+      } catch(e) {
+        console.warn('Leave MongoDB sync failed:', e.message);
+      }
+
+      dsCloseLeaveModal();
+      dsRender();
+      showToast(`✅ Leave marked: ${nameEl} — ${type}`, '#5b21b6');
+    }
+
+    // ── EXCEL EXPORT (Daily Sheet) ───────────────────────
+    async function dsExportExcel() {
+      if (!ds_currentDate) { showToast('⚠️ Please select a date first', '#e53935'); return; }
+      await salarySyncAllFromServer();
+
+      const all       = await getAllRecords(); // already scoped
+      const { sandwichKeys } = detectSandwichLeaves(all);
+      const d         = new Date(ds_currentDate + 'T00:00:00');
+      const dateLabel = `${d.getDate()} ${DS_MONTH[d.getMonth()]} ${d.getFullYear()} (${DS_DAYS[d.getDay()]})`;
+
+      // Build employee map (scoped)
+      const allEmps = dsGetScopedEmployeeMap(all);
+
+      // Records for this date
+      const todayRecs = {};
+      all.forEach(r => {
+        if (parseDate(r.date) === ds_currentDate) {
+          const key = r.emp_id || r.emp_name || 'unknown';
+          todayRecs[key] = r;
+        }
+      });
+
+      // ── Sheet 1: Full Daily Attendance ───────────────────
+      const sheetRows = [[
+        'S.No', 'Employee Name', 'Employee ID', 'Department', 'City',
+        'Status', 'Clock In', 'Clock Out', 'Work Hours',
+        'Leave Type', 'Leave Reason', 'Location', 'Sandwich Leave', 'Remarks'
+      ]];
+
+      let sno = 1;
+      const ORDER2 = { present:0, progress:1, half:2, leave:3, absent:4 };
+      const entries = Object.entries(allEmps).map(([key, emp]) => {
+        const rec       = todayRecs[key] || null;
+        const leaveKey  = `${key}|${ds_currentDate}`;
+        const leaveInfo = ds_leaveStore[leaveKey] || null;
+        const isSw      = rec && sandwichKeys.has(`${key}|${ds_currentDate}`);
+        let status = 'Absent';
+        if (leaveInfo) status = 'On Leave';
+        else if (rec) {
+          if (rec.attendance_type==='Full Day') status = 'Present';
+          else if ((rec.attendance_type||'').includes('Half')) status = 'Half Day';
+          else status = 'In Progress';
+        }
+        return { key, emp, rec, leaveInfo, isSw, status };
+      }).sort((a,b)=>ORDER2[a.status.toLowerCase().replace(' ','')]-(ORDER2[b.status.toLowerCase().replace(' ','')] || 0));
+
+      entries.forEach(({ emp, rec, leaveInfo, isSw, status }) => {
+        sheetRows.push([
+          sno++,
+          emp.name  || '',
+          emp.id    || '',
+          emp.dept  || '',
+          emp.city  || '',
+          status,
+          rec?.clock_in   || '',
+          rec?.clock_out  || '',
+          rec?.work_hours || '',
+          leaveInfo?.type   || '',
+          leaveInfo?.reason || '',
+          rec?.location || '',
+          isSw ? 'Yes' : 'No',
+          status === 'Absent' && !leaveInfo ? 'No Record' : ''
         ]);
       });
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = [22, 15, 18, 15, 12, 10, 10, 12, 40, 14].map(w => ({ wch: w }));
+
+      const ws1 = XLSX.utils.aoa_to_sheet(sheetRows);
+      ws1['!cols'] = [5,24,14,18,14,14,10,10,12,16,22,36,14,14].map(w=>({wch:w}));
+
+      // Header style
+      for (let C = 0; C < 14; C++) {
+        const ca = XLSX.utils.encode_cell({r:0,c:C});
+        if (!ws1[ca]) continue;
+        ws1[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1A237E'}}, alignment:{horizontal:'center',wrapText:true} };
+      }
+
+      // Row colours by status
+      const rowColors = { 'Present':'C8E6C9', 'In Progress':'BBDEFB', 'Half Day':'FFF9C4', 'On Leave':'EDE7F6', 'Absent':'FFEBEE' };
+      entries.forEach((e, idx) => {
+        const bg = e.isSw ? 'FFF3CD' : (rowColors[e.status] || 'FFFFFF');
+        for (let C = 0; C < 14; C++) {
+          const ca = XLSX.utils.encode_cell({r:idx+1,c:C});
+          if (!ws1[ca]) ws1[ca] = {v:'',t:'s'};
+          ws1[ca].s = { fill:{fgColor:{rgb:bg}}, alignment:{vertical:'center'}, border:{bottom:{style:'thin',color:{rgb:'E0E0E0'}}} };
+        }
+      });
+
+      // ── Sheet 2: Summary ─────────────────────────────────
+      const sumRows = [
+        ['Attendance Summary', dateLabel],
+        [],
+        ['Metric', 'Count', 'Percentage'],
+        ['Total Employees',    entries.length, '100%'],
+        ['Present',           entries.filter(e=>e.status==='Present'||e.status==='In Progress').length,
+         entries.length ? ((entries.filter(e=>e.status==='Present'||e.status==='In Progress').length/entries.length)*100).toFixed(1)+'%' : '0%'],
+        ['Absent',            entries.filter(e=>e.status==='Absent').length,
+         entries.length ? ((entries.filter(e=>e.status==='Absent').length/entries.length)*100).toFixed(1)+'%' : '0%'],
+        ['Half Day',          entries.filter(e=>e.status==='Half Day').length,
+         entries.length ? ((entries.filter(e=>e.status==='Half Day').length/entries.length)*100).toFixed(1)+'%' : '0%'],
+        ['On Leave',          entries.filter(e=>e.status==='On Leave').length,
+         entries.length ? ((entries.filter(e=>e.status==='On Leave').length/entries.length)*100).toFixed(1)+'%' : '0%'],
+        ['Sandwich Leave',    entries.filter(e=>e.isSw).length,
+         entries.length ? ((entries.filter(e=>e.isSw).length/entries.length)*100).toFixed(1)+'%' : '0%'],
+      ];
+
+      const ws2 = XLSX.utils.aoa_to_sheet(sumRows);
+      ws2['!cols'] = [{wch:22},{wch:12},{wch:14}];
+      ws2['A1'].s = { font:{bold:true,sz:14,color:{rgb:'1A237E'}} };
+
+      // ── Sheet 3: Leave Register (scoped) ──────────────────
+      const scopedIds = new Set(Object.keys(allEmps));
+      const leaveRows = [['Employee Name','Employee ID','Department','City','Date','Leave Type','Reason']];
+      Object.entries(ds_leaveStore).forEach(([k, v]) => {
+        const empKey = k.split('|')[0];
+        if (scopedEmpIds && !scopedIds.has(empKey)) return;
+        leaveRows.push([v.empName||'',v.empId||'',
+          allEmps[empKey]?.dept||'',
+          allEmps[empKey]?.city||'',
+          v.date||'',v.type||'',v.reason||'']);
+      });
+
+      const ws3 = XLSX.utils.aoa_to_sheet(leaveRows);
+      ws3['!cols'] = [22,14,18,14,12,18,30].map(w=>({wch:w}));
+      for (let C = 0; C < 7; C++) {
+        const ca = XLSX.utils.encode_cell({r:0,c:C});
+        if (!ws3[ca]) continue;
+        ws3[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'5B21B6'}}, alignment:{horizontal:'center'} };
+      }
+
+      // ── Sheet 4: Salary History (scoped) ──────────────────
+      const salDB = salaryGetDB();
+      const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
+      Object.entries(salDB).forEach(([empId, entriesArr]) => {
+        if (scopedEmpIds && !scopedIds.has(empId)) return;
+        (entriesArr||[]).forEach(e => {
+          salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
+        });
+      });
+      const ws4 = XLSX.utils.aoa_to_sheet(salRows);
+      ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
+      for (let C = 0; C < 6; C++) {
+        const ca = XLSX.utils.encode_cell({r:0,c:C});
+        if (!ws4[ca]) continue;
+        ws4[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1D6F42'}}, alignment:{horizontal:'center'} };
+      }
+
+      // ── Workbook ─────────────────────────────────────────
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'My Team Attendance');
-      const fileName = `MEVTENCIA_MyTeam_Attendance_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.utils.book_append_sheet(wb, ws1, '📋 Daily Attendance');
+      XLSX.utils.book_append_sheet(wb, ws2, '📊 Summary');
+      XLSX.utils.book_append_sheet(wb, ws3, '🗓️ Leave Register');
+      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+
+      wb.Props = { Title:`MEVTENCIA Daily Sheet — ${dateLabel}`, Author:'Mevrick Solution Pvt. Ltd.' };
+
+      const fileName = `MEVTENCIA_Daily_${ds_currentDate}.xlsx`;
       XLSX.writeFile(wb, fileName);
       showToast(`✅ Excel downloaded: ${fileName}`, '#1d6f42');
     }
-
-    // ========== LEAVE TAB (who's absent today) ==========
-    function renderLeaveTab() {
-      const empDB = getEmployeeDB();
-      const today = (() => {
-        const d = new Date();
-        return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
-      })();
-      const presentIds = new Set(lastAllData.filter(r => r.date === today).map(r => r.emp_id));
-      const absentIds = assignedEmpIds.filter(id => !presentIds.has(id));
-
-      document.getElementById('leaveCount').textContent = `${absentIds.length} employee${absentIds.length !== 1 ? 's' : ''}`;
-
-      const grid = document.getElementById('leaveGrid');
-      if (!absentIds.length) {
-        grid.innerHTML = `<div class="empty-row" style="grid-column:1/-1;">🎉 Everyone assigned to you has attendance recorded today.</div>`;
-        return;
-      }
-      grid.innerHTML = absentIds.map(id => {
-        const emp = allEmployeesData.find(e => e.emp_id === id) || empDB[id] || {};
-        return `<div class="emp-mini-card">
-          <div class="emp-mini-name">${emp.employee_name || emp.name || id}</div>
-          <div class="emp-mini-id">${id}</div>
-          <div class="emp-mini-row"><span>Department</span><span>${emp.dept || '—'}</span></div>
-          <div class="emp-mini-row"><span>City</span><span>${emp.city || '—'}</span></div>
-          <div class="emp-mini-row"><span>Status Today</span><span style="color:#e53935;font-weight:700;">Absent</span></div>
-        </div>`;
-      }).join('');
-    }
-
-    // ========== SALARY TAB ==========
-    function renderSalaryTab() {
-      const empDB = getEmployeeDB();
-      document.getElementById('salaryEmpCount').textContent = `${assignedEmpIds.length} employee${assignedEmpIds.length !== 1 ? 's' : ''}`;
-
-      const grid = document.getElementById('salaryGrid');
-      if (!assignedEmpIds.length) {
-        grid.innerHTML = `<div class="empty-row" style="grid-column:1/-1;">No employees are assigned to you yet.</div>`;
-        return;
-      }
-      grid.innerHTML = assignedEmpIds.map(id => {
-        const emp = allEmployeesData.find(e => e.emp_id === id) || empDB[id] || {};
-        const salary = emp.salary ? parseInt(emp.salary) : 15000;
-        return `<div class="emp-mini-card">
-          <div class="emp-mini-name">${emp.employee_name || emp.name || id}</div>
-          <div class="emp-mini-id">${id}</div>
-          <div class="emp-mini-row"><span>Department</span><span>${emp.dept || '—'}</span></div>
-          <div class="emp-mini-row"><span>Base Salary</span><span>₹${salary.toLocaleString('en-IN')}/mo</span></div>
-        </div>`;
-      }).join('');
-    }
-
-    // ========== INIT ==========
-    (async function init() {
-      applyPermissions();
-      await loadEmployees();
-      await loadAdminInfo();
-      await renderRecords();
-      setInterval(renderRecords, 30000);
-    })();
   </script>
-</body>
 
+  <style>
+  /* Employee Credentials Modal */
+  .cred-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 500;
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .cred-overlay.open { display: flex; }
+
+  .cred-box {
+    background: white;
+    border-radius: 22px;
+    width: 100%; max-width: 620px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+    animation: credPop 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes credPop { from { transform: scale(0.93) translateY(20px); opacity:0; } to { transform: scale(1) translateY(0); opacity:1; } }
+
+  .cred-header {
+    background: linear-gradient(135deg, #1a237e, #3f51b5);
+    padding: 22px 24px;
+    border-radius: 22px 22px 0 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .cred-header h2 { color: white; font-size: 17px; font-weight: 800; }
+  .cred-header p  { color: rgba(255,255,255,0.75); font-size: 12px; margin-top: 3px; }
+  .cred-close {
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    color: white; width: 34px; height: 34px; border-radius: 50%;
+    cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+  }
+
+  .cred-body { padding: 22px 24px; }
+
+  /* Add form */
+  .cred-add-form {
+    background: #f8faff;
+    border: 2px solid #e0e7ff;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+  .cred-add-form h3 { color: #1a237e; font-size: 13px; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .cred-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  @media(max-width:500px) { .cred-fields { grid-template-columns: 1fr; } }
+
+  .cred-field label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .cred-field input {
+    width: 100%; padding: 10px 12px;
+    border: 2px solid #e2e8f0; border-radius: 10px;
+    font-size: 14px; font-family: 'Segoe UI', sans-serif;
+    outline: none; transition: border-color 0.2s; background: white;
+  }
+  .cred-field input:focus { border-color: #3f51b5; }
+
+  .cred-dept-city { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+  .cred-add-btn {
+    width: 100%; padding: 11px;
+    background: linear-gradient(135deg, #1a237e, #3f51b5);
+    color: white; border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; font-family: 'Segoe UI', sans-serif;
+  }
+  .cred-add-btn:hover { box-shadow: 0 5px 18px rgba(63,81,181,0.4); transform: translateY(-1px); }
+
+  /* Employee list */
+  .cred-list-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px;
+  }
+  .cred-list-header h3 { color: #334155; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cred-count { background: #e0e7ff; color: #3f51b5; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+
+  .cred-search {
+    width: 100%; padding: 9px 14px;
+    border: 2px solid #e2e8f0; border-radius: 10px;
+    font-size: 13px; font-family: 'Segoe UI', sans-serif;
+    outline: none; margin-bottom: 12px; transition: border-color 0.2s;
+  }
+  .cred-search:focus { border-color: #3f51b5; }
+
+  .cred-emp-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
+
+  .cred-emp-row {
+    background: #f8faff;
+    border: 1.5px solid #e0e7ff;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.2s;
+  }
+  .cred-emp-row:hover { border-color: #3f51b5; }
+
+  .cred-emp-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #3f51b5, #1a237e);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 800; font-size: 15px; flex-shrink: 0;
+  }
+
+  .cred-emp-info { flex: 1; min-width: 0; }
+  .cred-emp-name { font-weight: 700; color: #1e293b; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cred-emp-id   { font-size: 11px; color: #64748b; font-family: monospace; margin-top: 1px; }
+  .cred-emp-meta { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+
+  .cred-pw-display {
+    font-family: monospace; font-size: 12px;
+    background: #e0e7ff; color: #1a237e;
+    padding: 3px 10px; border-radius: 8px;
+    cursor: pointer; user-select: all;
+    white-space: nowrap; flex-shrink: 0;
+  }
+
+  .cred-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .cred-edit-btn, .cred-del-btn {
+    width: 30px; height: 30px; border-radius: 8px;
+    border: none; cursor: pointer; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .cred-edit-btn { background: #e0f2fe; color: #0369a1; }
+  .cred-edit-btn:hover { background: #0369a1; color: white; }
+  .cred-del-btn  { background: #fee2e2; color: #dc2626; }
+  .cred-del-btn:hover  { background: #dc2626; color: white; }
+
+  .cred-empty { text-align: center; padding: 30px; color: #94a3b8; font-size: 13px; }
+
+  /* Edit inline */
+  .cred-editing { background: #fffbeb; border-color: #f59e0b; }
+  .cred-edit-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .cred-edit-input {
+    padding: 7px 10px; border: 2px solid #e2e8f0; border-radius: 8px;
+    font-size: 13px; font-family: 'Segoe UI', sans-serif; outline: none;
+    transition: border-color 0.2s;
+  }
+  .cred-edit-input:focus { border-color: #3f51b5; }
+  .cred-save-btn {
+    grid-column: 1/-1;
+    padding: 8px; background: #10b981; color: white;
+    border: none; border-radius: 8px; font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: 'Segoe UI', sans-serif;
+  }
+
+  /* Manage Admins modal (reuses cred-* styling) */
+  .adm-role-hint { font-size: 11px; color: #64748b; margin-top: -6px; margin-bottom: 12px; }
+  .adm-emp-picker {
+    max-height: 180px; overflow-y: auto;
+    border: 2px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; background: white;
+  }
+  .adm-emp-picker label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px; color: #334155; font-weight: 500; cursor: pointer;
+    text-transform: none; letter-spacing: normal;
+  }
+  .adm-emp-picker input[type="checkbox"] { width: 15px; height: 15px; accent-color: #3f51b5; cursor: pointer; }
+  .adm-assigned-chip {
+    display: inline-block; background: #ede9fe; color: #5b21b6;
+    padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; margin: 2px 3px 0 0;
+  }
+
+  /* Salary History Modal */
+  .sal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,0.7);
+    z-index: 550;
+    display: none; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .sal-overlay.open { display: flex; }
+  .sal-box {
+    background: white; border-radius: 20px;
+    width: 100%; max-width: 500px; max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+  }
+  .sal-header {
+    background: linear-gradient(135deg, #1d6f42, #2e9160);
+    padding: 20px 22px; border-radius: 20px 20px 0 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .sal-header h2 { color: white; font-size: 16px; font-weight: 800; }
+  .sal-header p  { color: rgba(255,255,255,0.8); font-size: 11px; margin-top: 3px; font-family: monospace; }
+  .sal-close {
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35);
+    color: white; width: 30px; height: 30px; border-radius: 50%;
+    cursor: pointer; font-size: 14px; flex-shrink: 0;
+  }
+  .sal-body { padding: 20px 22px; }
+  .sal-add-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .sal-add-row input, .sal-body textarea {
+    width: 100%; padding: 9px 12px; border: 2px solid #e2e8f0; border-radius: 9px;
+    font-size: 13px; font-family: 'Segoe UI', sans-serif; outline: none; transition: border-color 0.2s;
+  }
+  .sal-add-row input:focus, .sal-body textarea:focus { border-color: #1d6f42; }
+  .sal-add-btn {
+    width: 100%; padding: 10px; background: #1d6f42; color: white; border: none;
+    border-radius: 9px; font-weight: 700; font-size: 13px; cursor: pointer; margin-top: 4px;
+  }
+  .sal-add-btn:hover { background: #145232; }
+  .sal-total {
+    background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 12px;
+    padding: 12px 16px; margin: 16px 0; display: flex; justify-content: space-between; align-items: center;
+  }
+  .sal-total .lbl { font-size: 12px; color: #065f46; font-weight: 700; }
+  .sal-total .amt { font-size: 20px; color: #047857; font-weight: 800; }
+  .sal-list { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; }
+  .sal-entry {
+    background: #f8faff; border: 1.5px solid #e0e7ff; border-radius: 10px;
+    padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .sal-entry .se-left { min-width: 0; }
+  .sal-entry .se-amt { font-weight: 800; color: #1d6f42; font-size: 14px; }
+  .sal-entry .se-date { font-size: 11px; color: #888; font-family: monospace; }
+  .sal-entry .se-note { font-size: 11px; color: #666; margin-top: 2px; }
+  .sal-del-btn {
+    width: 26px; height: 26px; border-radius: 7px; border: none; background: #fee2e2; color: #dc2626;
+    cursor: pointer; font-size: 12px; flex-shrink: 0;
+  }
+  .sal-del-btn:hover { background: #dc2626; color: white; }
+  .sal-empty { text-align: center; padding: 20px; color: #94a3b8; font-size: 13px; }
+</style>
+
+<!-- Credentials Modal -->
+<div class="cred-overlay" id="credOverlay">
+  <div class="cred-box">
+    <div class="cred-header">
+      <div id="credHeaderText">
+        <h2>🔑 Employee Credentials Manager</h2>
+        <p>Add, edit or remove employee login credentials</p>
+      </div>
+      <button class="cred-close" onclick="closeCredModal()">✕</button>
+    </div>
+    <div class="cred-body">
+
+      <!-- Add New Employee Form (Super Admin only) -->
+      <div class="cred-add-form" id="credAddFormBox">
+        <h3>➕ Add New Employee</h3>
+        <div class="cred-fields">
+          <div class="cred-field">
+            <label>Employee Name</label>
+            <input type="text" id="credName" placeholder="e.g. Rahul Sharma" />
+          </div>
+          <div class="cred-field">
+            <label>Employee ID</label>
+            <input type="text" id="credId" placeholder="e.g. MEV/341/2026" />
+          </div>
+          <div class="cred-field">
+            <label>Password</label>
+            <input type="text" id="credPw" placeholder="e.g. MEVRICK1707" />
+          </div>
+          <div class="cred-field">
+            <label>Department</label>
+            <input type="text" id="credDept" placeholder="e.g. Sales" />
+          </div>
+          <div class="cred-field">
+            <label>City</label>
+            <input type="text" id="credCity" placeholder="e.g. Kolkata" />
+          </div>
+          <div class="cred-field">
+            <label>Salary (₹/month)</label>
+            <input type="number" id="credSalary" placeholder="e.g. 15000" />
+          </div>
+        </div>
+        <button class="cred-add-btn" onclick="credAdd()">✓ Add Employee</button>
+      </div>
+
+      <!-- Employee List -->
+      <div class="cred-list-header">
+        <h3>👥 Registered Employees</h3>
+        <span class="cred-count" id="credCount">0 employees</span>
+      </div>
+      <input class="cred-search" id="credSearch" placeholder="🔍 Search by name or ID..." oninput="credRenderList()" />
+      <div class="cred-emp-list" id="credEmpList">
+        <div class="cred-empty">No employees added yet.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Manage Admins Modal (superadmin only) -->
+<div class="cred-overlay" id="adminMgrOverlay">
+  <div class="cred-box">
+    <div class="cred-header" style="background:linear-gradient(135deg,#5b21b6,#7c3aed);">
+      <div>
+        <h2>🛠️ Manage Admins</h2>
+        <p>Create scoped admin logins & assign which employees each one can see</p>
+      </div>
+      <button class="cred-close" onclick="closeAdminMgrModal()">✕</button>
+    </div>
+    <div class="cred-body">
+
+      <div class="cred-add-form">
+        <h3 id="admFormTitle">➕ Create New Admin</h3>
+        <input type="hidden" id="admEditingId" value="" />
+        <div class="cred-fields">
+          <div class="cred-field">
+            <label>Admin Display Name</label>
+            <input type="text" id="admName" placeholder="e.g. Kolkata Branch Admin" />
+          </div>
+          <div class="cred-field">
+            <label>Admin Login ID</label>
+            <input type="text" id="admId" placeholder="e.g. admin_kolkata" />
+          </div>
+        </div>
+        <div class="cred-fields" style="grid-template-columns:1fr;">
+          <div class="cred-field">
+            <label>Admin Password</label>
+            <input type="text" id="admPw" placeholder="e.g. Kolkata@2026" />
+          </div>
+        </div>
+        <div class="adm-role-hint">This admin will only see attendance, daily sheet & salary history for the employees checked below.</div>
+        <div class="cred-field" style="margin-bottom:10px;">
+          <label>Assign Employees</label>
+          <input class="cred-search" id="admEmpSearch" placeholder="🔍 Filter employee list..." oninput="admRenderEmpPicker()" style="margin-bottom:8px;" />
+          <div class="adm-emp-picker" id="admEmpPicker"></div>
+        </div>
+        <button class="cred-add-btn" style="background:linear-gradient(135deg,#5b21b6,#7c3aed);" onclick="admSaveAdmin()">✓ Save Admin</button>
+        <button class="cred-add-btn" id="admCancelEditBtn" style="display:none;background:#94a3b8;margin-top:6px;" onclick="admCancelEdit()">Cancel Edit</button>
+      </div>
+
+      <div class="cred-list-header">
+        <h3>🗂️ Existing Admins</h3>
+        <span class="cred-count" id="admCount">0 admins</span>
+      </div>
+      <div class="cred-emp-list" id="admList">
+        <div class="cred-empty">No admins created yet.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Salary History Modal -->
+<div class="sal-overlay" id="salOverlay">
+  <div class="sal-box">
+    <div class="sal-header">
+      <div>
+        <h2 id="salEmpName">Salary History</h2>
+        <p id="salEmpId"></p>
+      </div>
+      <button class="sal-close" onclick="closeSalaryModal()">✕</button>
+    </div>
+    <div class="sal-body">
+      <div class="sal-add-row">
+        <input type="date" id="salDate" />
+        <input type="number" id="salAmount" placeholder="Amount (₹)" />
+      </div>
+      <textarea id="salNote" rows="2" placeholder="Note (e.g. June salary, advance, bonus)..."></textarea>
+      <button class="sal-add-btn" onclick="salaryAddEntry()">✓ Add Salary Entry</button>
+
+      <div class="sal-total">
+        <span class="lbl">Total Paid</span>
+        <span class="amt" id="salTotal">₹0</span>
+      </div>
+
+      <div class="sal-list" id="salList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   EMPLOYEE CREDENTIALS MANAGER
+   Storage: localStorage key 'mev_employeeDB'
+   Format: { "EMP_ID": { id, name, password, dept, city, salary } }
+══════════════════════════════════════════════════════ */
+
+const CRED_DEFAULTS = {
+  "MEV/336/2025": { id:"MEV/336/2025", name:"Sehenaz Khatun",   password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/340/2026": { id:"MEV/340/2026", name:"Ishika Nayak",     password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/296/2025": { id:"MEV/296/2025", name:"Udita Karmakar",   password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/110/2022": { id:"MEV/110/2022", name:"Indrani Ganguly",  password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/339/2026": { id:"MEV/339/2026", name:"Sreeparna Biswas", password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/322/2025": { id:"MEV/322/2025", name:"Tathagata Roy",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/323/2025": { id:"MEV/323/2025", name:"Swagata Dutta",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/264/2024": { id:"MEV/264/2024", name:"Sumit Naskar",     password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/337/2025": { id:"MEV/337/2025", name:"Adisree Tapader",  password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/259/2024": { id:"MEV/259/2024", name:"Subir Kumar Gosh", password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/316/2025": { id:"MEV/316/2025", name:"Enakshi Ghosh",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/288/2024": { id:"MEV/288/2024", name:"Madhumita Das",    password:"MEVRICK1707", dept:"", city:"" },
+  "MEV/262/2024": { id:"MEV/262/2024", name:"Subhojit Gosh",    password:"MEVRICK1707", dept:"", city:"" },
+};
+
+function credGetDB() {
+  const stored = localStorage.getItem('mev_employeeDB');
+  if (!stored) {
+    localStorage.setItem('mev_employeeDB', JSON.stringify(CRED_DEFAULTS));
+    return { ...CRED_DEFAULTS };
+  }
+  return JSON.parse(stored);
+}
+
+function credSaveDB(db) {
+  localStorage.setItem('mev_employeeDB', JSON.stringify(db));
+}
+
+function credSyncToServer(id, name, pw, dept, city, salary) {
+  fetch('/api/employees', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      emp_id: id || '',
+      employee_name: name,
+      password: pw,
+      dept: dept,
+      city: city,
+      salary: salary,
+      work_location: city,
+      employee_type: 'Full Time'
+    })
+  }).then(() => console.log('✅ Employee saved to MongoDB'))
+    .catch(e => console.warn('MongoDB save failed:', e));
+}
+
+function openCredModal() {
+  credGetDB();
+  const addForm = document.getElementById('credAddFormBox');
+  const header  = document.getElementById('credHeaderText');
+  if (scopedEmpIds) {
+    if (addForm) addForm.style.display = 'none';   // scoped admins edit only, can't create new employees
+    if (header)  header.innerHTML = '<h2>👥 My Employees</h2><p>View & edit details for your assigned employees</p>';
+  } else {
+    if (addForm) addForm.style.display = '';
+    if (header)  header.innerHTML = '<h2>🔑 Employee Credentials Manager</h2><p>Add, edit or remove employee login credentials</p>';
+  }
+  credRenderList();
+  document.getElementById('credOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCredModal() {
+  document.getElementById('credOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('credOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeCredModal();
+});
+
+function credAdd() {
+  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can add new employees.', '#e53935'); return; }
+  const name   = document.getElementById('credName').value.trim();
+  const id     = document.getElementById('credId').value.trim().toUpperCase();
+  const pw     = document.getElementById('credPw').value.trim();
+  const dept   = document.getElementById('credDept').value.trim();
+  const city   = document.getElementById('credCity').value.trim();
+  const salary = document.getElementById('credSalary').value.trim();
+
+  if (!name || !id || !pw) {
+    showToast('⚠️ Name, ID aur Password required hai!', '#e53935');
+    return;
+  }
+
+  const db = credGetDB();
+  if (db[id]) {
+    showToast('⚠️ Ye Employee ID already exist karta hai!', '#f59e0b');
+    return;
+  }
+
+  db[id] = { id, name, password: pw, dept, city, salary };
+  credSaveDB(db);
+  credSyncToServer(id, name, pw, dept, city, salary);
+
+  ['credName','credId','credPw','credDept','credCity','credSalary'].forEach(f => document.getElementById(f).value = '');
+  credRenderList();
+  showToast(`✅ ${name} add ho gaya!`, '#10b981');
+}
+
+function credDelete(id) {
+  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can remove employees.', '#e53935'); return; }
+  if (!confirm(`"${id}" ko delete karna chahte ho?`)) return;
+  const db = credGetDB();
+  delete db[id];
+  credSaveDB(db);
+  credRenderList();
+  showToast('🗑️ Employee removed.', '#64748b');
+}
+
+let credEditingId = null;
+
+function credStartEdit(id) {
+  if (scopedEmpIds && !scopedEmpIds.includes(id)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
+  credEditingId = id;
+  credRenderList();
+}
+
+function credSaveEdit(id) {
+  if (scopedEmpIds && !scopedEmpIds.includes(id)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
+  const newName = document.getElementById(`cedit-name-${id}`).value.trim();
+  const newPw   = document.getElementById(`cedit-pw-${id}`).value.trim();
+  const newDept = document.getElementById(`cedit-dept-${id}`).value.trim();
+  const newCity = document.getElementById(`cedit-city-${id}`).value.trim();
+
+  if (!newName || !newPw) { showToast('⚠️ Name aur Password required!', '#e53935'); return; }
+
+  const db = credGetDB();
+  db[id].name     = newName;
+  db[id].password = newPw;
+  db[id].dept     = newDept;
+  db[id].city     = newCity;
+  credSaveDB(db);
+  credEditingId = null;
+  credRenderList();
+  showToast(`✅ ${newName} updated!`, '#10b981');
+}
+
+function credRenderList() {
+  const db     = credGetDB();
+  const search = (document.getElementById('credSearch')?.value || '').toLowerCase();
+  const list   = document.getElementById('credEmpList');
+  const count  = document.getElementById('credCount');
+
+  let entries = Object.values(db);
+
+  // Scoped admin only ever sees their own assigned employees here
+  if (scopedEmpIds) {
+    const allowed = new Set(scopedEmpIds);
+    entries = entries.filter(e => allowed.has(e.id));
+  }
+
+  if (search) {
+    entries = entries.filter(e =>
+      (e.name||'').toLowerCase().includes(search) ||
+      (e.id||'').toLowerCase().includes(search)
+    );
+  }
+
+  count.textContent = scopedEmpIds
+    ? `${entries.length} of ${(scopedEmpIds||[]).length} assigned`
+    : `${Object.keys(db).length} employees`;
+
+  if (!entries.length) {
+    list.innerHTML = scopedEmpIds
+      ? '<div class="cred-empty">No assigned employees have a credential record yet.</div>'
+      : '<div class="cred-empty">Koi employee nahi mila.</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(emp => {
+    const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const isEditing = credEditingId === emp.id;
+    const delBtn = scopedEmpIds ? '' : `<button class="cred-del-btn" onclick="credDelete('${emp.id}')" title="Delete">🗑️</button>`;
+
+    if (isEditing) {
+      return `
+      <div class="cred-emp-row cred-editing">
+        <div class="cred-emp-avatar">${initials}</div>
+        <div style="flex:1;">
+          <div class="cred-emp-id">${emp.id}</div>
+          <div class="cred-edit-inputs">
+            <input class="cred-edit-input" id="cedit-name-${emp.id}" value="${emp.name||''}" placeholder="Name" />
+            <input class="cred-edit-input" id="cedit-pw-${emp.id}"   value="${emp.password||''}" placeholder="Password" />
+            <input class="cred-edit-input" id="cedit-dept-${emp.id}" value="${emp.dept||''}" placeholder="Department" />
+            <input class="cred-edit-input" id="cedit-city-${emp.id}" value="${emp.city||''}" placeholder="City" />
+            <button class="cred-save-btn" onclick="credSaveEdit('${emp.id}')">✓ Save Changes</button>
+          </div>
+        </div>
+        <button class="cred-del-btn" onclick="credEditingId=null;credRenderList()">✕</button>
+      </div>`;
+    }
+
+    return `
+    <div class="cred-emp-row">
+      <div class="cred-emp-avatar">${initials}</div>
+      <div class="cred-emp-info">
+        <div class="cred-emp-name">${emp.name||'—'}</div>
+        <div class="cred-emp-id">${emp.id}</div>
+        <div class="cred-emp-meta">${[emp.dept, emp.city].filter(Boolean).join(' · ') || 'No dept/city'}</div>
+      </div>
+      <div class="cred-pw-display" title="Click to copy" onclick="navigator.clipboard.writeText('${emp.password||''}');showToast('📋 Password copied!','#3f51b5')">
+        🔑 ${emp.password||'—'}
+      </div>
+      <div class="cred-actions">
+        <button class="cred-edit-btn" onclick="credStartEdit('${emp.id}')" title="Edit">✏️</button>
+        ${delBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   MANAGE ADMINS (Super Admin only)
+   Storage: localStorage key 'mev_normalAdmins'
+   Format: [ { id, password, employeeName, assignedEmpIds: [] } ]
+   AdminLogin.html reads this same key to authenticate
+   scoped admins and build their session.
+══════════════════════════════════════════════════════ */
+
+function admGetList() {
+  return JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
+}
+
+function admSaveList(list) {
+  localStorage.setItem('mev_normalAdmins', JSON.stringify(list));
+}
+
+// Pulls the latest admins from MongoDB and merges them into the local
+// cache (server copy wins for anything already synced; anything only
+// present locally — e.g. created while offline — is kept too).
+async function admSyncFromServer() {
+  try {
+    const resp = await fetch('/api/admins');
+    if (!resp.ok) return;
+    const serverList = await resp.json();
+    const localList  = admGetList();
+    const merged = [...serverList];
+    localList.forEach(la => {
+      if (!merged.find(sa => sa.id === la.id)) merged.push(la);
+    });
+    admSaveList(merged);
+  } catch (e) {
+    console.warn('Admin sync failed (offline?):', e.message);
+  }
+}
+
+function admPushToServer(adm) {
+  fetch('/api/admins', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(adm)
+  }).then(() => console.log('✅ Admin saved to MongoDB'))
+    .catch(e => console.warn('Admin MongoDB sync failed:', e.message));
+}
+
+function admDeleteFromServer(id) {
+  fetch(`/api/admins/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    .then(() => console.log('✅ Admin deleted from MongoDB'))
+    .catch(e => console.warn('Admin MongoDB delete failed:', e.message));
+}
+
+async function openAdminMgrModal() {
+  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can manage admins.', '#e53935'); return; }
+  admCancelEdit();
+  document.getElementById('adminMgrOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  admRenderEmpPicker();
+  admRenderList();
+  await admSyncFromServer();
+  admRenderList(); // re-render once the freshest server data has merged in
+}
+
+function closeAdminMgrModal() {
+  document.getElementById('adminMgrOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('adminMgrOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeAdminMgrModal();
+});
+
+function admRenderEmpPicker(preselected) {
+  const db = credGetDB();
+  const search = (document.getElementById('admEmpSearch')?.value || '').toLowerCase();
+  const picker = document.getElementById('admEmpPicker');
+  const pre = preselected || admGetCheckedIds(true) || [];
+
+  let entries = Object.values(db);
+  if (search) {
+    entries = entries.filter(e => (e.name||'').toLowerCase().includes(search) || (e.id||'').toLowerCase().includes(search));
+  }
+
+  if (!entries.length) { picker.innerHTML = '<div class="cred-empty">No employees registered yet.</div>'; return; }
+
+  picker.innerHTML = entries.map(e => `
+    <label>
+      <input type="checkbox" class="adm-emp-check" value="${e.id}" ${pre.includes(e.id)?'checked':''}/>
+      <span>${e.name||'—'} <span style="color:#94a3b8;font-family:monospace;">(${e.id})</span></span>
+    </label>
+  `).join('');
+}
+
+function admGetCheckedIds(silent) {
+  const boxes = document.querySelectorAll('.adm-emp-check');
+  if (!boxes.length && !silent) return [];
+  return Array.from(boxes).filter(b=>b.checked).map(b=>b.value);
+}
+
+function admSaveAdmin() {
+  const editingId = document.getElementById('admEditingId').value;
+  const name = document.getElementById('admName').value.trim();
+  const id   = document.getElementById('admId').value.trim();
+  const pw   = document.getElementById('admPw').value.trim();
+  const assignedEmpIds = Array.from(document.querySelectorAll('.adm-emp-check')).filter(b=>b.checked).map(b=>b.value);
+
+  if (!name || !id || !pw) { showToast('⚠️ Name, ID and Password are required!', '#e53935'); return; }
+
+  let list = admGetList();
+
+  if (editingId) {
+    const idx = list.findIndex(a => a.id === editingId);
+    if (idx === -1) { showToast('⚠️ Admin not found.', '#e53935'); return; }
+    // If ID changed, ensure no clash with another admin, and remove the old server doc
+    if (id !== editingId && list.some(a => a.id === id)) {
+      showToast('⚠️ That Admin ID is already used.', '#f59e0b'); return;
+    }
+    if (id !== editingId) admDeleteFromServer(editingId);
+    list[idx] = { id, password: pw, employeeName: name, assignedEmpIds };
+  } else {
+    if (list.some(a => a.id === id)) { showToast('⚠️ That Admin ID is already used.', '#f59e0b'); return; }
+    list.push({ id, password: pw, employeeName: name, assignedEmpIds });
+  }
+
+  admSaveList(list);
+  admPushToServer({ id, password: pw, employeeName: name, assignedEmpIds });
+  admCancelEdit();
+  admRenderList();
+  showToast(`✅ Admin "${name}" saved with ${assignedEmpIds.length} employee(s) assigned.`, '#7c3aed');
+}
+
+function admStartEdit(id) {
+  const list = admGetList();
+  const adm  = list.find(a => a.id === id);
+  if (!adm) return;
+  document.getElementById('admFormTitle').textContent = `✏️ Editing Admin: ${adm.employeeName}`;
+  document.getElementById('admEditingId').value = adm.id;
+  document.getElementById('admName').value = adm.employeeName;
+  const idField = document.getElementById('admId');
+  idField.value = adm.id;
+  idField.readOnly = true;
+  idField.style.background = '#f1f5f9';
+  document.getElementById('admPw').value   = adm.password;
+  document.getElementById('admCancelEditBtn').style.display = '';
+  admRenderEmpPicker(adm.assignedEmpIds || []);
+  document.querySelector('.cred-body').scrollTop = 0;
+}
+
+function admCancelEdit() {
+  document.getElementById('admFormTitle').textContent = '➕ Create New Admin';
+  document.getElementById('admEditingId').value = '';
+  document.getElementById('admName').value = '';
+  const idField = document.getElementById('admId');
+  idField.value = '';
+  idField.readOnly = false;
+  idField.style.background = '';
+  document.getElementById('admPw').value = '';
+  document.getElementById('admCancelEditBtn').style.display = 'none';
+  admRenderEmpPicker([]);
+}
+
+function admDelete(id) {
+  if (!confirm(`Delete admin "${id}"? They will no longer be able to log in.`)) return;
+  let list = admGetList();
+  list = list.filter(a => a.id !== id);
+  admSaveList(list);
+  admDeleteFromServer(id);
+  admRenderList();
+  showToast('🗑️ Admin removed.', '#64748b');
+}
+
+function admRenderList() {
+  const list  = admGetList();
+  const box   = document.getElementById('admList');
+  const count = document.getElementById('admCount');
+  count.textContent = `${list.length} admin${list.length!==1?'s':''}`;
+
+  if (!list.length) { box.innerHTML = '<div class="cred-empty">No admins created yet.</div>'; return; }
+
+  const empDB = credGetDB();
+  box.innerHTML = list.map(a => {
+    const initials = (a.employeeName||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const chips = (a.assignedEmpIds||[]).map(eid => {
+      const nm = empDB[eid]?.name || eid;
+      return `<span class="adm-assigned-chip">${nm}</span>`;
+    }).join('') || '<span style="color:#94a3b8;font-size:11px;">No employees assigned yet</span>';
+    return `
+    <div class="cred-emp-row" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="cred-emp-avatar" style="background:linear-gradient(135deg,#7c3aed,#5b21b6);">${initials}</div>
+        <div class="cred-emp-info">
+          <div class="cred-emp-name">${a.employeeName||'—'}</div>
+          <div class="cred-emp-id">Login ID: ${a.id}</div>
+        </div>
+        <div class="cred-pw-display" title="Click to copy" onclick="navigator.clipboard.writeText('${a.password||''}');showToast('📋 Password copied!','#3f51b5')">
+          🔑 ${a.password||'—'}
+        </div>
+        <div class="cred-actions">
+          <button class="cred-edit-btn" onclick="admStartEdit('${a.id}')" title="Edit">✏️</button>
+          <button class="cred-del-btn"  onclick="admDelete('${a.id}')"   title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;">${chips}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════
+   SALARY HISTORY
+   Storage: localStorage key 'mev_salaryHistory'
+   Format: { "EMP_ID": [ { date, amount, note, empName, addedBy } ] }
+══════════════════════════════════════════════════════ */
+
+function salaryGetDB() {
+  return JSON.parse(localStorage.getItem('mev_salaryHistory') || '{}');
+}
+
+function salarySaveDB(db) {
+  localStorage.setItem('mev_salaryHistory', JSON.stringify(db));
+}
+
+// Pulls salary entries for ONE employee from MongoDB and merges them
+// into the local cache (used right before opening the modal, so it's fast).
+async function salarySyncEmployeeFromServer(empId) {
+  try {
+    const resp = await fetch(`/api/salary?emp_id=${encodeURIComponent(empId)}`);
+    if (!resp.ok) return;
+    const serverEntries = await resp.json();
+    const db = salaryGetDB();
+    const localEntries = db[empId] || [];
+    // Server is the source of truth for anything with a _id; keep any
+    // purely-local (offline-created, no _id yet) entries too.
+    const offlineOnly = localEntries.filter(e => !e._id);
+    db[empId] = [...serverEntries, ...offlineOnly];
+    salarySaveDB(db);
+  } catch (e) {
+    console.warn('Salary sync failed (offline?):', e.message);
+  }
+}
+
+// Pulls EVERY salary entry from MongoDB — used before bulk Excel exports
+// so the report reflects entries added from other devices/admins too.
+async function salarySyncAllFromServer() {
+  try {
+    const resp = await fetch('/api/salary');
+    if (!resp.ok) return;
+    const serverEntries = await resp.json();
+    const db = {};
+    serverEntries.forEach(e => {
+      if (!db[e.emp_id]) db[e.emp_id] = [];
+      db[e.emp_id].push(e);
+    });
+    // Keep any purely-local (offline, no _id) entries per employee
+    const localDb = salaryGetDB();
+    Object.keys(localDb).forEach(empId => {
+      const offlineOnly = (localDb[empId] || []).filter(e => !e._id);
+      if (offlineOnly.length) db[empId] = [...(db[empId] || []), ...offlineOnly];
+    });
+    salarySaveDB(db);
+  } catch (e) {
+    console.warn('Bulk salary sync failed (offline?):', e.message);
+  }
+}
+
+let salaryTargetId = null;
+let salaryTargetName = null;
+
+async function openSalaryModal(empId, empName) {
+  if (!empId) { showToast('⚠️ This record has no Employee ID to attach salary to.', '#e53935'); return; }
+  if (scopedEmpIds && !scopedEmpIds.includes(empId)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
+  salaryTargetId = empId;
+  salaryTargetName = empName || empId;
+  document.getElementById('salEmpName').textContent = `💰 ${salaryTargetName}`;
+  document.getElementById('salEmpId').textContent = empId;
+  document.getElementById('salDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('salAmount').value = '';
+  document.getElementById('salNote').value = '';
+  document.getElementById('salOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  salaryRenderList();
+  await salarySyncEmployeeFromServer(empId);
+  if (salaryTargetId === empId) salaryRenderList(); // re-render with freshest server data
+}
+
+function closeSalaryModal() {
+  document.getElementById('salOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  salaryTargetId = null;
+}
+
+document.getElementById('salOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeSalaryModal();
+});
+
+function salaryAddEntry() {
+  if (!salaryTargetId) return;
+  const date   = document.getElementById('salDate').value;
+  const amount = parseFloat(document.getElementById('salAmount').value);
+  const note   = document.getElementById('salNote').value.trim();
+
+  if (!date || !amount || amount <= 0) { showToast('⚠️ Please enter a valid date and amount.', '#e53935'); return; }
+
+  const addedBy = (currentSession && (currentSession.name || currentSession.id)) || 'admin';
+  const entry = { emp_id: salaryTargetId, date, amount, note, empName: salaryTargetName, addedBy };
+
+  // Save locally right away so the UI feels instant
+  const db = salaryGetDB();
+  if (!db[salaryTargetId]) db[salaryTargetId] = [];
+  db[salaryTargetId].push({ ...entry });
+  db[salaryTargetId].sort((a,b) => (a.date||'').localeCompare(b.date||''));
+  salarySaveDB(db);
+
+  document.getElementById('salAmount').value = '';
+  document.getElementById('salNote').value = '';
+  salaryRenderList();
+  showToast(`✅ ₹${amount} entry added for ${salaryTargetName}`, '#1d6f42');
+
+  // Then persist to MongoDB and attach the real _id once it comes back,
+  // so the entry can be deleted server-side too.
+  fetch('/api/salary', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(entry)
+  })
+    .then(r => r.ok ? r.json() : null)
+    .then(saved => {
+      if (!saved || !saved._id) return;
+      const db2 = salaryGetDB();
+      const arr = db2[salaryTargetId] || [];
+      const match = arr.find(e => !e._id && e.date === date && e.amount === amount && e.note === note);
+      if (match) match._id = saved._id;
+      salarySaveDB(db2);
+      if (salaryTargetId) salaryRenderList();
+      console.log('✅ Salary entry saved to MongoDB');
+    })
+    .catch(e => console.warn('Salary MongoDB save failed:', e.message));
+}
+
+function salaryDeleteEntry(idx) {
+  if (!salaryTargetId) return;
+  const db = salaryGetDB();
+  if (!db[salaryTargetId]) return;
+  const entry = db[salaryTargetId][idx];
+  db[salaryTargetId].splice(idx, 1);
+  salarySaveDB(db);
+  salaryRenderList();
+
+  if (entry && entry._id) {
+    fetch(`/api/salary/${entry._id}`, { method: 'DELETE' })
+      .then(() => console.log('✅ Salary entry deleted from MongoDB'))
+      .catch(e => console.warn('Salary MongoDB delete failed:', e.message));
+  }
+}
+
+function salaryRenderList() {
+  const db = salaryGetDB();
+  const entries = (db[salaryTargetId] || []).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const total = entries.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
+  document.getElementById('salTotal').textContent = `₹${total.toLocaleString('en-IN')}`;
+
+  const list = document.getElementById('salList');
+  if (!entries.length) { list.innerHTML = '<div class="sal-empty">No salary entries recorded yet.</div>'; return; }
+
+  // map back to original (unsorted) index for delete
+  const original = db[salaryTargetId] || [];
+  list.innerHTML = entries.map(e => {
+    const origIdx = original.indexOf(e);
+    return `
+    <div class="sal-entry">
+      <div class="se-left">
+        <div class="se-amt">₹${(parseFloat(e.amount)||0).toLocaleString('en-IN')}</div>
+        <div class="se-date">${e.date||''}${e.addedBy?' · by '+e.addedBy:''}</div>
+        ${e.note?`<div class="se-note">${e.note}</div>`:''}
+      </div>
+      <button class="sal-del-btn" onclick="salaryDeleteEntry(${origIdx})" title="Delete">✕</button>
+    </div>`;
+  }).join('');
+}
+</script>
+</body>
 </html>
