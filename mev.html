@@ -471,7 +471,7 @@
       <li><a href="index.html">Home</a></li>
       <li><a href="mev.html" class="active">Employee Login</a></li>
       <li><a href="SalaryHistory.html" id="navSalary" style="display:none;">💰 Salary</a></li>
-      <li><a href="#" id="navAdminProfile" style="display:none;" onclick="goToAdminDashboard()">🛡️ Admin</a></li>
+      <li><a href="AdminDashboard.html" id="navAdminProfile" style="display:none;" onclick="goToAdminDashboard()">🛡️ Admin</a></li>
     </ul>
   </nav>
 
@@ -528,10 +528,10 @@
         </div>
 
         <div class="btn-group">
-          <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()">📷 Enable Camera</button>
-          <button class="btn btn-primary btn-hidden" id="captureBtn" onclick="capturePhoto()">✓ Capture Photo</button>
-          <button class="btn btn-secondary btn-hidden" id="retakeBtn" onclick="retake()">↩ Retake</button>
-          <button class="btn btn-success btn-hidden" id="continueBtn" onclick="continueToDashboard()">📊 Go to Dashboard</button>
+          <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()"> Enable Camera</button>
+          <button class="btn btn-primary btn-hidden" id="captureBtn" onclick="capturePhoto()"> Capture Photo</button>
+          <button class="btn btn-secondary btn-hidden" id="retakeBtn" onclick="retake()">Retake</button>
+          <button class="btn btn-success btn-hidden" id="continueBtn" onclick="continueToDashboard()"> Go to Dashboard</button>
         </div>
       </div>
 
@@ -822,7 +822,7 @@
       linkedAdminInfo = await checkIfAdmin(verifiedEmployee.id);
       isAdminEmployee = !!linkedAdminInfo;
       document.getElementById('continueBtn').textContent =
-        isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
+        isAdminEmployee ? '🛠️ Go to Admin Dashboard' : ' Go to Dashboard';
 
       showMsg('⏳ Fetching location...', 'warning');
       await fetchLocation();
