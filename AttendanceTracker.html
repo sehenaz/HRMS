@@ -1112,6 +1112,12 @@
     const AUTO_CLOCKOUT_H = 23,
       AUTO_CLOCKOUT_M = 0;
 
+    // How many days of history to keep in the shared mev_adminLog before
+    // trimming old entries. This is the fix for the storage bloat that
+    // was causing localStorage.setItem() to throw and silently break
+    // navigation after camera capture on mev.html.
+    const ADMIN_LOG_MAX_DAYS = 120;
+
     let session = null;
     let clockInTime = null;
     let autoClockoutTimer = null;
@@ -1119,7 +1125,60 @@
     let isSuperAdmin = false;
     let isAdminUser = false;
 
+    // ── FIX: safe localStorage writer (see mev.html for full explanation) ──
+    // Prevents a QuotaExceededError from silently breaking any function
+    // partway through. Every localStorage.setItem() call in this file now
+    // goes through this helper.
+    function safeSetItem(key, value) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e) {
+        console.warn(`⚠️ localStorage.setItem("${key}") failed (${e.name}).`);
+        return false;
+      }
+    }
+
+    // ── FIX: trim old entries from the shared admin log ──
+    // mev_adminLog accumulates one entry per employee per day, each
+    // carrying a base64 photo. Left unchecked, this eventually fills
+    // localStorage and breaks writes everywhere in the app. This keeps
+    // only the last ADMIN_LOG_MAX_DAYS worth of entries.
+    function trimAdminLog() {
+      try {
+        const all = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+        if (!all.length) return;
+
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - ADMIN_LOG_MAX_DAYS);
+
+        const parseRecDate = (dateStr) => {
+          if (!dateStr) return null;
+          if (dateStr.includes('/')) {
+            const [d, m, y] = dateStr.split('/');
+            return new Date(`${y}-${m}-${d}`);
+          }
+          return new Date(dateStr);
+        };
+
+        const trimmed = all.filter(r => {
+          const d = parseRecDate(r.date);
+          return !d || d >= cutoff; // keep if undated (safety) or recent enough
+        });
+
+        if (trimmed.length !== all.length) {
+          const ok = safeSetItem('mev_adminLog', JSON.stringify(trimmed));
+          if (ok) console.log(`🧹 Trimmed mev_adminLog: ${all.length} → ${trimmed.length} entries`);
+        }
+      } catch (e) {
+        console.warn('trimAdminLog failed:', e.message);
+      }
+    }
+
     window.onload = async function() {
+      // Clean up old data first so there's room for today's writes
+      trimAdminLog();
+
       // Check for employee session
       session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
 
@@ -1141,7 +1200,7 @@
             isAdmin: isAdminUser,
             assigned_employees: adminSession.assigned_employees || adminSession.assignedEmpIds || []
           };
-          localStorage.setItem('mev_employeeSession', JSON.stringify(session));
+          safeSetItem('mev_employeeSession', JSON.stringify(session));
         }
       }
 
@@ -1172,6 +1231,8 @@
       // Apply Super Admin restrictions
       applySuperAdminRestrictions();
 
+      let photo = null;
+
       if (isSuperAdmin) {
         document.getElementById('empName').textContent = 'Welcome MEVTENCIA';
         document.getElementById('empMeta').textContent = '';
@@ -1187,7 +1248,7 @@
         if (city) metaParts.push(city);
         document.getElementById('empMeta').textContent = metaParts.join(' · ');
 
-        const photo = session.photo || localStorage.getItem('mev_capturedPhoto');
+        photo = session.photo || localStorage.getItem('mev_capturedPhoto');
         if (photo) {
           const img = document.createElement('img');
           img.src = photo;
@@ -1240,7 +1301,7 @@
               const db2 = b.date.includes('/') ? b.date.split('/').reverse().join('') : b.date;
               return db2.localeCompare(da);
             });
-            localStorage.setItem(getKey(), JSON.stringify(merged));
+            safeSetItem(getKey(), JSON.stringify(merged));
             renderHistory();
             updateSummary();
             initAnalytics();
@@ -1256,7 +1317,7 @@
       if (isAdminUser) {
         const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
         if (!adminSession) {
-          localStorage.setItem('mev_adminSession', JSON.stringify({
+          safeSetItem('mev_adminSession', JSON.stringify({
             type: 'normal',
             id: session.id,
             name: session.name,
@@ -1573,7 +1634,10 @@
     function getRecords() { return JSON.parse(localStorage.getItem(getKey()) || '[]'); }
 
     function saveRecords(recs, syncIdx = 0) {
-      localStorage.setItem(getKey(), JSON.stringify(recs));
+      // FIX: was localStorage.setItem() directly - now safe, so an
+      // unrelated storage-quota problem elsewhere can't break clock
+      // in/out actions either.
+      safeSetItem(getKey(), JSON.stringify(recs));
       pushToAdminLog(recs);
       if (recs.length > syncIdx) syncToBackend(recs[syncIdx]);
     }
@@ -1593,7 +1657,10 @@
         if (existingIdx !== -1) all[existingIdx] = recordData;
         else all.push(recordData);
       });
-      localStorage.setItem('mev_adminLog', JSON.stringify(all));
+      // FIX: was localStorage.setItem() directly.
+      safeSetItem('mev_adminLog', JSON.stringify(all));
+      // Keep the log from growing unbounded going forward too.
+      trimAdminLog();
     }
 
     function determineType(inTime, outTime) {
