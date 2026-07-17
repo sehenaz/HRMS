@@ -651,11 +651,8 @@
           <div class="value" id="resId">—</div>
         </div>
         <div class="contact-item">
-          <div class="label">Password</div>
-          <div class="value">
-            <span id="resPassword">••••••••</span>
-            <button type="button" id="resTogglePass">👁️</button>
-          </div>
+          <div class="label">Email</div>
+          <div class="value" id="resEmail">—</div>
         </div>
         <div class="contact-item">
           <div class="label">Designation</div>
@@ -922,10 +919,11 @@
 
       document.getElementById('resId').textContent = emp.id || emp.empId || '—';
 
-      const passSpan = document.getElementById('resPassword');
-      passSpan.dataset.value = emp.password || '';
-      passSpan.textContent = emp.password ? '••••••••' : '—';
-      document.getElementById('resTogglePass').textContent = '👁️';
+      // Email - checks a few possible field names since employee records
+      // in mev_employeeDB may have been saved under different keys
+      // depending on which part of the app wrote them.
+      const email = emp.email || emp.employeeEmail || emp.employee_email || '';
+      document.getElementById('resEmail').textContent = email || '—';
 
       document.getElementById('resDesignation').textContent = emp.designation || roleNames[role] || '—';
       document.getElementById('resDept').textContent = emp.dept || '—';
@@ -972,19 +970,6 @@
         reportsEl.innerHTML = `<div class="empty-relation">No one currently reports to this employee.</div>`;
       }
     }
-
-    document.getElementById('resTogglePass').addEventListener('click', function () {
-      const span = document.getElementById('resPassword');
-      const real = span.dataset.value || '';
-      if (!real) return;
-      if (span.textContent === '••••••••') {
-        span.textContent = real;
-        this.textContent = '🙈';
-      } else {
-        span.textContent = '••••••••';
-        this.textContent = '👁️';
-      }
-    });
 
     // ========== INIT ==========
     document.addEventListener('DOMContentLoaded', () => {
