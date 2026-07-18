@@ -397,11 +397,40 @@
       gap: 8px;
     }
 
-    .contact-item .value button {
-      background: none;
-      border: none;
-      cursor: pointer;
+    /* Email box is a bit special: the address itself can be long, and it
+       needs room for the copy + mailto action buttons without wrapping
+       awkwardly, so it gets its own rule on top of .contact-item .value */
+    .contact-item .value.email-value {
       font-size: 14px;
+      flex-wrap: wrap;
+    }
+
+    .contact-item .value .email-text {
+      overflow-wrap: anywhere;
+    }
+
+    .contact-item .value button,
+    .contact-item .value .icon-link {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      line-height: 1;
+      padding: 5px 8px;
+      color: #3f51b5;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+
+    .contact-item .value button:hover,
+    .contact-item .value .icon-link:hover {
+      background: #3f51b5;
+      color: white;
+      border-color: #3f51b5;
     }
 
     .relation-section {
@@ -650,9 +679,22 @@
           <div class="label">Employee ID</div>
           <div class="value" id="resId">—</div>
         </div>
+        <!-- Email box: shows the address, plus a copy button and a
+             mailto: link so it can actually be used, not just read. -->
         <div class="contact-item">
           <div class="label">Email</div>
-          <div class="value" id="resEmail">—</div>
+          <div class="value email-value" id="resEmailWrap">
+            <span class="email-text" id="resEmail">—</span>
+          </div>
+        </div>
+        <!-- Phone box: same pattern as Email — a copy button and a
+             tel: link so a colleague's number can actually be called
+             or texted straight from the search result, not just read. -->
+        <div class="contact-item">
+          <div class="label">Phone</div>
+          <div class="value email-value" id="resPhoneWrap">
+            <span class="email-text" id="resPhone">—</span>
+          </div>
         </div>
         <div class="contact-item">
           <div class="label">Designation</div>
@@ -919,11 +961,51 @@
 
       document.getElementById('resId').textContent = emp.id || emp.empId || '—';
 
-      // Email - checks a few possible field names since employee records
-      // in mev_employeeDB may have been saved under different keys
-      // depending on which part of the app wrote them.
+      // ── Email box ──────────────────────────────────────────
+      // Checks a few possible field names since employee records in
+      // mev_employeeDB may have been saved under different keys
+      // depending on which part of the app wrote them. When an email
+      // is present, it's rendered as text + a copy button + a mailto:
+      // link so it's actually usable, not just readable.
       const email = emp.email || emp.employeeEmail || emp.employee_email || '';
-      document.getElementById('resEmail').textContent = email || '—';
+      const emailWrap = document.getElementById('resEmailWrap');
+
+      if (email) {
+        const safeEmailAttr = email.replace(/'/g, "\\'");
+        emailWrap.innerHTML = `
+          <span class="email-text" id="resEmail">${escapeHtml(email)}</span>
+          <button type="button" title="Copy email"
+            onclick="navigator.clipboard.writeText('${safeEmailAttr}');showToast('📋 Email copied!','success')">
+            📋
+          </button>
+          <a class="icon-link" href="mailto:${encodeURIComponent(email)}" title="Send email">✉️</a>
+        `;
+      } else {
+        emailWrap.innerHTML = `<span class="email-text" id="resEmail">—</span>`;
+      }
+
+      // ── Phone box ──────────────────────────────────────────
+      // Same idea as the Email box: check a few possible field names
+      // (different parts of the app have saved this under different
+      // keys — Profile.html uses "phone", AddEmployee/server.js uses
+      // "phone_number"/"phoneNumber"), then render as text + a copy
+      // button + a tel: link so it can be called/texted directly.
+      const phone = emp.phone || emp.phoneNumber || emp.phone_number || '';
+      const phoneWrap = document.getElementById('resPhoneWrap');
+
+      if (phone) {
+        const safePhoneAttr = phone.replace(/'/g, "\\'");
+        phoneWrap.innerHTML = `
+          <span class="email-text" id="resPhone">${escapeHtml(phone)}</span>
+          <button type="button" title="Copy phone number"
+            onclick="navigator.clipboard.writeText('${safePhoneAttr}');showToast('📋 Phone number copied!','success')">
+            📋
+          </button>
+          <a class="icon-link" href="tel:${encodeURIComponent(phone)}" title="Call">📞</a>
+        `;
+      } else {
+        phoneWrap.innerHTML = `<span class="email-text" id="resPhone">—</span>`;
+      }
 
       document.getElementById('resDesignation').textContent = emp.designation || roleNames[role] || '—';
       document.getElementById('resDept').textContent = emp.dept || '—';
