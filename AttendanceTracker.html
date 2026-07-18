@@ -1112,10 +1112,6 @@
     const AUTO_CLOCKOUT_H = 23,
       AUTO_CLOCKOUT_M = 0;
 
-    // How many days of history to keep in the shared mev_adminLog before
-    // trimming old entries. This is the fix for the storage bloat that
-    // was causing localStorage.setItem() to throw and silently break
-    // navigation after camera capture on mev.html.
     const ADMIN_LOG_MAX_DAYS = 120;
 
     let session = null;
@@ -1125,10 +1121,6 @@
     let isSuperAdmin = false;
     let isAdminUser = false;
 
-    // ── FIX: safe localStorage writer (see mev.html for full explanation) ──
-    // Prevents a QuotaExceededError from silently breaking any function
-    // partway through. Every localStorage.setItem() call in this file now
-    // goes through this helper.
     function safeSetItem(key, value) {
       try {
         localStorage.setItem(key, value);
@@ -1139,11 +1131,6 @@
       }
     }
 
-    // ── FIX: trim old entries from the shared admin log ──
-    // mev_adminLog accumulates one entry per employee per day, each
-    // carrying a base64 photo. Left unchecked, this eventually fills
-    // localStorage and breaks writes everywhere in the app. This keeps
-    // only the last ADMIN_LOG_MAX_DAYS worth of entries.
     function trimAdminLog() {
       try {
         const all = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
@@ -1163,7 +1150,7 @@
 
         const trimmed = all.filter(r => {
           const d = parseRecDate(r.date);
-          return !d || d >= cutoff; // keep if undated (safety) or recent enough
+          return !d || d >= cutoff;
         });
 
         if (trimmed.length !== all.length) {
@@ -1176,18 +1163,17 @@
     }
 
     window.onload = async function() {
-      // Clean up old data first so there's room for today's writes
       trimAdminLog();
 
-      // Check for employee session
       session = JSON.parse(localStorage.getItem('mev_employeeSession') || 'null');
 
-      // If no session, try admin session fallback
       if (!session) {
         const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
         if (adminSession) {
-          // Check if admin (normal admin)
-          isAdminUser = adminSession.type === 'normal';
+          // FIX: recognize both the new 'admin' type and the legacy
+          // 'normal' type here (fallback path only), so older sessions
+          // saved before this fix still load without breaking.
+          isAdminUser = adminSession.type === 'admin' || adminSession.type === 'normal';
           isSuperAdmin = adminSession.type === 'super' || adminSession.type === 'superadmin';
 
           session = {
@@ -1204,31 +1190,25 @@
         }
       }
 
-      // Check if user is Super Admin from session
       if (session && session.isSuperAdmin) {
         isSuperAdmin = true;
       }
 
-      // Check if user is Admin from session
       if (session && session.isAdmin) {
         isAdminUser = true;
       }
 
-      // If still no session, redirect to login
       if (!session) {
         window.location.href = 'mev.html';
         return;
       }
 
-      // Show Admin badge if user is Admin (not Super Admin)
       if (isAdminUser && !isSuperAdmin) {
         document.getElementById('adminNavBtn').classList.add('show');
         document.getElementById('btnAdminProfile').style.display = 'inline-flex';
-        // Add Admin badge next to name
         document.getElementById('empName').innerHTML = session.name + ' <span class="admin-role-badge">🛡️ ADMIN</span>';
       }
 
-      // Apply Super Admin restrictions
       applySuperAdminRestrictions();
 
       let photo = null;
@@ -1316,13 +1296,24 @@
     function goToAdminDashboard() {
       if (isAdminUser) {
         const adminSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
-        if (!adminSession) {
+        // FIX: previously this only wrote a session when NONE existed,
+        // and when it did write one it used type:'normal'. AdminDashboard.html
+        // only scopes the view to assignedEmpIds when it sees type==='admin' —
+        // anything else (including the old 'normal' value) falls through to
+        // the unrestricted superadmin branch and shows EVERY employee, not
+        // just the ones assigned to this admin. Now we always make sure the
+        // stored session has the correct type before navigating, while still
+        // preserving whatever assigned_employees data is already there.
+        if (!adminSession || adminSession.type !== 'admin') {
+          const existingAssigned = (adminSession && (adminSession.assigned_employees || adminSession.assignedEmpIds))
+            || session.assigned_employees
+            || [];
           safeSetItem('mev_adminSession', JSON.stringify({
-            type: 'normal',
-            id: session.id,
-            name: session.name,
-            assigned_employees: session.assigned_employees || [],
-            assignedEmpIds: session.assigned_employees || [],
+            type: 'admin',
+            id: (adminSession && (adminSession.id || adminSession.admin_id)) || session.id,
+            name: (adminSession && (adminSession.name || adminSession.employeeName)) || session.name,
+            assigned_employees: existingAssigned,
+            assignedEmpIds: existingAssigned,
             loginAt: new Date().toISOString()
           }));
         }
@@ -1634,9 +1625,6 @@
     function getRecords() { return JSON.parse(localStorage.getItem(getKey()) || '[]'); }
 
     function saveRecords(recs, syncIdx = 0) {
-      // FIX: was localStorage.setItem() directly - now safe, so an
-      // unrelated storage-quota problem elsewhere can't break clock
-      // in/out actions either.
       safeSetItem(getKey(), JSON.stringify(recs));
       pushToAdminLog(recs);
       if (recs.length > syncIdx) syncToBackend(recs[syncIdx]);
@@ -1657,9 +1645,7 @@
         if (existingIdx !== -1) all[existingIdx] = recordData;
         else all.push(recordData);
       });
-      // FIX: was localStorage.setItem() directly.
       safeSetItem('mev_adminLog', JSON.stringify(all));
-      // Keep the log from growing unbounded going forward too.
       trimAdminLog();
     }
 

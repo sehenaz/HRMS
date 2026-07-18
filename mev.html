@@ -549,9 +549,6 @@
     let linkedAdminInfo = null;
 
     // ── DEBUG LOG PANEL (visible on-screen, no DevTools needed) ──
-    // Writes timestamped messages into the hidden #debugInfo box and
-    // makes it visible. This lets us see exactly what's happening /
-    // failing on a phone, where opening the browser console isn't easy.
     function debugLog(msg) {
       const el = document.getElementById('debugInfo');
       if (!el) return;
@@ -561,9 +558,6 @@
       el.scrollTop = el.scrollHeight;
     }
 
-    // Catches ANY uncaught JS error anywhere on the page (including
-    // ones that would otherwise fail totally silently on mobile) and
-    // writes it into the visible debug box.
     window.onerror = function(message, source, lineno, colno, error) {
       debugLog(`❌ UNCAUGHT ERROR: ${message}\n   at line ${lineno}:${colno}`);
       showMsg('⚠️ Something went wrong. See the debug box below - screenshot it and send it.', 'error');
@@ -666,17 +660,6 @@
     }
 
     // ── FIX: safe localStorage writer ─────────────────────────
-    // Previously every localStorage.setItem() call in this file was
-    // unprotected. If the browser's storage quota was exceeded (very
-    // likely over time, since base64 photos pile up in mev_adminLog),
-    // setItem() throws a QuotaExceededError. Since nothing caught it,
-    // execution stopped dead at that line - which is exactly why
-    // clicking "Go to Dashboard" appeared to do nothing: the redirect
-    // line right after never ran.
-    //
-    // Now every write goes through this helper, which never throws.
-    // Worst case, that one piece of data doesn't get saved, but the
-    // rest of the flow (and the redirect) always continues.
     function safeSetItem(key, value) {
       try {
         localStorage.setItem(key, value);
@@ -688,12 +671,6 @@
     }
 
     // ── FIX: compress captured photo before storing ───────────
-    // Full-resolution camera photos as base64 JPEG can easily be
-    // 1-3MB each. Storing that every day, for every employee, in
-    // mev_adminLog (see AttendanceTracker.html) is what eventually
-    // fills up localStorage and triggers the QuotaExceededError above.
-    // Resizing to a smaller width before storing keeps each photo to
-    // a few dozen KB instead, which avoids the problem happening again.
     function compressImage(dataUrl, maxWidth = 480, quality = 0.7) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -709,7 +686,7 @@
           c.getContext('2d').drawImage(img, 0, 0, width, height);
           resolve(c.toDataURL('image/jpeg', quality));
         };
-        img.onerror = () => resolve(dataUrl); // fall back to original if compression fails
+        img.onerror = () => resolve(dataUrl);
         img.src = dataUrl;
       });
     }
@@ -894,8 +871,7 @@
       // Check admin status
       linkedAdminInfo = await checkIfAdmin(verifiedEmployee.id);
       isAdminEmployee = !!linkedAdminInfo;
-      document.getElementById('continueBtn').textContent =
-        isAdminEmployee ? '🛠️ Go to Admin Dashboard' : '📊 Go to Dashboard';
+      document.getElementById('continueBtn').textContent = '📊 Go to Dashboard';
 
       showMsg('⏳ Fetching location...', 'warning');
       await fetchLocation();
@@ -1013,15 +989,16 @@
           photo: capturedData,
           location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
           loginAt: new Date().toISOString(),
-          isAdmin: isAdminEmployee
+          isAdmin: isAdminEmployee,
+          // FIX: carry the assigned-employees list straight onto the
+          // employee session too, so AttendanceTracker.html's Admin
+          // button always has a fallback even if mev_adminSession is
+          // ever missing/cleared.
+          assigned_employees: linkedAdminInfo ? (linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || []) : []
         };
 
         debugLog('✓ sessionData built, saving to localStorage...');
 
-        // ── FIX: this is the core bug fix. ──────────────────────
-        // Every write below now goes through safeSetItem() instead of
-        // localStorage.setItem() directly, so a storage error can never
-        // silently kill the script before the redirect at the bottom runs.
         const sessionSaved = safeSetItem('mev_employeeSession', JSON.stringify(sessionData));
         debugLog(`✓ mev_employeeSession saved: ${sessionSaved}`);
 
@@ -1037,18 +1014,28 @@
         debugLog(`✓ mev_capturedLocation saved: ${locSaved}`);
 
         if (isAdminEmployee && linkedAdminInfo) {
+          // FIX: type must be 'admin' (not 'normal') — AdminDashboard.html
+          // only scopes the view down to assignedEmpIds when it sees
+          // type === 'admin'. Anything else (including the old 'normal'
+          // value) falls through to the unrestricted superadmin branch,
+          // which showed this admin EVERY employee instead of just the
+          // ones assigned to them.
           safeSetItem('mev_adminSession', JSON.stringify({
-            type: 'normal',
+            type: 'admin',
             id: linkedAdminInfo.admin_id || linkedAdminInfo.id,
             name: linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
             assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
             assignedEmpIds: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
             loginAt: new Date().toISOString()
           }));
-          debugLog('✓ mev_adminSession saved (admin flow)');
+          debugLog('✓ mev_adminSession saved (type: admin, scoped)');
         }
 
-        const targetPage = isAdminEmployee ? 'AdminDashboard.html' : 'AttendanceTracker.html';
+        // FIX: always land on AttendanceTracker.html first, even for
+        // admin-linked employees. They give their own attendance there;
+        // the golden "Admin" button that appears in the top nav is what
+        // takes them into their scoped Admin Dashboard, on demand.
+        const targetPage = 'AttendanceTracker.html';
         debugLog(`✓ All done. Redirecting to: ${targetPage} in 800ms...`);
         showMsg('✅ Redirecting...', 'success');
 
@@ -1058,22 +1045,20 @@
         }, 800);
 
       } catch (err) {
-        // FIX: this try/catch is the key addition. Previously, if
-        // ANYTHING in this function threw (storage quota, unexpected
-        // data shape, etc.) the function would stop dead silently and
-        // the redirect at the bottom would never run - which is exactly
-        // what "clicking Go to Dashboard does nothing" looks like.
-        // Now the exact error is shown on-screen instead of vanishing.
         debugLog(`🛑 CRASH in continueToDashboard: ${err.name}: ${err.message}`);
         showMsg('⚠️ An error stopped the redirect. See debug box below - please screenshot and send it.', 'error');
       }
     }
 
     // ========== GO TO ADMIN DASHBOARD ==========
+    // (Bound to the hidden #navAdminProfile link in the navbar above —
+    // kept working/consistent even though the main entry point is now
+    // the Admin button on AttendanceTracker.html.)
     function goToAdminDashboard() {
       if (linkedAdminInfo) {
+        // FIX: type: 'admin', not 'normal' — see note in continueToDashboard().
         safeSetItem('mev_adminSession', JSON.stringify({
-          type: 'normal',
+          type: 'admin',
           id: linkedAdminInfo.admin_id || linkedAdminInfo.id,
           name: linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
           assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
