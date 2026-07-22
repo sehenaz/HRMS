@@ -8,9 +8,11 @@ const mongoose = require('mongoose');
 const app  = express();
 const PORT = process.env.PORT || 4000;
 
-mongoose.connect('mongodb://samaresh_Mondal:Mspl%402026@ac-yuzpvud-shard-00-00.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-01.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-02.xjccckc.mongodb.net:27017/mevtencia?authSource=admin&tls=true')
-  .then(() => console.log('✅ MongoDB Atlas Connected!'))
-  .catch(err => { console.error('❌ MongoDB Error:', err); process.exit(1); });
+// mongoose.connect('mongodb://samaresh_Mondal:Mspl%402026@ac-yuzpvud-shard-00-00.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-01.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-02.xjccckc.mongodb.net:27017/mevtencia?authSource=admin&tls=true')
+//   .then(() => console.log('✅ MongoDB Atlas Connected!'))
+//   .catch(err => { console.error('❌ MongoDB Error:', err); process.exit(1); });
+
+mongoose.connect(process.env.MONGODB_URI);
 
 const employeeSchema = new mongoose.Schema({
   emp_id:         { type: String, required: true, unique: true },

@@ -9,6 +9,7 @@
   <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    
     * {
       margin: 0;
       padding: 0;
@@ -1649,15 +1650,18 @@
       trimAdminLog();
     }
 
+    ////////////////////////////////////////////
+const FULL_DAY_MIN_HOURS = 9;   // >= 9h kaam → Full Day
+    const HALF_DAY_MIN_HOURS = 5;   // >= 5h kaam → Half Day (isse kam ho to "Short Day")
+
     function determineType(inTime, outTime) {
-      const ih = inTime.getHours(),
-        im = inTime.getMinutes();
-      const oh = outTime.getHours(),
-        om = outTime.getMinutes();
-      const lateIn = ih > HALF_IN_H || (ih === HALF_IN_H && im >= HALF_IN_M);
-      const earlyOut = oh < HALF_OUT_H || (oh === HALF_OUT_H && om < HALF_OUT_M);
-      return (lateIn || earlyOut) ? 'Half Day' : 'Full Day';
+      const workedHours = (outTime - inTime) / 3600000;
+      if (workedHours >= FULL_DAY_MIN_HOURS) return 'Full Day';
+      if (workedHours >= HALF_DAY_MIN_HOURS) return 'Half Day';
+      return 'Short Day';
     }
+
+
 
     function loadTodayState() {
       const rec = getRecord();
@@ -1756,14 +1760,23 @@
       if (!isSuperAdmin) initAnalytics();
     }
 
+    ////////////////////////////////
     function setStatusBadge(type) {
       const el = document.getElementById('statStatus');
       const badge = document.getElementById('statBadge');
-      if (type === 'Full Day') { el.textContent = 'Full Day';
-        badge.innerHTML = '<div class="badge-full">✓ FULL DAY</div>'; } else if (type === 'Half Day') { el.textContent =
-          'Half Day';
-        badge.innerHTML = '<div class="badge-half">½ HALF DAY</div>'; } else { el.textContent = 'Working';
-        badge.innerHTML = '<div class="badge-live">● IN PROGRESS</div>'; }
+      if (type === 'Full Day') {
+        el.textContent = 'Full Day';
+        badge.innerHTML = '<div class="badge-full">✓ FULL DAY</div>';
+      } else if (type === 'Half Day') {
+        el.textContent = 'Half Day';
+        badge.innerHTML = '<div class="badge-half">½ HALF DAY</div>';
+      } else if (type === 'Short Day') {
+        el.textContent = 'Short Day';
+        badge.innerHTML = '<div class="badge-half" style="background:#f8d7da;color:#721c24;">⚠ SHORT DAY</div>';
+      } else {
+        el.textContent = 'Working';
+        badge.innerHTML = '<div class="badge-live">● IN PROGRESS</div>';
+      }
     }
 
     function renderHistory() {
