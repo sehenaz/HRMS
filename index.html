@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#3f51b5" />
+  <meta name="theme-color" content="#1e3a8a" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MEVTENCIA" />
@@ -19,251 +19,167 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    html,
-    body {
-
-
-      height: 100%;
-    }
+    html, body { height: 100%; }
 
     body {
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
+      background: #eef2fb;
       min-height: 100vh;
       overflow-x: hidden;
-
     }
 
+    /* ── NAVBAR ── */
     .navbar {
-      background-color: #3f51b5;
-      padding: 14px 18px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      padding: 18px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
       position: sticky;
       top: 0;
       z-index: 10;
+      flex-wrap: wrap;
+      gap: 12px;
+      box-shadow: 0 4px 20px rgba(30, 58, 138, 0.25);
     }
 
-    .logo {
-      color: white;
-      font-size: 20px;
-      font-weight: 800;
-      text-decoration: none;
-    }
+    .navbar-left { display: flex; align-items: center; gap: 14px; }
 
-    .nav-time {
-      color: rgba(255, 255, 255, 0.85);
-      font-size: 13px;
-      background: rgba(73, 64, 64, 0.12);
-      padding: 6px 12px;
-      border-radius: 999px;
-    }
-
-    .container {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 30px 20px 50px;
-    }
-
-    .hero-card {
+    .navbar-logo {
+      width: 56px; height: 56px;
+      border-radius: 50%;
       background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      margin-bottom: 25px;
-      text-align: center;
-    }
-
-    .hero-card .brand-icon {
-      width: 70px;
-      height: 70px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #3f51b5, #2c3e9e);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      box-shadow: 0 8px 20px rgba(63, 81, 181, 0.3);
-    }
-
-    .hero-card .brand-icon svg {
-      width: 36px;
-      height: 36px;
-      fill: white;
-    }
-
-    .hero-card h1 {
-      color: #3f51b5;
-      font-size: 26px;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .hero-card p {
-      color: #666;
-      font-size: 14px;
-    }
-
-    .install-banner {
-      display: none;
-      background: white;
-      border-radius: 16px;
-      padding: 18px 20px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-      margin-bottom: 20px;
-      border-left: 4px solid #3f51b5;
-    }
-
-    .install-banner.show {
-      display: block;
-    }
-
-    .install-banner h4 {
-      color: #3f51b5;
-      font-size: 14px;
-      margin-bottom: 6px;
-    }
-
-    .install-banner p {
-      color: #666;
-      font-size: 12px;
-      margin-bottom: 12px;
-    }
-
-    .install-btn {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      background: linear-gradient(135deg, #3f51b5, #5c6bc0);
-      color: white;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-    }
-
-    .menu-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .menu-card {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.2s;
-    }
-
-    .menu-card:hover,
-    .menu-card:active {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-    }
-
-    .menu-icon {
-      width: 54px;
-      height: 54px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
       flex-shrink: 0;
     }
 
-    .menu-icon svg {
-      width: 28px;
-      height: 28px;
-      fill: white;
+    .navbar-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+    .navbar-titles h1 { color: white; font-size: 19px; font-weight: 800; letter-spacing: 0.5px; }
+    .navbar-titles p  { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 1px; }
+
+    .navbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .nav-pill {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.14);
+      color: white; font-size: 12.5px; font-weight: 600;
+      padding: 8px 14px; border-radius: 999px;
+      white-space: nowrap;
     }
 
-    .icon-emp {
-      background: linear-gradient(135deg, #4caf50, #388e3c);
+    .nav-pill svg { width: 15px; height: 15px; fill: white; flex-shrink: 0; }
+
+    .container { max-width: 720px; margin: 0 auto; padding: 26px 18px 50px; }
+
+    /* ── HERO CARD ── */
+    .hero-card {
+      background: white; border-radius: 22px; padding: 32px 26px;
+      box-shadow: 0 10px 40px rgba(30, 58, 138, 0.08);
+      margin-bottom: 20px; text-align: center;
     }
 
-    .icon-track {
-      background: linear-gradient(135deg, #3f51b5, #2c3e9e);
+    .hero-logo-full {
+      width: 260px; max-width: 78%; height: auto;
+      display: block; margin: 0 auto 20px;
     }
 
-    .icon-admin {
-      background: linear-gradient(135deg, #f44336, #c62828);
+    .hero-tagline { color: #475569; font-size: 15px; margin-bottom: 22px; }
+
+    .feature-row {
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+      padding-top: 18px; border-top: 1px solid #f1f5f9;
     }
 
-    .menu-body {
-      flex: 1;
+    .feature-item { flex: 1; min-width: 80px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+    .feature-item .f-icon {
+      width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
     }
 
-    .menu-body h3 {
-      color: #333;
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
+    .feature-item .f-icon svg { width: 24px; height: 24px; fill: #1d4ed8; }
+
+    .feature-item span { font-size: 11px; color: #475569; font-weight: 600; line-height: 1.3; }
+
+    /* ── INSTALL BANNER ── */
+    .install-banner {
+      display: none; background: white; border-radius: 16px; padding: 18px 20px;
+      box-shadow: 0 5px 20px rgba(30, 58, 138, 0.06); margin-bottom: 20px; border-left: 4px solid #1d4ed8;
     }
 
-    .menu-body p {
-      color: #888;
-      font-size: 12px;
-      line-height: 1.4;
+    .install-banner.show { display: block; }
+    .install-banner h4 { color: #1d4ed8; font-size: 14px; margin-bottom: 6px; }
+    .install-banner p  { color: #666; font-size: 12px; margin-bottom: 12px; }
+
+    .install-btn {
+      width: 100%; padding: 12px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6); color: white;
+      font-weight: 700; font-size: 14px; cursor: pointer;
     }
 
-    .menu-arrow {
-      color: #ccc;
-      font-size: 22px;
+    /* ── MENU CARDS ── */
+    .menu-grid { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+
+    .menu-card {
+      background: white; border-radius: 16px; padding: 18px 20px;
+      box-shadow: 0 5px 20px rgba(30, 58, 138, 0.06);
+      display: flex; align-items: center; gap: 16px;
+      text-decoration: none; color: inherit; transition: all 0.2s;
     }
 
+    .menu-card:hover, .menu-card:active {
+      transform: translateY(-2px); box-shadow: 0 10px 30px rgba(30, 58, 138, 0.12);
+    }
+
+    .menu-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+
+    .menu-icon svg { width: 26px; height: 26px; fill: white; }
+
+    .icon-login      { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .icon-superadmin { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
+    .icon-admin       { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+    .menu-body { flex: 1; }
+    .menu-body h3 { color: #1e293b; font-size: 16px; font-weight: 700; margin-bottom: 3px; }
+    .menu-body p  { color: #64748b; font-size: 12.5px; line-height: 1.4; }
+    .menu-arrow   { color: #cbd5e1; font-size: 22px; }
+
+    /* ── RULES CARD ── */
     .rules-card {
-      background: white;
-      border-radius: 16px;
-      padding: 20px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-      margin-top: 20px;
+      background: white; border-radius: 16px; padding: 20px;
+      box-shadow: 0 5px 20px rgba(30, 58, 138, 0.06);
+      display: flex; align-items: center; gap: 16px; justify-content: space-between; flex-wrap: wrap;
     }
 
-    .rules-card h4 {
-      color: #3f51b5;
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 12px;
+    .rules-left { display: flex; gap: 14px; flex: 1; min-width: 200px; }
+
+    .rules-bell {
+      width: 40px; height: 40px; border-radius: 12px; background: #e0e7ff;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
 
-    .rules-card ul {
-      list-style: none;
-    }
+    .rules-bell svg { width: 20px; height: 20px; fill: #1d4ed8; }
 
-    .rules-card li {
-      font-size: 13px;
-      color: #555;
-      padding: 5px 0;
-      padding-left: 20px;
-      position: relative;
-      border-bottom: 1px solid #f0f0f0;
-    }
+    .rules-text h4 { color: #1d4ed8; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .rules-text ul { list-style: none; }
+    .rules-text li { font-size: 12.5px; color: #475569; padding: 3px 0; }
 
-    .rules-card li:last-child {
-      border-bottom: none;
-    }
+    .rules-illustration { width: 78px; height: 78px; flex-shrink: 0; }
+    .rules-illustration svg { width: 100%; height: 100%; }
 
-    .rules-card li::before {
-      content: '→';
-      position: absolute;
-      left: 0;
-      color: #3f51b5;
-      font-weight: 700;
-    }
+    /* ── FOOTER ── */
+    footer { text-align: center; padding: 22px 10px 6px; color: #94a3b8; font-size: 12px; }
+    footer .version { margin-top: 4px; color: #1d4ed8; font-weight: 600; font-size: 12px; }
 
-    footer {
-      text-align: center;
-      padding: 20px;
-      color: #999;
-      font-size: 12px;
+    @media (max-width: 480px) {
+      .feature-row { justify-content: center; }
+      .feature-item { min-width: 70px; }
+      .rules-illustration { display: none; }
     }
   </style>
 </head>
@@ -271,25 +187,53 @@
 <body>
 
   <nav class="navbar">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <img src="/assets/logo.png" alt="Mevrick Logo" style="height: 80px; width: 80px; object-fit: contain; background: white; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-     
-     
-      <div class="logo">MEVTENCIA</div>
+    <div class="navbar-left">
+      <div class="navbar-logo"><img src="assets/logo.png" alt="Mevrick Logo" /></div>
+      <div class="navbar-titles">
+        <h1>MEVTENCIA</h1>
+        <p>Smart HRMS Platform</p>
+      </div>
     </div>
-    <div class="nav-time" id="liveTime">--:--</div>
+    <div class="navbar-right">
+      <div class="nav-pill">
+        <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z"/></svg>
+        <span id="liveDate">--</span>
+      </div>
+      <div class="nav-pill">
+        <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 11H7v-2h4V6h2v7z"/></svg>
+        <span id="liveTime">--:--</span>
+      </div>
+    </div>
   </nav>
 
   <div class="container">
 
     <div class="hero-card">
-      <div style="margin-bottom: 20px;">
-       
-        <img src="/assets/logo.png" alt="Mevrick Solution" style="width: 120px; height: 120px; object-fit: contain; background: white; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid #3f51b5; padding: 10px;">
-      
+      <img class="hero-logo-full" src="assets/logo.png" alt="MEVTENCIA HRMS Solution" />
+      <p class="hero-tagline">Empowering people, simplifying HR.</p>
+
+      <div class="feature-row">
+        <div class="feature-item">
+          <div class="f-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+          <span>Employee Management</span>
+        </div>
+        <div class="feature-item">
+          <div class="f-icon"><svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM7 12h5v5H7z"/></svg></div>
+          <span>Attendance Tracking</span>
+        </div>
+        <div class="feature-item">
+          <div class="f-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></div>
+          <span>Leave &amp; Approvals</span>
+        </div>
+        <div class="feature-item">
+          <div class="f-icon"><svg viewBox="0 0 24 24"><path d="M5 9.2h3V19H5V9.2zM10.6 5h2.8v14h-2.8V5zm5.6 8H19v6h-2.8v-6z"/></svg></div>
+          <span>Real-time Insights</span>
+        </div>
+        <div class="feature-item">
+          <div class="f-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+          <span>Secure &amp; Reliable</span>
+        </div>
       </div>
-      <h1>MEVTENCIA</h1>
-      <p>Mevrick Solution Pvt. Ltd. — Pan India Attendance System</p>
     </div>
 
     <div class="install-banner" id="installBanner">
@@ -300,65 +244,75 @@
 
     <div class="menu-grid">
       <a class="menu-card" href="mev.html">
-        <div class="menu-icon icon-emp">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm9-3h-3.17l-1.24-1.35A2 2 0 0 0 15.12 4H8.88a2 2 0 0 0-1.47.65L6.17 6H3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2Zm-9 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z" />
-          </svg>
+        <div class="menu-icon icon-login">
+          <svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v10zM4 3h2v18H4V3z"/></svg>
         </div>
         <div class="menu-body">
           <h3>Login</h3>
-          <p>Capture photo + GPS location for verified attendance</p>
+          <p>Login to your HRMS account</p>
         </div>
         <div class="menu-arrow">›</div>
       </a>
 
       <a class="menu-card" href="SuperAdminLogin.html">
-        <div class="menu-icon" style="background: linear-gradient(135deg, #673ab7, #512da8);">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 13c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-          </svg>
+        <div class="menu-icon icon-superadmin">
+          <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 13c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
         </div>
         <div class="menu-body">
           <h3>Super Admin</h3>
-          <p>Authorized access for administrator management</p>
+          <p>Access super admin functionalities and system settings</p>
         </div>
         <div class="menu-arrow">›</div>
       </a>
 
-      <a class="menu-card" href="AdminLogin.html">
+      <!-- <a class="menu-card" href="AdminLogin.html">
         <div class="menu-icon icon-admin">
-          <svg viewBox="0 0 24 24">
-            <path
-              d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
-          </svg>
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.44.17-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.31-.09.63-.09.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
         </div>
         <div class="menu-body">
           <h3>Admin Portal</h3>
-          <p>Monitor all employee attendance across Pan India</p>
-        </div>
+          <p>Manage users, roles, and HRMS configurations</p>
+        </div> 
         <div class="menu-arrow">›</div>
       </a>
-    </div>
+    </div> -->
 
     <div class="rules-card">
-      <h4>⚡ Attendance Rules</h4>
-      <ul>
-        <li>Clock-in after 11:30 AM = Half Day</li>
-        <li>Clock-out before 4:30 PM = Half Day</li>
-        <!-- <li>Auto clock-out after 8 hours of work</li>
-        <li>Photo + GPS required for every login</li> -->
-      </ul>
+      <div class="rules-left">
+        <div class="rules-bell">
+          <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+        </div>
+        <div class="rules-text">
+          <h4>⚡Attendance Rules</h4>
+          <ul>
+            <li>Clock-in after 11 AM = Half Day</li>
+            <li>Clock-out before 4:30 PM = Half Day</li>
+          </ul>
+        </div>
+      </div>
+      <div class="rules-illustration">
+        <svg viewBox="0 0 64 64">
+          <circle cx="32" cy="32" r="30" fill="#e0e7ff"/>
+          <rect x="18" y="24" width="28" height="24" rx="3" fill="#c7d2fe"/>
+          <rect x="22" y="16" width="20" height="12" rx="3" fill="#a5b4fc"/>
+          <circle cx="32" cy="36" r="7" fill="#eef2fb" stroke="#1d4ed8" stroke-width="2"/>
+          <path d="M32 32v4l3 2" stroke="#1d4ed8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
     </div>
 
   </div>
 
-  <footer>© 2026 MEVTENCIA · Mevrick Solution Pvt. Ltd.</footer>
+  <footer>
+    © 2026 Mevrick Solution Pvt. Ltd. All rights reserved.
+    <div class="version">Version 1.0.0</div>
+  </footer>
 
   <script>
     function tick() {
       const now = new Date();
       document.getElementById('liveTime').textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+      document.getElementById('liveDate').textContent = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     }
     tick(); setInterval(tick, 1000);
 
