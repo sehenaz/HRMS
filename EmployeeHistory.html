@@ -59,6 +59,9 @@
     .view-btn { background: #3f51b5; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 4px; }
     .view-btn:hover { background: #303f9f; }
 
+    .incomplete-badge { display:inline-block; background:#fff3cd; color:#856404; font-size:10px; font-weight:700; padding:3px 8px; border-radius:12px; margin-left:6px; }
+    .incomplete-banner { grid-column: span 2; background:#fff3cd; color:#856404; padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:6px; border:1px solid #ffe69c; }
+
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.show { display: flex; }
     .modal-box { background: white; border-radius: 20px; padding: 30px; max-width: 700px; width: 100%; max-height: 85vh; overflow-y: auto; position: relative; }
@@ -232,6 +235,21 @@
       return merged;
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Ek record "complete" hai ya nahi — agar zyada tar core fields
+    // (email, phone, bank, documents) missing hain to purana/broken
+    // registration hai, jise re-register karna chahiye.
+    // ─────────────────────────────────────────────────────────────────────
+    function isIncompleteRecord(r) {
+      const coreFields = [
+        r.employee_email, r.phone_number, r.dob, r.address,
+        r.bank_name, r.account_number,
+        r.cv_resume, r.id_proof, r.bank_passbook, r.marksheet
+      ];
+      const filled = coreFields.filter(v => v !== null && v !== undefined && v !== '').length;
+      return filled === 0;
+    }
+
     async function loadData() {
       let backendRaw = [];
       try {
@@ -251,6 +269,12 @@
       // payload), r.emp_id / r.employee_name etc. would all read as undefined.
       const backendData = backendRaw.map(normalizeEmployee);
 
+      // ✅ FIX: the full registration record (Nominee/Bank/DOB/Documents)
+      // is saved by Registration.html under 'mevtencia_employeeDatabase'.
+      // This was previously (incorrectly) reading 'mev_employeeDB', which
+      // only ever holds the minimal login-credentials record
+      // ({id, name, password, dept, city, salary}) — that's why every
+      // profile showed N/A for everything except name/designation/salary.
       let localData = [];
       try {
         const lsStr = localStorage.getItem('mevtencia_employeeDatabase');
@@ -277,6 +301,34 @@
       });
 
       allData = Array.from(mergedMap.values());
+
+      // ✅ FIX: documents are no longer stored inline on the Employee record
+      // (they moved to a separate /api/documents collection to avoid hitting
+      // MongoDB's 16MB per-document limit when several files were bundled
+      // into one employee record). Fetch each employee's documents here and
+      // merge them in — falling back to whatever was already found locally
+      // (e.g. from mevtencia_employeeDatabase) if the server has none.
+      if (allData.length > 0) {
+        try {
+          await Promise.all(allData.map(async (emp) => {
+            if (!emp.emp_id) return;
+            try {
+              const docResp = await fetch(`/api/documents/${encodeURIComponent(emp.emp_id)}`);
+              if (!docResp.ok) return;
+              const docs = await docResp.json();
+              if (docs.cv_resume)          emp.cv_resume = docs.cv_resume;
+              if (docs.id_proof)           emp.id_proof = docs.id_proof;
+              if (docs.bank_passbook)      emp.bank_passbook = docs.bank_passbook;
+              if (docs.marksheet)          emp.marksheet = docs.marksheet;
+              if (docs.appointment_letter) emp.appointment_letter = docs.appointment_letter;
+            } catch (docErr) {
+              console.warn(`Document fetch failed for ${emp.emp_id}:`, docErr.message);
+            }
+          }));
+        } catch (e) {
+          console.warn('Document fetch batch failed:', e);
+        }
+      }
 
       if (allData.length === 0) {
         document.getElementById('tableBody').innerHTML =
@@ -313,14 +365,15 @@
       tbody.innerHTML = filtered.map(r => {
         const typeBadge = r.employee_type === 'Full Time'
           ? `<span class="type-badge type-full">Full Time</span>`
-          : `<span class="type-badge type-casual">Casual</span>`;
+          : (r.employee_type === 'Casual' ? `<span class="type-badge type-casual">Casual</span>` : '—');
         const regDate = r.registered_at ? new Date(r.registered_at).toLocaleDateString('en-IN') : '—';
         const salary  = r.salary ? `₹${parseInt(r.salary).toLocaleString('en-IN')}` : '—';
+        const incompleteTag = isIncompleteRecord(r) ? `<span class="incomplete-badge">⚠ Incomplete</span>` : '';
         return `
           <tr>
             <td><span class="emp-id">${r.emp_id || '—'}</span></td>
             <td>
-              <div class="emp-name">${r.employee_name || '—'}</div>
+              <div class="emp-name">${r.employee_name || '—'}${incompleteTag}</div>
               <div class="emp-id">${r.employee_email || ''}</div>
             </td>
             <td>${r.phone_number || '—'}</td>
@@ -409,6 +462,14 @@
       ];
 
       let html = '';
+
+      // ⚠️ Incomplete-profile banner — purani/broken registrations
+      // (jinka document/bank/nominee data kabhi save hua hi nahi tha)
+      // ko clearly flag karo taaki N/A confusing na lage.
+      if (isIncompleteRecord(emp)) {
+        html += `<div class="incomplete-banner">⚠️ This profile looks incomplete — it was likely registered before documents/bank details were being saved. Please re-register this employee through the Registration form to complete their profile.</div>`;
+      }
+
       sections.forEach(sec => {
         html += `<div class="section-title">${sec.title}</div>`;
         sec.fields.forEach(([label, val]) => {
@@ -515,8 +576,12 @@
         await fetch(`/api/employees/${encodeURIComponent(empId)}`, { method: 'DELETE' });
       } catch (e) {}
 
+      // ✅ ADD: also remove this employee's documents (now stored separately)
       try {
-      
+        await fetch(`/api/documents/${encodeURIComponent(empId)}`, { method: 'DELETE' });
+      } catch (e) {}
+
+      try {
         const lsStr = localStorage.getItem('mevtencia_employeeDatabase');
         if (lsStr) {
           const db = JSON.parse(lsStr);

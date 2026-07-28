@@ -1651,16 +1651,24 @@
     }
 
     ////////////////////////////////////////////
-const FULL_DAY_MIN_HOURS = 9;   // >= 9h kaam → Full Day
-    const HALF_DAY_MIN_HOURS = 5;   // >= 5h kaam → Half Day (isse kam ho to "Short Day")
+// const FULL_DAY_MIN_HOURS = 9;   // >= 9h kaam → Full Day
+//     const HALF_DAY_MIN_HOURS = 5;   // >= 5h kaam → Half Day (isse kam ho to "Short Day")
 
-    function determineType(inTime, outTime) {
-      const workedHours = (outTime - inTime) / 3600000;
-      if (workedHours >= FULL_DAY_MIN_HOURS) return 'Full Day';
-      if (workedHours >= HALF_DAY_MIN_HOURS) return 'Half Day';
-      return 'Short Day';
-    }
+//     function determineType(inTime, outTime) {
+//       const workedHours = (outTime - inTime) / 3600000;
+//       if (workedHours >= FULL_DAY_MIN_HOURS) return 'Full Day';
+//       if (workedHours >= HALF_DAY_MIN_HOURS) return 'Half Day';
+//       return 'Short Day';
+//     }
 
+
+const FULL_DAY_MIN_HOURS = 5;   // >= 5h kaam → Full Day
+
+function determineType(inTime, outTime) {
+  const workedHours = (outTime - inTime) / 3600000;
+  if (workedHours >= FULL_DAY_MIN_HOURS) return 'Full Day';
+  return 'Half Day';
+}
 
 
     function loadTodayState() {

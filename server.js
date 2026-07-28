@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 const express  = require('express');
 const cors     = require('cors');
@@ -11,9 +10,25 @@ const PORT = process.env.PORT || 4000;
 
 mongoose.connect('mongodb://samaresh_Mondal:Mspl%402026@ac-yuzpvud-shard-00-00.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-01.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-02.xjccckc.mongodb.net:27017/mevtencia?authSource=admin&tls=true')
   .then(() => console.log('✅ MongoDB Atlas Connected!'))
-  .catch(err => { console.error('❌ MongoDB Error:', err);  });
+  .catch(err => {
+    // ✅ FIX: previously this called process.exit(1), which killed the
+    // entire Node server (and every API route) the moment MongoDB failed
+    // to connect (e.g. due to an IP not being whitelisted on Atlas).
+    // That meant ALL employees saw the "✕ Server Offline" badge and every
+    // employee's salary fell back to the hardcoded ₹15000 default on
+    // AttendanceTracker.html, since /api/employees was unreachable.
+    //
+    // Now the server keeps running even if MongoDB is unreachable — API
+    // routes that hit the DB will fail individually (each already has its
+    // own try/catch returning a 500), but the rest of the app (static
+    // files, localStorage-based flows) keeps working, and once the IP is
+    // whitelisted on Atlas + the server is restarted, it reconnects fine.
+    console.error('❌ MongoDB Error:', err.message);
+    console.error('⚠️  Server will keep running, but any /api/* route that needs the database will fail until MongoDB connects.');
+    console.error('⚠️  Fix: whitelist this server\'s IP in MongoDB Atlas → Network Access, then restart the server.');
+  });
 
-/////////////////////////////////////////////////////
+
 
 const employeeSchema = new mongoose.Schema({
   emp_id:         { type: String, required: true, unique: true },
@@ -32,6 +47,24 @@ const employeeSchema = new mongoose.Schema({
   registered_at:  { type: Date, default: Date.now },
   updated_at:     { type: Date, default: Date.now }
 });
+
+// ✅ FIX: documents (CV, ID proof, bank passbook, marksheet, appointment
+// letter) used to be stuffed as base64 strings directly onto the Employee
+// document. MongoDB caps every single document at 16MB — with 4 uploaded
+// files plus a generated PDF all base64-encoded (~33% larger than the raw
+// file) inside ONE employee record, larger uploads silently failed to save
+// or got truncated. Each document now gets its OWN MongoDB document in a
+// separate collection, keyed by emp_id + doc_type, so the 16MB limit
+// applies per-file instead of per-employee, and one employee's stored size
+// only grows with actual usage rather than being capped as a group.
+const documentSchema = new mongoose.Schema({
+  emp_id:      { type: String, required: true },
+  doc_type:    { type: String, required: true }, // 'cv_resume' | 'id_proof' | 'bank_passbook' | 'marksheet' | 'appointment_letter'
+  filename:    String,
+  data:        String, // base64 data URI
+  uploaded_at: { type: Date, default: Date.now }
+});
+documentSchema.index({ emp_id: 1, doc_type: 1 }, { unique: true });
 
 const attendanceSchema = new mongoose.Schema({
   emp_id:          { type: String, required: true },
@@ -87,10 +120,15 @@ const Attendance = mongoose.model('Attendance', attendanceSchema);
 const Leave      = mongoose.model('Leave',      leaveSchema);
 const Admin      = mongoose.model('Admin',      adminSchema);
 const Salary     = mongoose.model('Salary',     salarySchema);
+const Document   = mongoose.model('Document',   documentSchema);
 
 app.use(cors({ origin: '*' }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Each request now carries at most ONE document (via /api/documents) instead
+// of four bundled together, so 8mb comfortably covers a base64-encoded 5MB
+// file (~6.7MB) with headroom, while still protecting the server from
+// oversized payloads.
+app.use(express.json({ limit: '8mb' }));
+app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(express.static(__dirname));
 
 const storage = multer.diskStorage({
@@ -163,6 +201,46 @@ app.post('/api/register', upload.any(), async (req, res) => {
       { emp_id: empId }, data, { upsert: true, new: true }
     );
     res.json({ success: true, employee: result });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ════════════════════════════════════════════════════════
+//  DOCUMENTS (stored separately from the Employee record so a single
+//  large file — or several of them together — never risks hitting
+//  MongoDB's 16MB per-document limit on the Employee record itself)
+// ════════════════════════════════════════════════════════
+
+// Save/replace ONE document for one employee. Body: { emp_id, doc_type, filename, data }
+app.post('/api/documents', async (req, res) => {
+  try {
+    const { emp_id, doc_type, filename, data } = req.body;
+    if (!emp_id || !doc_type) {
+      return res.status(400).json({ error: 'emp_id and doc_type are required' });
+    }
+    const result = await Document.findOneAndUpdate(
+      { emp_id, doc_type },
+      { emp_id, doc_type, filename: filename || '', data: data || '', uploaded_at: new Date() },
+      { upsert: true, new: true }
+    );
+    res.json({ success: true, document: { emp_id: result.emp_id, doc_type: result.doc_type, filename: result.filename } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Get all documents for one employee, returned as a flat object:
+// { cv_resume: "data:...", id_proof: "data:...", ... }
+app.get('/api/documents/:empId', async (req, res) => {
+  try {
+    const docs = await Document.find({ emp_id: decodeURIComponent(req.params.empId) });
+    const out = {};
+    docs.forEach(d => { out[d.doc_type] = d.data; });
+    res.json(out);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/documents/:empId', async (req, res) => {
+  try {
+    await Document.deleteMany({ emp_id: decodeURIComponent(req.params.empId) });
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

@@ -74,6 +74,9 @@
 
         .note { font-size: 12px; color: #666; font-style: italic; margin-top: 5px; }
 
+        /* ✅ ADD: green confirmation text shown under a file input once attached */
+        .file-ok { font-size: 12px; color: #2e7d32; font-weight: 700; margin-top: 5px; display: none; }
+
         .success-message {
             display: none; background: #d4edda; color: #155724;
             padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;
@@ -404,24 +407,28 @@
                 <label class="required">CV / Resume</label>
                 <input type="file" id="cvResume" name="cvResume" accept=".pdf,.doc,.docx" required>
                 <div class="note">Accepted formats: PDF, DOC, DOCX (Max 5MB)</div>
+                <div class="file-ok" id="cvResume_ok"></div>
             </div>
 
             <div class="form-group">
                 <label class="required">Aadhaar Card / PAN Card</label>
                 <input type="file" id="idProof" name="idProof" accept=".pdf,.jpg,.jpeg,.png" required>
                 <div class="note">Accepted formats: PDF, JPG, PNG (Max 5MB)</div>
+                <div class="file-ok" id="idProof_ok"></div>
             </div>
 
             <div class="form-group">
                 <label class="required">Bank Passbook (Front Page)</label>
                 <input type="file" id="bankPassbook" name="bankPassbook" accept=".pdf,.jpg,.jpeg,.png" required>
                 <div class="note">Accepted formats: PDF, JPG, PNG (Max 5MB)</div>
+                <div class="file-ok" id="bankPassbook_ok"></div>
             </div>
 
             <div class="form-group">
                 <label class="required">Last Exam Marksheet / Certificate</label>
                 <input type="file" id="marksheet" name="marksheet" accept=".pdf,.jpg,.jpeg,.png" required>
                 <div class="note">Accepted formats: PDF, JPG, PNG (Max 5MB)</div>
+                <div class="file-ok" id="marksheet_ok"></div>
             </div>
 
             <button type="submit" id="submitBtn">🚀 Submit Registration & Generate Appointment Letter</button>
@@ -647,6 +654,35 @@
                 const bankFile = document.getElementById('bankPassbook').files[0];
                 const markFile = document.getElementById('marksheet').files[0];
 
+                // ✅ ADD: debug log — confirm what's actually attached at submit time.
+                // This is the key diagnostic for the "Documents show N/A" issue —
+                // if any of these print MISSING, the file input didn't have a file
+                // selected when Submit was clicked (often because the 5MB check
+                // below cleared it earlier and it was never re-selected).
+                console.log('📎 File check before submit:', {
+                    cvResume:      cvFile   ? `${cvFile.name} (${(cvFile.size/1024).toFixed(1)} KB)`   : '❌ MISSING',
+                    idProof:       idFile   ? `${idFile.name} (${(idFile.size/1024).toFixed(1)} KB)`   : '❌ MISSING',
+                    bankPassbook:  bankFile ? `${bankFile.name} (${(bankFile.size/1024).toFixed(1)} KB)`: '❌ MISSING',
+                    marksheet:     markFile ? `${markFile.name} (${(markFile.size/1024).toFixed(1)} KB)`: '❌ MISSING'
+                });
+
+                // ✅ ADD: hard-stop submit if any required document is missing,
+                // instead of silently saving the record with null documents.
+                if (!cvFile || !idFile || !bankFile || !markFile) {
+                    const missing = [];
+                    if (!cvFile)   missing.push('CV / Resume');
+                    if (!idFile)   missing.push('Aadhaar/PAN (ID Proof)');
+                    if (!bankFile) missing.push('Bank Passbook');
+                    if (!markFile) missing.push('Marksheet/Certificate');
+
+                    errorMsg.innerHTML = `❌ Please attach the following document(s) before submitting: <strong>${missing.join(', ')}</strong>.`;
+                    errorMsg.style.display = 'block';
+                    loading.style.display  = 'none';
+                    submitBtn.disabled     = false;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    return;
+                }
+
                 // Generate appointment letter
                 const doc  = await generateAppointmentLetter(textFormData);
                 doc.save(`Appointment_Letter_${employeeId.replace(/\//g,'_')}.pdf`);
@@ -661,6 +697,15 @@
                     fileToBase64(cvFile), fileToBase64(idFile),
                     fileToBase64(bankFile), fileToBase64(markFile)
                 ]);
+
+                // ✅ ADD: confirm the base64 conversion actually produced data
+                // (catches a corrupt/unreadable file slipping through the checks above)
+                console.log('📎 Base64 conversion result:', {
+                    cvResume:     cvB64   ? `OK (${cvB64.length} chars)`   : '❌ NULL',
+                    idProof:      idB64   ? `OK (${idB64.length} chars)`   : '❌ NULL',
+                    bankPassbook: bankB64 ? `OK (${bankB64.length} chars)` : '❌ NULL',
+                    marksheet:    markB64 ? `OK (${markB64.length} chars)`: '❌ NULL'
+                });
 
                 // ── Save to mevtencia_employeeDatabase ──
                 const LS_DB = 'mevtencia_employeeDatabase';
@@ -680,10 +725,15 @@
                 try {
                     localStorage.setItem(LS_DB, JSON.stringify(empDB));
                 } catch(se) {
+                    // ✅ Quota exceeded — warn clearly instead of silently
+                    // saving the record with documents wiped out.
+                    console.warn('⚠️ localStorage quota exceeded while saving documents:', se);
                     empDB[employeeId].cvResume = empDB[employeeId].idProof =
                     empDB[employeeId].bankPassbook = empDB[employeeId].marksheet =
                     empDB[employeeId].appointmentLetter = null;
                     localStorage.setItem(LS_DB, JSON.stringify(empDB));
+                    errorMsg.innerHTML = '⚠️ Registration saved, but documents could not be stored locally (storage limit reached). Please contact admin to sync via server/database.';
+                    errorMsg.style.display = 'block';
                 }
 
                 // ══════════════════════════════════════════
@@ -703,19 +753,16 @@
                 // ══════════════════════════════════════════
 
                 // ── Save to MongoDB Atlas ──
-                // FIX (previously the bug you hit): this payload used to only
-                // contain text fields — the 4 uploaded documents and the
-                // appointment letter were generated but never sent here, so
-                // the profile page always showed "N/A" for them.
-                //
-                // FIX: since the exact field names your profile/backend reads
-                // weren't available to check against, every value below is
-                // sent under BOTH the camelCase name (as this form uses) AND
-                // the snake_case name (as seen in your SuperAdminDashboard.html,
-                // e.g. employee_email, phone_number, joining_date). This makes
-                // the payload work regardless of which convention the backend
-                // expects. Once you confirm the backend/profile-page field
-                // names, this can be trimmed down to just the correct ones.
+                // ✅ FIX (updated): documents are no longer bundled into this
+                // text-field payload. Previously all 4 uploaded files + the
+                // appointment letter were base64-encoded and stuffed into ONE
+                // employee record — MongoDB caps a single document at 16MB,
+                // so once real (non-tiny) files were used, the write would
+                // silently fail or the documents would never actually save.
+                // Now this payload only carries text fields, and each
+                // document is saved separately below via /api/documents,
+                // so each file gets its own MongoDB record (16MB limit
+                // applies per file, not per employee).
                 try {
                     const nowIso = new Date().toISOString();
                     const mongoPayload = {
@@ -799,22 +846,6 @@
                         loginPassword: loginPassword,
                         password: loginPassword,
 
-                        // Documents (base64 data URIs) — this is the fix for
-                        // the "N/A" Documents section on the profile page
-                        cvResume: cvB64 || '',
-                        cv_resume: cvB64 || '',
-
-                        idProof: idB64 || '',
-                        id_proof: idB64 || '',
-
-                        bankPassbook: bankB64 || '',
-                        bank_passbook: bankB64 || '',
-
-                        marksheet: markB64 || '',
-
-                        appointmentLetter: appointmentLetterB64 || '',
-                        appointment_letter: appointmentLetterB64 || '',
-
                         registeredAt: nowIso,
                         registered_at: nowIso
                     };
@@ -826,13 +857,45 @@
                     });
 
                     if (mongoResp.ok) {
-                        console.log('✅ Saved to MongoDB Atlas (with documents)!');
+                        console.log('✅ Saved employee record to MongoDB Atlas!');
                     } else {
-                        console.warn('MongoDB save failed:', await mongoResp.text());
+                        console.warn('MongoDB employee save failed:', await mongoResp.text());
                     }
                 } catch(mongoErr) {
                     console.warn('MongoDB error (offline?):', mongoErr.message);
                 }
+
+                // ── Save each document separately (one MongoDB write per file) ──
+                async function saveDocumentToServer(docType, base64Data, filename) {
+                    if (!base64Data) return;
+                    try {
+                        const resp = await fetch('/api/documents', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                emp_id: employeeId,
+                                doc_type: docType,
+                                filename: filename || '',
+                                data: base64Data
+                            })
+                        });
+                        if (resp.ok) {
+                            console.log(`✅ Saved document to MongoDB: ${docType}`);
+                        } else {
+                            console.warn(`⚠️ Document save failed (${docType}):`, await resp.text());
+                        }
+                    } catch (docErr) {
+                        console.warn(`⚠️ Document save error (${docType}, offline?):`, docErr.message);
+                    }
+                }
+
+                await Promise.all([
+                    saveDocumentToServer('cv_resume', cvB64, cvFile?.name),
+                    saveDocumentToServer('id_proof', idB64, idFile?.name),
+                    saveDocumentToServer('bank_passbook', bankB64, bankFile?.name),
+                    saveDocumentToServer('marksheet', markB64, markFile?.name),
+                    saveDocumentToServer('appointment_letter', appointmentLetterB64, `Appointment_Letter_${employeeId.replace(/\//g,'_')}.pdf`)
+                ]);
                 // ── End MongoDB Save ──
 
                 // Excel log
@@ -895,6 +958,11 @@
                 document.getElementById('registrationForm').reset();
                 document.getElementById('prevId').textContent = '—';
                 document.getElementById('prevPw').textContent = '—';
+                // ✅ ADD: hide the green "attached" confirmations on reset
+                ['cvResume','idProof','bankPassbook','marksheet'].forEach(id => {
+                    const ok = document.getElementById(id + '_ok');
+                    if (ok) { ok.style.display = 'none'; ok.textContent = ''; }
+                });
                 window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } catch(error) {
@@ -918,17 +986,30 @@
             document.getElementById('age').value = age;
         });
 
-        // File size limit 5MB
+        // File size limit 5MB + ✅ ADD: show a green "Attached: filename" confirmation
         ['cvResume','idProof','bankPassbook','marksheet'].forEach(id => {
             document.getElementById(id).addEventListener('change', function(e) {
-                if (e.target.files[0]?.size > 5*1024*1024) {
+                const okEl = document.getElementById(id + '_ok');
+                const file = e.target.files[0];
+
+                if (file?.size > 5*1024*1024) {
                     alert('File size should not exceed 5MB.');
                     e.target.value = '';
+                    if (okEl) { okEl.style.display = 'none'; okEl.textContent = ''; }
+                    return;
+                }
+
+                if (file && okEl) {
+                    okEl.textContent = `✅ Attached: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+                    okEl.style.display = 'block';
+                } else if (okEl) {
+                    okEl.style.display = 'none';
+                    okEl.textContent = '';
                 }
             });
         });
 
-        document.getElementById('joiningDate').min = new Date().toISOString().split('T')[0];
+
     </script>
 </body>
 </html>
