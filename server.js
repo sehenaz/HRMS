@@ -44,6 +44,24 @@ const employeeSchema = new mongoose.Schema({
   password:       { type: String, default: 'MEVRICK1707' },
   work_location:  String,
   address:        String,
+  // ✅ FIX: these fields were completely missing from the schema, so
+  // Mongoose silently dropped them on every save (this is the same class
+  // of bug we already fixed for documents) — this is why DOB, Age, Marital
+  // Status, Blood Group, Nominee, and Bank details always showed N/A on
+  // the profile page even though Registration.html was sending them.
+  alternative_phone: String,
+  dob:               String,
+  age:               String,
+  marital_status:    String,
+  blood_group:       String,
+  nominee_name:      String,
+  nominee_phone:     String,
+  bank_name:         String,
+  branch_name:       String,
+  account_number:    String,
+  ifsc_code:         String,
+  branch_code:       String,
+  upi_id:            String,
   registered_at:  { type: Date, default: Date.now },
   updated_at:     { type: Date, default: Date.now }
 });
@@ -167,6 +185,21 @@ app.post('/api/employees', upload.any(), async (req, res) => {
       password:       emp.password      || 'MEVRICK1707',
       work_location:  emp.work_location || emp.workLocation || '',
       address:        emp.address       || '',
+      // ✅ FIX: previously missing — this is why DOB/Age/Marital Status/
+      // Blood Group/Nominee/Bank details always showed N/A.
+      alternative_phone: emp.alternative_phone || emp.alternativePhone || '',
+      dob:               emp.dob || '',
+      age:               emp.age || '',
+      marital_status:    emp.marital_status || emp.maritalStatus || '',
+      blood_group:       emp.blood_group || emp.bloodGroup || '',
+      nominee_name:      emp.nominee_name || emp.nomineeName || '',
+      nominee_phone:     emp.nominee_phone || emp.nomineePhone || '',
+      bank_name:         emp.bank_name || emp.bankName || '',
+      branch_name:       emp.branch_name || emp.branchName || '',
+      account_number:    emp.account_number || emp.accountNumber || '',
+      ifsc_code:         emp.ifsc_code || emp.ifscCode || '',
+      branch_code:       emp.branch_code || emp.branchCode || '',
+      upi_id:            emp.upi_id || emp.upiId || '',
       updated_at:     new Date()
     };
     const result = await Employee.findOneAndUpdate(
@@ -195,6 +228,21 @@ app.post('/api/register', upload.any(), async (req, res) => {
       password:       emp.password      || 'MEVRICK1707',
       work_location:  emp.work_location || emp.workLocation || '',
       address:        emp.address       || '',
+      // ✅ FIX: previously missing — this is why DOB/Age/Marital Status/
+      // Blood Group/Nominee/Bank details always showed N/A.
+      alternative_phone: emp.alternative_phone || emp.alternativePhone || '',
+      dob:               emp.dob || '',
+      age:               emp.age || '',
+      marital_status:    emp.marital_status || emp.maritalStatus || '',
+      blood_group:       emp.blood_group || emp.bloodGroup || '',
+      nominee_name:      emp.nominee_name || emp.nomineeName || '',
+      nominee_phone:     emp.nominee_phone || emp.nomineePhone || '',
+      bank_name:         emp.bank_name || emp.bankName || '',
+      branch_name:       emp.branch_name || emp.branchName || '',
+      account_number:    emp.account_number || emp.accountNumber || '',
+      ifsc_code:         emp.ifsc_code || emp.ifscCode || '',
+      branch_code:       emp.branch_code || emp.branchCode || '',
+      upi_id:            emp.upi_id || emp.upiId || '',
       updated_at:     new Date()
     };
     const result = await Employee.findOneAndUpdate(
