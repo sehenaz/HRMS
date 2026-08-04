@@ -1186,7 +1186,8 @@
   <div class="toast" id="toast"></div>
 
   <script>
-    const SERVER_URL = 'https://hrms-2-n4kt.onrender.com';
+    //////////////////////////////////
+    const SERVER_URL = '';
 
     // ========== AUTH CHECK ==========
     const session = JSON.parse(localStorage.getItem('mev_superSession'));
@@ -2095,13 +2096,24 @@
         showToast('Error: ' + e.message, '#e53935');
       }
     }
+/////////////////////////////////////
+  //   document.getElementById('editAdminOverlay').addEventListener('click', function(e) {
+  //     if (e.target === this) closeEditAdmin();
+  //   });
 
-    document.getElementById('editAdminOverlay').addEventListener('click', function(e) {
-      if (e.target === this) closeEditAdmin();
+  //   loadAdminsTab();
+  window.addEventListener('load', function() {
+      const editOverlayEl = document.getElementById('editAdminOverlay');
+      if (editOverlayEl) {
+        editOverlayEl.addEventListener('click', function(e) {
+          if (e.target === this) closeEditAdmin();
+        });
+      }
     });
 
     loadAdminsTab();
   </script>
+  
 
 <!-- ══ EDIT ADMIN MODAL ══════════════════════════════════ -->
 <div id="editAdminOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;">

@@ -160,13 +160,34 @@
     // Super Admin via "Manage Admins") and merges them into localStorage,
     // so an admin can log in from any device, not just the one they were
     // created on.
+    // async function syncAdminsFromServer() {
+    //   try {
+    //     const resp = await fetch('/api/admins');
+    //     if (!resp.ok) return;
+    //     const serverList = await resp.json();
+    //     const localList  = JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
+    //     const merged = [...serverList];
+    //     localList.forEach(la => {
+    //       if (!merged.find(sa => sa.id === la.id)) merged.push(la);
+    //     });
+    //     localStorage.setItem('mev_normalAdmins', JSON.stringify(merged));
+    //   } catch (e) {
+    //     console.warn('Admin sync failed (offline?):', e.message);
+    //   }
+    // }
     async function syncAdminsFromServer() {
       try {
         const resp = await fetch('/api/admins');
         if (!resp.ok) return;
         const serverList = await resp.json();
+        const mappedServerList = serverList.map(a => ({
+          id: a.admin_id || a.id,
+          password: a.password,
+          employeeName: a.employee_name || a.employeeName || 'Admin',
+          assignedEmpIds: a.assigned_employees || a.assignedEmpIds || []
+        }));
         const localList  = JSON.parse(localStorage.getItem('mev_normalAdmins') || '[]');
-        const merged = [...serverList];
+        const merged = [...mappedServerList];
         localList.forEach(la => {
           if (!merged.find(sa => sa.id === la.id)) merged.push(la);
         });
@@ -175,6 +196,7 @@
         console.warn('Admin sync failed (offline?):', e.message);
       }
     }
+    /////////////////////////////
 
     async function doAdminLogin() {
       hideMsg('msgErr'); hideMsg('msgOk');
