@@ -10,428 +10,379 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html, body { height: 100%; }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 20px;
-            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            padding: 10px;
         }
 
         .container {
-            max-width: 900px;
-            margin: 0 auto;
+            width: 100%;
+            height: 100%;
             background: white;
-            padding: 40px;
-            border-radius: 15px;
+            border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 10px 18px;
         }
 
-        .header { text-align: center; margin-bottom: 30px; }
+        /* ── Compact header strip ── */
+        .header-strip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #1a408d;
+            margin-bottom: 8px;
+        }
+        .header-strip img {
+            width: 38px; height: 38px; object-fit: contain; background: white;
+            border-radius: 50%; border: 2px solid #1a408d; padding: 3px; flex-shrink: 0;
+        }
+        .header-strip .titles { flex: 1; min-width: 0; }
+        .company-logo { color: #1a408d; font-size: 15px; font-weight: 800; line-height: 1.1; }
+        h1 { color: #1a408d; font-size: 13px; font-weight: 600; margin-top: 1px; }
+        .info-box {
+            background: #e7f3ff; border-left: 3px solid #2196F3;
+            padding: 5px 10px; border-radius: 4px; font-size: 9.5px; color: #345;
+            max-width: 340px; flex-shrink: 0; line-height: 1.35;
+        }
+        .info-box b { color: #2196F3; }
 
-        .company-logo { color: #1a408d; font-size: 32px; font-weight: bold; margin-bottom: 5px; }
-
-        h1 { color: #1a408d; text-align: center; margin-bottom: 10px; font-size: 28px; margin-top: 20px; }
-
-        h2 {
-            color: #1a408d; margin-top: 30px; margin-bottom: 20px;
-            padding-bottom: 10px; border-bottom: 2px solid #1a408d; font-size: 20px;
+        #successMessage, #errorMessage, #loading {
+            flex-shrink: 0;
         }
 
-        .form-group { margin-bottom: 20px; }
+        .success-message {
+            display: none; background: #d4edda; color: #155724;
+            padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #c3e6cb;
+            font-size: 11px; max-height: 26vh; overflow-y: auto;
+        }
+        .error-message {
+            display: none; background: #f8d7da; color: #721c24;
+            padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid #f5c6cb;
+            font-size: 11px;
+        }
+        .loading { display: none; text-align: center; padding: 4px; color: #1a408d; font-weight: bold; font-size: 11px; }
 
-        label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; font-size: 14px; }
+        /* ── Main body: everything visible at once ── */
+        .board {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1.05fr 1fr 1fr 0.95fr;
+            gap: 8px;
+            min-height: 0;
+        }
 
+        .panel {
+            border: 1.5px solid #dfe3ee;
+            border-radius: 8px;
+            padding: 7px 9px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .panel.cred { border-color: #3f51b5; background: linear-gradient(135deg,#1a237e08,#3f51b508); }
+
+        .panel h2 {
+            color: #1a408d; font-size: 11px; font-weight: 700;
+            padding-bottom: 3px; margin-bottom: 5px; border-bottom: 1.5px solid #1a408d;
+            display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+        }
+        .panel.cred h2 { color: #1a237e; border-bottom-color: #3f51b5; }
+        .panel h2 .hint { font-weight: 400; color: #8891c9; font-size: 8.5px; }
+
+        .fields { overflow-y: auto; flex: 1; min-height: 0; padding-right: 2px; }
+        .fields::-webkit-scrollbar { width: 5px; }
+        .fields::-webkit-scrollbar-thumb { background: #c3cfe2; border-radius: 6px; }
+
+        .form-group { margin-bottom: 6px; }
+        .form-group.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+
+        label {
+            display: block; margin-bottom: 2px; color: #444; font-weight: 600;
+            font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.2px;
+        }
         .required::after { content: " *"; color: #e74c3c; }
 
         input[type="text"], input[type="email"], input[type="number"],
         input[type="date"], input[type="tel"], select, textarea {
-            width: 100%; padding: 12px; border: 2px solid #e0e0e0;
-            border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
-            font-family: 'Segoe UI', sans-serif;
+            width: 100%; padding: 5px 7px; border: 1.5px solid #dcdfe6;
+            border-radius: 5px; font-size: 11px; font-family: inherit;
         }
-
         input[type="file"] {
-            width: 100%; padding: 10px; border: 2px dashed #667eea;
-            border-radius: 8px; background: #f8f9ff; cursor: pointer;
+            width: 100%; padding: 4px 6px; border: 1.5px dashed #667eea;
+            border-radius: 5px; background: #f8f9ff; cursor: pointer; font-size: 9.5px;
         }
-
         input:focus, select:focus, textarea:focus { outline: none; border-color: #667eea; }
-
-        textarea { min-height: 80px; resize: vertical; }
-
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-        button {
-            width: 100%; padding: 15px;
-            background: linear-gradient(135deg, #1a408d 0%, #0d2552 100%);
-            color: white; border: none; border-radius: 8px;
-            font-size: 16px; font-weight: bold; cursor: pointer;
-            margin-top: 20px; transition: all 0.3s ease;
-        }
-
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102,126,234,0.4); }
-        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
-        .note { font-size: 12px; color: #666; font-style: italic; margin-top: 5px; }
-
-        /* ✅ ADD: green confirmation text shown under a file input once attached */
-        .file-ok { font-size: 12px; color: #2e7d32; font-weight: 700; margin-top: 5px; display: none; }
-
-        .success-message {
-            display: none; background: #d4edda; color: #155724;
-            padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #c3e6cb;
-        }
-
-        .error-message {
-            display: none; background: #f8d7da; color: #721c24;
-            padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #f5c6cb;
-        }
-
-        .loading { display: none; text-align: center; padding: 20px; color: #1a408d; font-weight: bold; }
-
-        .info-box {
-            background: #e7f3ff; border-left: 4px solid #2196F3;
-            padding: 15px; margin-bottom: 20px; border-radius: 4px;
-        }
-
-        .info-box h3 { color: #2196F3; margin-bottom: 10px; font-size: 16px; }
-        .info-box ul { margin-left: 20px; color: #555; }
-        .info-box li { margin-bottom: 5px; }
-
-        /* ── Credential Fields Special Styling ── */
-        .cred-section {
-            background: linear-gradient(135deg, #1a237e08, #3f51b508);
-            border: 2px solid #3f51b5;
-            border-radius: 12px;
-            padding: 24px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
-
-        .cred-section h2 {
-            border-bottom: 2px solid #3f51b5;
-            color: #1a237e;
-            margin-top: 0;
-        }
+        textarea { min-height: 32px; resize: none; }
 
         .cred-section .form-group input {
-            border: 2px solid #3f51b5;
-            font-family: monospace;
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            border: 1.5px solid #3f51b5; font-family: monospace; font-weight: 700; font-size: 12px;
         }
-
         .cred-section .form-group input:focus { border-color: #1a237e; background: #f0f3ff; }
 
-        .cred-hint {
-            background: #e8eaf6;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 12px;
-            color: #3f51b5;
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Password show/hide toggle */
         .pw-wrap { position: relative; }
         .pw-toggle {
-            position: absolute; right: 12px; top: 50%;
-            transform: translateY(-50%);
-            background: none; border: none; cursor: pointer;
-            color: #888; font-size: 16px; padding: 0;
-            margin: 0; width: auto;
+            position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; color: #888; font-size: 11px;
+            padding: 0; margin: 0; width: auto;
         }
         .pw-toggle:hover { color: #3f51b5; transform: translateY(-50%); box-shadow: none; }
 
-        /* Preview box */
         .cred-preview {
-            background: #1a237e;
-            border-radius: 10px;
-            padding: 14px 18px;
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-top: 14px;
-            align-items: center;
+            background: #1a237e; border-radius: 6px; padding: 5px 8px;
+            display: flex; gap: 8px; margin-top: 4px; flex-shrink: 0;
         }
+        .cp-item { flex: 1; min-width: 0; }
+        .cp-label { font-size: 7px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+        .cp-val { font-size: 10px; font-weight: 800; font-family: monospace; color: white; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .cp-label { font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-        .cp-val { font-size: 15px; font-weight: 800; font-family: monospace; color: white; }
-        .cp-item { flex: 1; min-width: 130px; }
+        .note { font-size: 7.5px; color: #888; font-style: italic; margin-top: 1px; }
+        .file-ok { font-size: 8px; color: #2e7d32; font-weight: 700; margin-top: 1px; display: none; }
 
-        @media (max-width: 768px) {
-            .row { grid-template-columns: 1fr; }
-            .container { padding: 20px; }
+        /* ── Footer: submit button ── */
+        .footer-bar { flex-shrink: 0; padding-top: 7px; }
+        button {
+            width: 100%; padding: 9px;
+            background: linear-gradient(135deg, #1a408d 0%, #0d2552 100%);
+            color: white; border: none; border-radius: 7px;
+            font-size: 13px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        @media (max-width: 1100px) {
+            body { overflow-y: auto; }
+            .container { height: auto; min-height: 100%; }
+            .board { grid-template-columns: 1fr 1fr; }
+            .fields { overflow-y: visible; }
+        }
+        @media (max-width: 650px) {
+            .board { grid-template-columns: 1fr; }
+            .header-strip { flex-wrap: wrap; }
+            .info-box { max-width: 100%; }
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="header">
-            <div style="margin-bottom: 15px;">
-                <img src="assets/logo.png" alt="Mevrick Solution"
-                    style="width:100px;height:100px;object-fit:contain;background:white;border-radius:50%;box-shadow:0 10px 30px rgba(0,0,0,0.1);border:2px solid #1a408d;padding:10px;">
+
+        <div class="header-strip">
+            <img src="assets/logo.png" alt="Mevrick Solution">
+            <div class="titles">
+                <div class="company-logo">MEVRICK SOLUTION PRIVATE LIMITED</div>
+                <h1>Employee Online Registration Form</h1>
             </div>
-            <div class="company-logo">MEVRICK SOLUTION PRIVATE LIMITED</div>
-        </div>
-
-        <h1>Employee Online Registration Form</h1>
-
-        <div class="info-box">
-            <h3>📋 Registration Process</h3>
-            <ul>
-                <li>Complete all required fields marked with (*)</li>
-                <li>Admin manually enters Employee ID and Password in the credentials section</li>
-                <li>Appointment letter will be generated and downloaded automatically</li>
-                <li>Please ensure all information is accurate before submitting</li>
-            </ul>
+            <div class="info-box">
+                <b>📋 Process:</b> Fill all (*) fields · Admin enters Employee ID/Password · Appointment letter auto-generates · Verify before submitting
+            </div>
         </div>
 
         <div id="successMessage" class="success-message"></div>
         <div id="errorMessage"   class="error-message"></div>
         <div id="loading"        class="loading">⏳ Generating appointment letter and processing registration...</div>
 
-        <form id="registrationForm">
+        <form id="registrationForm" style="flex:1; min-height:0; display:flex; flex-direction:column;">
 
-            <!-- ══════════════════════════════════════════════
-                 🔑 EMPLOYEE CREDENTIALS  (Admin fills this)
-            ══════════════════════════════════════════════ -->
-            <div class="cred-section">
-                <h2>🔑 Employee Login Credentials <span style="font-size:13px;font-weight:400;color:#5c6bc0;">(Admin fills this)</span></h2>
+            <div class="board">
 
-                <div class="row">
-                    <div class="form-group">
-                        <label class="required">Employee ID</label>
-                        <input type="text" id="employeeId" name="employeeId"
-                            placeholder="e.g. MEV/341/2026"
-                            oninput="updateCredPreview()"
-                            required />
-                        <div class="cred-hint">🪪 Format: MEV/[Number]/[Year] — e.g. MEV/341/2026</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="required">Login Password</label>
-                        <div class="pw-wrap">
-                            <input type="text" id="loginPassword" name="loginPassword"
-                                placeholder="e.g. MEVRICK1707"
-                                oninput="updateCredPreview()"
-                                required />
-                            <button type="button" class="pw-toggle" onclick="togglePw()" id="pwToggleBtn" title="Show/Hide">👁️</button>
+                <!-- Column 1: Credentials + Personal -->
+                <div class="panel">
+                    <div class="fields">
+
+                        <div class="panel cred" style="border:none; padding:0; margin-bottom:8px;">
+                            <h2>🔑 Login Credentials <span class="hint">(Admin fills)</span></h2>
+                            <div class="cred-section">
+                                <div class="form-group">
+                                    <label class="required">Employee ID</label>
+                                    <input type="text" id="employeeId" name="employeeId" placeholder="MEV/341/2026" oninput="updateCredPreview()" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="required">Login Password</label>
+                                    <div class="pw-wrap">
+                                        <input type="text" id="loginPassword" name="loginPassword" placeholder="MEVRICK1707" oninput="updateCredPreview()" required />
+                                        <button type="button" class="pw-toggle" onclick="togglePw()" id="pwToggleBtn" title="Show/Hide">👁️</button>
+                                    </div>
+                                </div>
+                                <div class="cred-preview" id="credPreview">
+                                    <div class="cp-item"><div class="cp-label">ID</div><div class="cp-val" id="prevId">—</div></div>
+                                    <div class="cp-item"><div class="cp-label">Password</div><div class="cp-val" id="prevPw">—</div></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="cred-hint">🔒 Admin sets this password. Employee will use it to login.</div>
+
+                        <h2>📄 Personal Details</h2>
+                        <div class="form-group">
+                            <label class="required">Full Name (Aadhaar/PAN)</label>
+                            <input type="text" id="employeeName" name="employeeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Email ID</label>
+                            <input type="email" id="employeeEmail" name="employeeEmail" required>
+                        </div>
+                        <div class="form-group pair">
+                            <div><label class="required">Phone</label><input type="tel" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10}" placeholder="10 digits" required></div>
+                            <div><label>Alt. Phone</label><input type="tel" id="alternativePhone" name="alternativePhone" pattern="[0-9]{10}" placeholder="optional"></div>
+                        </div>
+                        <div class="form-group pair">
+                            <div><label class="required">DOB</label><input type="date" id="dob" name="dob" required></div>
+                            <div><label class="required">Age</label><input type="number" id="age" name="age" min="18" max="100" readonly></div>
+                        </div>
+                        <div class="form-group pair">
+                            <div>
+                                <label class="required">Marital Status</label>
+                                <select id="maritalStatus" name="maritalStatus" required>
+                                    <option value="">Select</option>
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                    <option value="Divorced">Divorced</option>
+                                    <option value="Widowed">Widowed</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="required">Blood Group</label>
+                                <select id="bloodGroup" name="bloodGroup" required>
+                                    <option value="">Select</option>
+                                    <option value="A+">A+</option><option value="A-">A-</option>
+                                    <option value="B+">B+</option><option value="B-">B-</option>
+                                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                                    <option value="O+">O+</option><option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Complete Address</label>
+                            <textarea id="address" name="address" placeholder="House No., Street, City, State, PIN" required></textarea>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Live Preview -->
-                <div class="cred-preview" id="credPreview">
-                    <div class="cp-item">
-                        <div class="cp-label">Employee ID</div>
-                        <div class="cp-val" id="prevId">—</div>
+                <!-- Column 2: Nominee + Bank -->
+                <div class="panel">
+                    <div class="fields">
+                        <h2>👤 Nominee Details</h2>
+                        <div class="form-group">
+                            <label class="required">Nominee Name</label>
+                            <input type="text" id="nomineeName" name="nomineeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Nominee Phone</label>
+                            <input type="tel" id="nomineePhone" name="nomineePhone" pattern="[0-9]{10}" placeholder="10 digits" required>
+                        </div>
+
+                        <h2 style="margin-top:8px;">🏦 Bank Details</h2>
+                        <div class="form-group">
+                            <label class="required">Bank Name</label>
+                            <input type="text" id="bankName" name="bankName" placeholder="e.g., SBI" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Branch Name</label>
+                            <input type="text" id="branchName" name="branchName" placeholder="e.g., Kalyani" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Account Number</label>
+                            <input type="text" id="accountNumber" name="accountNumber" required>
+                        </div>
+                        <div class="form-group pair">
+                            <div><label class="required">IFSC Code</label><input type="text" id="ifscCode" name="ifscCode" placeholder="SBIN0001234" required></div>
+                            <div><label>Branch Code</label><input type="text" id="branchCode" name="branchCode" placeholder="optional"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>UPI ID</label>
+                            <input type="text" id="upiId" name="upiId" placeholder="yourname@bank (optional)">
+                        </div>
                     </div>
-                    <div class="cp-item">
-                        <div class="cp-label">Password</div>
-                        <div class="cp-val" id="prevPw">—</div>
+                </div>
+
+                <!-- Column 3: Job Details -->
+                <div class="panel">
+                    <div class="fields">
+                        <h2>💼 Job Details</h2>
+                        <div class="form-group">
+                            <label class="required">Employee Type</label>
+                            <select id="employeeType" name="employeeType" required>
+                                <option value="">Select</option>
+                                <option value="Full Time">Full Time</option>
+                                <option value="Casual">Casual/Contractual</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Monthly Salary (₹)</label>
+                            <input type="number" id="salary" name="salary" min="0" step="500" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Designation/Position</label>
+                            <input type="text" id="designation" name="designation" placeholder="e.g., Software Developer" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Joining Date</label>
+                            <input type="date" id="joiningDate" name="joiningDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Work Location</label>
+                            <select id="workLocation" name="workLocation" required>
+                                <option value="">Select</option>
+                                <option value="Kalyani (HO)">Kalyani (HO)</option>
+                                <option value="Kolkata">Kolkata</option>
+                                <option value="Delhi">Delhi</option>
+                                <option value="Mumbai">Mumbai</option>
+                                <option value="Telangana">Telangana</option>
+                                <option value="Lucknow">Lucknow</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
                     </div>
-                    <div style="font-size:11px;color:rgba(255,255,255,0.5);align-self:flex-end;">Live Preview</div>
                 </div>
+
+                <!-- Column 4: Documents -->
+                <div class="panel">
+                    <div class="fields">
+                        <h2>📎 Documents</h2>
+                        <div class="form-group">
+                            <label class="required">CV / Resume</label>
+                            <input type="file" id="cvResume" name="cvResume" accept=".pdf,.doc,.docx" required>
+                            <div class="note">PDF/DOC/DOCX, max 5MB</div>
+                            <div class="file-ok" id="cvResume_ok"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Aadhaar / PAN Card</label>
+                            <input type="file" id="idProof" name="idProof" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <div class="note">PDF/JPG/PNG, max 5MB</div>
+                            <div class="file-ok" id="idProof_ok"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Bank Passbook</label>
+                            <input type="file" id="bankPassbook" name="bankPassbook" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <div class="note">PDF/JPG/PNG, max 5MB</div>
+                            <div class="file-ok" id="bankPassbook_ok"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Marksheet / Certificate</label>
+                            <input type="file" id="marksheet" name="marksheet" accept=".pdf,.jpg,.jpeg,.png" required>
+                            <div class="note">PDF/JPG/PNG, max 5MB</div>
+                            <div class="file-ok" id="marksheet_ok"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Personal Details -->
-            <h2>📄 Personal Details</h2>
-
-            <div class="form-group">
-                <label class="required">Full Name (as per Aadhaar/PAN)</label>
-                <input type="text" id="employeeName" name="employeeName" required>
+            <div class="footer-bar">
+                <button type="submit" id="submitBtn">🚀 Submit Registration & Generate Appointment Letter</button>
             </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Employee Email ID</label>
-                    <input type="email" id="employeeEmail" name="employeeEmail" required>
-                </div>
-                <div class="form-group">
-                    <label class="required">Phone Number</label>
-                    <input type="tel" id="phoneNumber" name="phoneNumber" pattern="[0-9]{10}" placeholder="10 digits" required>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Age</label>
-                    <input type="number" id="age" name="age" min="18" max="100" readonly>
-                </div>
-                <div class="form-group">
-                    <label class="required">Date of Birth</label>
-                    <input type="date" id="dob" name="dob" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Alternative Phone</label>
-                <input type="tel" id="alternativePhone" name="alternativePhone" pattern="[0-9]{10}" placeholder="10 digits (optional)">
-            </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Marital Status</label>
-                    <select id="maritalStatus" name="maritalStatus" required>
-                        <option value="">Select</option>
-                        <option value="Single">Single</option>
-                        <option value="Married">Married</option>
-                        <option value="Divorced">Divorced</option>
-                        <option value="Widowed">Widowed</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="required">Blood Group</label>
-                    <select id="bloodGroup" name="bloodGroup" required>
-                        <option value="">Select</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Complete Address</label>
-                <textarea id="address" name="address" placeholder="House No., Street, City, State, PIN Code" required></textarea>
-            </div>
-
-            <!-- Nominee Details -->
-            <h2>👤 Nominee Details (Emergency Contact)</h2>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Nominee Name</label>
-                    <input type="text" id="nomineeName" name="nomineeName" required>
-                </div>
-                <div class="form-group">
-                    <label class="required">Nominee Phone Number</label>
-                    <input type="tel" id="nomineePhone" name="nomineePhone" pattern="[0-9]{10}" placeholder="10 digits" required>
-                </div>
-            </div>
-
-            <!-- Bank Details -->
-            <h2>🏦 Bank Details (For Salary Transfer)</h2>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Bank Name</label>
-                    <input type="text" id="bankName" name="bankName" placeholder="e.g., State Bank of India" required>
-                </div>
-                <div class="form-group">
-                    <label class="required">Branch Name</label>
-                    <input type="text" id="branchName" name="branchName" placeholder="e.g., Kalyani Branch" required>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Account Number</label>
-                    <input type="text" id="accountNumber" name="accountNumber" required>
-                </div>
-                <div class="form-group">
-                    <label class="required">IFSC Code</label>
-                    <input type="text" id="ifscCode" name="ifscCode" placeholder="e.g., SBIN0001234" required>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label>Branch Code</label>
-                    <input type="text" id="branchCode" name="branchCode" placeholder="Optional">
-                </div>
-                <div class="form-group">
-                    <label>UPI ID</label>
-                    <input type="text" id="upiId" name="upiId" placeholder="yourname@bank (optional)">
-                </div>
-            </div>
-
-            <!-- Job Details -->
-            <h2>💼 Job Details</h2>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Employee Type</label>
-                    <select id="employeeType" name="employeeType" required>
-                        <option value="">Select Employment Type</option>
-                        <option value="Full Time">Full Time (Regular Employee)</option>
-                        <option value="Casual">Casual/Contractual (Project-Based)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="required">Monthly Salary (₹)</label>
-                    <input type="number" id="salary" name="salary" min="0" step="500" placeholder="Enter monthly salary" required>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Designation/Position</label>
-                <input type="text" id="designation" name="designation" placeholder="e.g., Software Developer, Digitization Associate" required>
-            </div>
-
-            <div class="row">
-                <div class="form-group">
-                    <label class="required">Joining Date</label>
-                    <input type="date" id="joiningDate" name="joiningDate" required>
-                </div>
-                <div class="form-group">
-                    <label class="required">Work Location</label>
-                    <select id="workLocation" name="workLocation" required>
-                        <option value="">Select Location</option>
-                        <option value="Kalyani (HO)">Kalyani (Head Office)</option>
-                        <option value="Kolkata">Kolkata</option>
-                        <option value="Delhi">Delhi</option>
-                        <option value="Mumbai">Mumbai</option>
-                        <option value="Telangana">Telangana</option>
-                        <option value="Lucknow">Lucknow</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Document Upload -->
-            <h2>📎 Document Upload</h2>
-
-            <div class="form-group">
-                <label class="required">CV / Resume</label>
-                <input type="file" id="cvResume" name="cvResume" accept=".pdf,.doc,.docx" required>
-                <div class="note">Accepted formats: PDF, DOC, DOCX (Max 5MB)</div>
-                <div class="file-ok" id="cvResume_ok"></div>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Aadhaar Card / PAN Card</label>
-                <input type="file" id="idProof" name="idProof" accept=".pdf,.jpg,.jpeg,.png" required>
-                <div class="note">Accepted formats: PDF, JPG, PNG (Max 5MB)</div>
-                <div class="file-ok" id="idProof_ok"></div>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Bank Passbook (Front Page)</label>
-                <input type="file" id="bankPassbook" name="bankPassbook" accept=".pdf,.jpg,.jpeg,.png" required>
-                <div class="note">Accepted formats: PDF, JPG, PNG (Max 5MB)</div>
-                <div class="file-ok" id="bankPassbook_ok"></div>
-            </div>
-
-            <div class="form-group">
-                <label class="required">Last Exam Marksheet / Certificate</label>
-                <input type="file" id="marksheet" name="marksheet" accept=".pdf,.jpg,.jpeg,.png" required>
-                <div class="note">Accepted formats: PDF, JPG, PNG (Max 5MB)</div>
-                <div class="file-ok" id="marksheet_ok"></div>
-            </div>
-
-            <button type="submit" id="submitBtn">🚀 Submit Registration & Generate Appointment Letter</button>
         </form>
     </div>
 
@@ -442,7 +393,6 @@
             const pw = document.getElementById('loginPassword').value.trim();
             document.getElementById('prevId').textContent = id || '—';
             document.getElementById('prevPw').textContent = pw || '—';
-            // Also auto-uppercase the ID field
             document.getElementById('employeeId').value = id;
         }
 
@@ -619,7 +569,6 @@
             loading.style.display    = 'block';
             submitBtn.disabled       = true;
 
-            // ── Read admin-entered credentials ──
             const employeeId    = document.getElementById('employeeId').value.trim().toUpperCase();
             const loginPassword = document.getElementById('loginPassword').value.trim();
 
@@ -631,7 +580,6 @@
                 return;
             }
 
-            // Check duplicate ID
             const existingCredDB = JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
             if (existingCredDB[employeeId]) {
                 errorMsg.innerHTML = `❌ Employee ID <strong>${employeeId}</strong> already exists! Please use a different ID.`;
@@ -642,23 +590,16 @@
             }
 
             try {
-                // Collect all text form data
                 const fd = new FormData(document.getElementById('registrationForm'));
                 const textFormData = {};
                 fd.forEach((v,k) => { if (typeof v === 'string') textFormData[k] = v; });
                 textFormData.employeeId = employeeId;
 
-                // Files
                 const cvFile   = document.getElementById('cvResume').files[0];
                 const idFile   = document.getElementById('idProof').files[0];
                 const bankFile = document.getElementById('bankPassbook').files[0];
                 const markFile = document.getElementById('marksheet').files[0];
 
-                // ✅ ADD: debug log — confirm what's actually attached at submit time.
-                // This is the key diagnostic for the "Documents show N/A" issue —
-                // if any of these print MISSING, the file input didn't have a file
-                // selected when Submit was clicked (often because the 5MB check
-                // below cleared it earlier and it was never re-selected).
                 console.log('📎 File check before submit:', {
                     cvResume:      cvFile   ? `${cvFile.name} (${(cvFile.size/1024).toFixed(1)} KB)`   : '❌ MISSING',
                     idProof:       idFile   ? `${idFile.name} (${(idFile.size/1024).toFixed(1)} KB)`   : '❌ MISSING',
@@ -666,8 +607,6 @@
                     marksheet:     markFile ? `${markFile.name} (${(markFile.size/1024).toFixed(1)} KB)`: '❌ MISSING'
                 });
 
-                // ✅ ADD: hard-stop submit if any required document is missing,
-                // instead of silently saving the record with null documents.
                 if (!cvFile || !idFile || !bankFile || !markFile) {
                     const missing = [];
                     if (!cvFile)   missing.push('CV / Resume');
@@ -679,27 +618,19 @@
                     errorMsg.style.display = 'block';
                     loading.style.display  = 'none';
                     submitBtn.disabled     = false;
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
                     return;
                 }
 
-                // Generate appointment letter
                 const doc  = await generateAppointmentLetter(textFormData);
                 doc.save(`Appointment_Letter_${employeeId.replace(/\//g,'_')}.pdf`);
 
-                // ── FIX: capture the appointment letter itself as base64 so it
-                // can be stored/served later — previously it was only ever
-                // pushed to the browser download and never persisted anywhere.
                 const appointmentLetterB64 = doc.output('datauristring');
 
-                // Files to base64
                 const [cvB64, idB64, bankB64, markB64] = await Promise.all([
                     fileToBase64(cvFile), fileToBase64(idFile),
                     fileToBase64(bankFile), fileToBase64(markFile)
                 ]);
 
-                // ✅ ADD: confirm the base64 conversion actually produced data
-                // (catches a corrupt/unreadable file slipping through the checks above)
                 console.log('📎 Base64 conversion result:', {
                     cvResume:     cvB64   ? `OK (${cvB64.length} chars)`   : '❌ NULL',
                     idProof:      idB64   ? `OK (${idB64.length} chars)`   : '❌ NULL',
@@ -707,7 +638,6 @@
                     marksheet:    markB64 ? `OK (${markB64.length} chars)`: '❌ NULL'
                 });
 
-                // ── Save to mevtencia_employeeDatabase ──
                 const LS_DB = 'mevtencia_employeeDatabase';
                 let empDB = JSON.parse(localStorage.getItem(LS_DB) || '{}');
                 empDB[employeeId] = {
@@ -725,8 +655,6 @@
                 try {
                     localStorage.setItem(LS_DB, JSON.stringify(empDB));
                 } catch(se) {
-                    // ✅ Quota exceeded — warn clearly instead of silently
-                    // saving the record with documents wiped out.
                     console.warn('⚠️ localStorage quota exceeded while saving documents:', se);
                     empDB[employeeId].cvResume = empDB[employeeId].idProof =
                     empDB[employeeId].bankPassbook = empDB[employeeId].marksheet =
@@ -736,10 +664,6 @@
                     errorMsg.style.display = 'block';
                 }
 
-                // ══════════════════════════════════════════
-                // ✅ Save to mev_employeeDB (Login DB)
-                // Admin ne jo ID + Password diya wahi save hoga
-                // ══════════════════════════════════════════
                 const credDB = JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
                 credDB[employeeId] = {
                     id:       employeeId,
@@ -750,104 +674,35 @@
                     salary:   textFormData.salary        || ''
                 };
                 localStorage.setItem('mev_employeeDB', JSON.stringify(credDB));
-                // ══════════════════════════════════════════
 
-                // ── Save to MongoDB Atlas ──
-                // ✅ FIX (updated): documents are no longer bundled into this
-                // text-field payload. Previously all 4 uploaded files + the
-                // appointment letter were base64-encoded and stuffed into ONE
-                // employee record — MongoDB caps a single document at 16MB,
-                // so once real (non-tiny) files were used, the write would
-                // silently fail or the documents would never actually save.
-                // Now this payload only carries text fields, and each
-                // document is saved separately below via /api/documents,
-                // so each file gets its own MongoDB record (16MB limit
-                // applies per file, not per employee).
                 try {
                     const nowIso = new Date().toISOString();
                     const mongoPayload = {
-                        // Identity
-                        employeeId: employeeId,
-                        emp_id: employeeId,
-                        id: employeeId,
-
-                        employeeName: textFormData.employeeName || '',
-                        employee_name: textFormData.employeeName || '',
-                        name: textFormData.employeeName || '',
-
-                        employeeEmail: textFormData.employeeEmail || '',
-                        employee_email: textFormData.employeeEmail || '',
-                        email: textFormData.employeeEmail || '',
-
-                        phoneNumber: textFormData.phoneNumber || '',
-                        phone_number: textFormData.phoneNumber || '',
-                        phone: textFormData.phoneNumber || '',
-
-                        alternativePhone: textFormData.alternativePhone || '',
-                        alternative_phone: textFormData.alternativePhone || '',
-
-                        dob: textFormData.dob || '',
-                        date_of_birth: textFormData.dob || '',
-
+                        employeeId: employeeId, emp_id: employeeId, id: employeeId,
+                        employeeName: textFormData.employeeName || '', employee_name: textFormData.employeeName || '', name: textFormData.employeeName || '',
+                        employeeEmail: textFormData.employeeEmail || '', employee_email: textFormData.employeeEmail || '', email: textFormData.employeeEmail || '',
+                        phoneNumber: textFormData.phoneNumber || '', phone_number: textFormData.phoneNumber || '', phone: textFormData.phoneNumber || '',
+                        alternativePhone: textFormData.alternativePhone || '', alternative_phone: textFormData.alternativePhone || '',
+                        dob: textFormData.dob || '', date_of_birth: textFormData.dob || '',
                         age: textFormData.age || '',
-
-                        maritalStatus: textFormData.maritalStatus || '',
-                        marital_status: textFormData.maritalStatus || '',
-
-                        bloodGroup: textFormData.bloodGroup || '',
-                        blood_group: textFormData.bloodGroup || '',
-
+                        maritalStatus: textFormData.maritalStatus || '', marital_status: textFormData.maritalStatus || '',
+                        bloodGroup: textFormData.bloodGroup || '', blood_group: textFormData.bloodGroup || '',
                         address: textFormData.address || '',
-
-                        // Nominee
-                        nomineeName: textFormData.nomineeName || '',
-                        nominee_name: textFormData.nomineeName || '',
-
-                        nomineePhone: textFormData.nomineePhone || '',
-                        nominee_phone: textFormData.nomineePhone || '',
-
-                        // Bank
-                        bankName: textFormData.bankName || '',
-                        bank_name: textFormData.bankName || '',
-
-                        branchName: textFormData.branchName || '',
-                        branch_name: textFormData.branchName || '',
-
-                        accountNumber: textFormData.accountNumber || '',
-                        account_number: textFormData.accountNumber || '',
-
-                        ifscCode: textFormData.ifscCode || '',
-                        ifsc_code: textFormData.ifscCode || '',
-
-                        branchCode: textFormData.branchCode || '',
-                        branch_code: textFormData.branchCode || '',
-
-                        upiId: textFormData.upiId || '',
-                        upi_id: textFormData.upiId || '',
-
-                        // Job
-                        employeeType: textFormData.employeeType || '',
-                        employee_type: textFormData.employeeType || '',
-
+                        nomineeName: textFormData.nomineeName || '', nominee_name: textFormData.nomineeName || '',
+                        nomineePhone: textFormData.nomineePhone || '', nominee_phone: textFormData.nomineePhone || '',
+                        bankName: textFormData.bankName || '', bank_name: textFormData.bankName || '',
+                        branchName: textFormData.branchName || '', branch_name: textFormData.branchName || '',
+                        accountNumber: textFormData.accountNumber || '', account_number: textFormData.accountNumber || '',
+                        ifscCode: textFormData.ifscCode || '', ifsc_code: textFormData.ifscCode || '',
+                        branchCode: textFormData.branchCode || '', branch_code: textFormData.branchCode || '',
+                        upiId: textFormData.upiId || '', upi_id: textFormData.upiId || '',
+                        employeeType: textFormData.employeeType || '', employee_type: textFormData.employeeType || '',
                         salary: textFormData.salary || '',
-
-                        designation: textFormData.designation || '',
-                        dept: textFormData.designation || '',
-                        department: textFormData.designation || '',
-
-                        joiningDate: textFormData.joiningDate || '',
-                        joining_date: textFormData.joiningDate || '',
-
-                        workLocation: textFormData.workLocation || '',
-                        work_location: textFormData.workLocation || '',
-                        city: textFormData.workLocation || '',
-
-                        // Credentials
-                        loginPassword: loginPassword,
-                        password: loginPassword,
-
-                        registeredAt: nowIso,
-                        registered_at: nowIso
+                        designation: textFormData.designation || '', dept: textFormData.designation || '', department: textFormData.designation || '',
+                        joiningDate: textFormData.joiningDate || '', joining_date: textFormData.joiningDate || '',
+                        workLocation: textFormData.workLocation || '', work_location: textFormData.workLocation || '', city: textFormData.workLocation || '',
+                        loginPassword: loginPassword, password: loginPassword,
+                        registeredAt: nowIso, registered_at: nowIso
                     };
 
                     const mongoResp = await fetch('/api/register', {
@@ -865,7 +720,6 @@
                     console.warn('MongoDB error (offline?):', mongoErr.message);
                 }
 
-                // ── Save each document separately (one MongoDB write per file) ──
                 async function saveDocumentToServer(docType, base64Data, filename) {
                     if (!base64Data) return;
                     try {
@@ -896,9 +750,7 @@
                     saveDocumentToServer('marksheet', markB64, markFile?.name),
                     saveDocumentToServer('appointment_letter', appointmentLetterB64, `Appointment_Letter_${employeeId.replace(/\//g,'_')}.pdf`)
                 ]);
-                // ── End MongoDB Save ──
 
-                // Excel log
                 let existingData = [];
                 const existingFile = localStorage.getItem('mevrickEmployeeRegistrations');
                 if (existingFile) {
@@ -922,54 +774,32 @@
                 XLSX.utils.book_append_sheet(wbk, ws, 'Employees');
                 localStorage.setItem('mevrickEmployeeRegistrations', XLSX.write(wbk, { bookType:'xlsx', type:'base64' }));
 
-                // ── Success message with credentials ──
                 successMsg.innerHTML = `
-                    <div style="text-align:center;padding:10px;">
-                        <strong style="font-size:20px;">✅ Registration Successful!</strong><br><br>
-                        <strong>Welcome to Mevrick Solutions, ${textFormData.employeeName}!</strong><br><br>
-                        📄 Appointment letter downloaded.<br>
-                        💼 Type: ${textFormData.employeeType} &nbsp;|&nbsp;
-                        📍 ${textFormData.workLocation} &nbsp;|&nbsp;
-                        📅 ${new Date(textFormData.joiningDate).toLocaleDateString('en-IN')}<br><br>
-
-                        <div style="background:linear-gradient(135deg,#1a237e,#3f51b5);border-radius:12px;padding:22px;margin-top:14px;color:white;">
-                            <div style="font-size:14px;opacity:0.85;margin-bottom:14px;">🔑 Employee Login Credentials</div>
-                            <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:12px;">
-                                <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:12px 22px;min-width:160px;">
-                                    <div style="font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Employee ID</div>
-                                    <div style="font-size:18px;font-weight:800;font-family:monospace;">${employeeId}</div>
-                                </div>
-                                <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:10px;padding:12px 22px;min-width:160px;">
-                                    <div style="font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;">Password</div>
-                                    <div style="font-size:18px;font-weight:800;font-family:monospace;">${loginPassword}</div>
-                                </div>
-                            </div>
-                            <div style="font-size:11px;opacity:0.65;">⚠️ Ye credentials note kar lo. Employee in se login karega.</div>
-                        </div>
-
-                        <br>
-                        <a href="EmployeeHistory.html"
-                           style="display:inline-block;background:#667eea;color:white;padding:10px 20px;text-decoration:none;border-radius:8px;font-weight:bold;">
-                           👥 View Registration History
-                        </a>
+                    <div style="text-align:center;padding:6px;">
+                        <strong style="font-size:14px;">✅ Registration Successful!</strong><br>
+                        <strong>Welcome, ${textFormData.employeeName}!</strong>
+                        &nbsp;|&nbsp; ${textFormData.employeeType} &nbsp;|&nbsp; ${textFormData.workLocation}
+                        &nbsp;|&nbsp; ${new Date(textFormData.joiningDate).toLocaleDateString('en-IN')}<br>
+                        <div style="display:inline-flex;gap:10px;margin-top:6px;background:linear-gradient(135deg,#1a237e,#3f51b5);border-radius:8px;padding:8px 16px;color:white;">
+                            <div><div style="font-size:8px;opacity:0.7;">EMPLOYEE ID</div><div style="font-size:12px;font-weight:800;font-family:monospace;">${employeeId}</div></div>
+                            <div><div style="font-size:8px;opacity:0.7;">PASSWORD</div><div style="font-size:12px;font-weight:800;font-family:monospace;">${loginPassword}</div></div>
+                        </div><br>
+                        <a href="EmployeeHistory.html" style="display:inline-block;background:#667eea;color:white;padding:5px 14px;text-decoration:none;border-radius:6px;font-weight:bold;font-size:10px;margin-top:4px;">👥 View Registration History</a>
                     </div>
                 `;
                 successMsg.style.display = 'block';
                 document.getElementById('registrationForm').reset();
                 document.getElementById('prevId').textContent = '—';
                 document.getElementById('prevPw').textContent = '—';
-                // ✅ ADD: hide the green "attached" confirmations on reset
                 ['cvResume','idProof','bankPassbook','marksheet'].forEach(id => {
                     const ok = document.getElementById(id + '_ok');
                     if (ok) { ok.style.display = 'none'; ok.textContent = ''; }
                 });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
 
             } catch(error) {
                 errorMsg.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
                 errorMsg.style.display = 'block';
                 console.error(error);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             } finally {
                 loading.style.display = 'none';
                 submitBtn.disabled    = false;
@@ -986,7 +816,7 @@
             document.getElementById('age').value = age;
         });
 
-        // File size limit 5MB + ✅ ADD: show a green "Attached: filename" confirmation
+        // File size limit 5MB + green "Attached: filename" confirmation
         ['cvResume','idProof','bankPassbook','marksheet'].forEach(id => {
             document.getElementById(id).addEventListener('change', function(e) {
                 const okEl = document.getElementById(id + '_ok');
@@ -1000,7 +830,7 @@
                 }
 
                 if (file && okEl) {
-                    okEl.textContent = `✅ Attached: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+                    okEl.textContent = `✅ ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
                     okEl.style.display = 'block';
                 } else if (okEl) {
                     okEl.style.display = 'none';
@@ -1008,7 +838,6 @@
                 }
             });
         });
-
 
     </script>
 </body>

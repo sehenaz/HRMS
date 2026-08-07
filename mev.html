@@ -571,57 +571,49 @@
         id: "MEV/336/2025",
         name: "Sehenaz Khatun",
         password: "MEVRICK1707",
-        dept: "HR",
-        city: "Kolkata"
+       
       },
       "MEV/340/2026": {
         id: "MEV/340/2026",
         name: "Ishika Nayak",
         password: "MEVRICK1707",
-        dept: "Sales",
-        city: "Mumbai"
+        
       },
       "MEV/296/2025": {
         id: "MEV/296/2025",
         name: "Udita Karmakar",
         password: "MEVRICK1707",
-        dept: "IT",
-        city: "Bangalore"
+       
       },
       "MEV/110/2022": {
         id: "MEV/110/2022",
         name: "Indrani Ganguly",
         password: "MEVRICK1707",
-        dept: "Finance",
-        city: "Delhi"
+        
       },
       "MEV/339/2026": {
         id: "MEV/339/2026",
         name: "Sreeparna Biswas",
         password: "MEVRICK1707",
-        dept: "Marketing",
-        city: "Hyderabad"
+        
       },
       "MEV/322/2025": {
         id: "MEV/322/2025",
         name: "Tathagata Roy",
         password: "MEVRICK1707",
-        dept: "IT",
-        city: "Kolkata"
+        
       },
       "MEV/323/2025": {
         id: "MEV/323/2025",
         name: "Swagata Dutta",
         password: "MEVRICK1707",
-        dept: "HR",
-        city: "Kolkata"
+        
       },
       "MEV/264/2024": {
         id: "MEV/264/2024",
         name: "Sumit Naskar",
         password: "MEVRICK1707",
-        dept: "Sales",
-        city: "Mumbai"
+       
       }
     };
 
@@ -695,7 +687,14 @@
     // Check if employee is an Admin
     async function checkIfAdmin(empId) {
       try {
-        const res = await fetch('https://hrms-2-n4kt.onrender.com/api/admins');
+        // FIX: was hardcoded to an unrelated external domain
+        // (https://hrms-2-n4kt.onrender.com/api/admins), so this always
+        // failed/mismatched against the real backend and isAdminEmployee
+        // stayed false forever — the Admin button never showed on
+        // AttendanceTracker.html no matter what the Super Admin assigned.
+        // Using a relative path hits the SAME backend this page is
+        // served from (same Render service), matching every other file.
+        const res = await fetch('/api/admins');
         if (!res.ok) return null;
         const admins = await res.json();
         return admins.find(a =>

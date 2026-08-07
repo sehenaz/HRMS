@@ -896,6 +896,36 @@
       background: #1d6f42;
     }
 
+    /* Change Password Modal */
+    .cp-field {
+      margin-bottom: 14px;
+    }
+    .cp-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .cp-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .cp-field input:focus {
+      border-color: #3f51b5;
+    }
+    .cp-hint {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: -8px;
+      margin-bottom: 14px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .navbar {
@@ -947,6 +977,7 @@
     </div>
     <div class="nav-actions">
       <span id="superName" style="font-weight:600;font-size:0.9rem;">Admin</span>
+      <button class="btn btn-outline-light" onclick="openChangePasswordModal()"> Change Password</button>
       <a href="index.html" class="btn btn-danger-outline" onclick="logout()">Logout</a>
     </div>
   </nav>
@@ -1182,6 +1213,41 @@
     <img class="modal-img" id="modalImg" alt="Employee Photo" />
   </div>
 
+  <!-- Change Password Modal -->
+  <div id="changePasswordOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:white;border-radius:20px;padding:30px;max-width:420px;width:100%;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="color:#1e293b;font-size:1.1rem;">🔑 Change Password</h3>
+        <button onclick="closeChangePasswordModal()" style="background:#f1f5f9;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;font-weight:700;">✕</button>
+      </div>
+
+      <div class="cp-field">
+        <label>Current Password</label>
+        <input type="password" id="cpCurrentPassword" placeholder="Enter current password" autocomplete="current-password" />
+      </div>
+
+      <div class="cp-field">
+        <label>New Password</label>
+        <input type="password" id="cpNewPassword" placeholder="Enter new password" autocomplete="new-password" />
+      </div>
+      <div class="cp-hint">Use at least 6 characters.</div>
+
+      <div class="cp-field">
+        <label>Confirm New Password</label>
+        <input type="password" id="cpConfirmPassword" placeholder="Re-enter new password" autocomplete="new-password" />
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:6px;">
+        <button onclick="submitChangePassword()" style="flex:1;padding:12px;background:linear-gradient(135deg,#3f51b5,#512da8);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.95rem;">
+          💾 Update Password
+        </button>
+        <button onclick="closeChangePasswordModal()" style="padding:12px 20px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
@@ -1208,6 +1274,76 @@
       t.style.background = bg;
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // ========== CHANGE PASSWORD (SUPER ADMIN) ==========
+    function openChangePasswordModal() {
+      document.getElementById('cpCurrentPassword').value = '';
+      document.getElementById('cpNewPassword').value = '';
+      document.getElementById('cpConfirmPassword').value = '';
+      document.getElementById('changePasswordOverlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordOverlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    async function submitChangePassword() {
+      const currentPassword = document.getElementById('cpCurrentPassword').value.trim();
+      const newPassword     = document.getElementById('cpNewPassword').value.trim();
+      const confirmPassword = document.getElementById('cpConfirmPassword').value.trim();
+
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        showToast('⚠️ Please fill in all fields.', '#f59e0b');
+        return;
+      }
+      if (newPassword.length < 6) {
+        showToast('⚠️ New password must be at least 6 characters.', '#f59e0b');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showToast('⚠️ New password and confirm password do not match.', '#f59e0b');
+        return;
+      }
+      if (newPassword === currentPassword) {
+        showToast('⚠️ New password must be different from current password.', '#f59e0b');
+        return;
+      }
+
+      const superId = session.id || session.super_id || session.admin_id || session.username || session.name;
+
+      try {
+        const res = await fetch(`${SERVER_URL}/api/super-admin/change-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: superId,
+            currentPassword,
+            newPassword
+          })
+        });
+
+        let data = {};
+        try { data = await res.json(); } catch (e) {}
+
+        if (!res.ok) {
+          showToast(data.error || '❌ Failed to change password. Check current password.', '#e53935');
+          return;
+        }
+
+        // Keep local session in sync if it stores the password
+        if (session.password) {
+          session.password = newPassword;
+          localStorage.setItem('mev_superSession', JSON.stringify(session));
+        }
+
+        showToast('✅ Password updated successfully!', '#10b981');
+        closeChangePasswordModal();
+      } catch (e) {
+        showToast('Server error: ' + e.message, '#e53935');
+      }
     }
 
     // ========== TAB SWITCHING ==========
@@ -2107,6 +2243,12 @@
       if (editOverlayEl) {
         editOverlayEl.addEventListener('click', function(e) {
           if (e.target === this) closeEditAdmin();
+        });
+      }
+      const cpOverlayEl = document.getElementById('changePasswordOverlay');
+      if (cpOverlayEl) {
+        cpOverlayEl.addEventListener('click', function(e) {
+          if (e.target === this) closeChangePasswordModal();
         });
       }
     });
