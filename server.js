@@ -1,5 +1,3 @@
-
-
 require('dotenv').config();
 const express  = require('express');
 const cors     = require('cors');
@@ -122,7 +120,33 @@ const adminSchema = new mongoose.Schema({
   employee_id:        String,
   employee_name:      String,
   assigned_employees: [String],   // array of emp_ids under this admin
+  // ✅ FIX: role and permissions were missing from the schema entirely, so
+  // Mongoose silently dropped them on every save/update — the Super Admin
+  // dashboard's Role dropdown (Normal Admin / Recruiter / HR) and the 5
+  // permission checkboxes (attendance, leave, salary, employeeDatabase,
+  // newEmployeeRegistration) always appeared to save but never persisted,
+  // so every admin reverted to default access after a refresh.
+  role: { type: String, enum: ['normal', 'recruiter', 'hr'], default: 'normal' },
+  permissions: {
+    attendance:              { type: Boolean, default: true },
+    leave:                   { type: Boolean, default: false },
+    salary:                  { type: Boolean, default: false },
+    employeeDatabase:        { type: Boolean, default: false },
+    newEmployeeRegistration: { type: Boolean, default: false }
+  },
   created_at:         { type: Date, default: Date.now }
+});
+
+// ── SUPER ADMIN SCHEMA (top-level accounts, was previously hardcoded
+//    only inside SuperAdminLogin.html with no backend persistence at all
+//    — that's why "Change Password" always failed, there was no
+//    /api/super-admin/... route and nowhere in the DB to save a new one) ──
+const superAdminSchema = new mongoose.Schema({
+  super_id:   { type: String, required: true, unique: true },
+  name:       String,
+  password:   { type: String, required: true },
+  phone:      String,
+  created_at: { type: Date, default: Date.now }
 });
 
 const salarySchema = new mongoose.Schema({
@@ -141,6 +165,26 @@ const Leave      = mongoose.model('Leave',      leaveSchema);
 const Admin      = mongoose.model('Admin',      adminSchema);
 const Salary     = mongoose.model('Salary',     salarySchema);
 const Document   = mongoose.model('Document',   documentSchema);
+const SuperAdmin = mongoose.model('SuperAdmin', superAdminSchema);
+
+// One-time seed: if the SuperAdmin collection is empty, create the same
+// 3 accounts that used to be hardcoded in SuperAdminLogin.html, so nothing
+// breaks for existing users on first deploy of this DB-backed version.
+async function seedSuperAdmins() {
+  try {
+    const count = await SuperAdmin.countDocuments();
+    if (count > 0) return;
+    await SuperAdmin.insertMany([
+      { super_id: 'super1', name: 'Samaresh',    password: 'super@20261', phone: '9876543210' },
+      { super_id: 'super2', name: 'Akash Singh', password: 'super@20262', phone: '8765432109' },
+      { super_id: 'super3', name: 'Somnath',     password: 'super@20263', phone: '7654321098' }
+    ]);
+    console.log('✅ Seeded default Super Admin accounts into MongoDB');
+  } catch (err) {
+    console.warn('⚠️  Could not seed Super Admins:', err.message);
+  }
+}
+mongoose.connection.once('open', seedSuperAdmins);
 
 app.use(cors({ origin: '*' }));
 // Each request now carries at most ONE document (via /api/documents) instead
@@ -297,10 +341,14 @@ app.delete('/api/documents/:empId', async (req, res) => {
 ///////////////////////////////
 app.patch('/api/admins/:adminId', async (req, res) => {
   try {
-    const { assigned_employees, permissions } = req.body;
+    const { assigned_employees, role, permissions } = req.body;
+    const update = {};
+    if (assigned_employees !== undefined) update.assigned_employees = assigned_employees;
+    if (role !== undefined) update.role = role;
+    if (permissions !== undefined) update.permissions = permissions;
     const admin = await Admin.findOneAndUpdate(
       { admin_id: req.params.adminId },
-      { $set: { assigned_employees, permissions } },
+      { $set: update },
       { new: true }
     );
     if (!admin) return res.status(404).json({ error: 'Admin not found' });
@@ -486,7 +534,7 @@ app.get('/api/admins', async (req, res) => {
 
 app.post('/api/admins', async (req, res) => {
   try {
-    const { admin_id, password, employee_id, employee_name, assigned_employees } = req.body;
+    const { admin_id, password, employee_id, employee_name, assigned_employees, role, permissions } = req.body;
 
     if (!admin_id || !password || !employee_id) {
       return res.status(400).json({ error: 'admin_id, password and employee_id are required' });
@@ -494,7 +542,17 @@ app.post('/api/admins', async (req, res) => {
 
     const existing = await Admin.findOne({ admin_id });
     if (existing) {
-      return res.status(409).json({ error: 'This Admin ID already exists' });
+      // ✅ FIX: previously a duplicate admin_id was always rejected outright,
+      // even when the Super Admin was just re-saving the same admin with an
+      // updated role/permissions/assigned_employees list from the "Assign
+      // Admin Role" form (which POSTs, it doesn't PATCH). Now we update the
+      // existing admin instead of blocking the request.
+      existing.employee_name = employee_name || existing.employee_name;
+      existing.assigned_employees = assigned_employees || existing.assigned_employees;
+      existing.role = role || existing.role;
+      if (permissions) existing.permissions = permissions;
+      await existing.save();
+      return res.json({ success: true, admin: existing, updated: true });
     }
 
     const admin = new Admin({
@@ -502,7 +560,9 @@ app.post('/api/admins', async (req, res) => {
       password,
       employee_id,
       employee_name: employee_name || '',
-      assigned_employees: assigned_employees || []
+      assigned_employees: assigned_employees || [],
+      role: role || 'normal',
+      permissions: permissions || undefined // let schema defaults apply if not sent
     });
 
     await admin.save();
@@ -526,6 +586,37 @@ app.post('/api/admin-login', async (req, res) => {
     } else {
       res.status(401).json({ success: false, error: 'Invalid Admin ID or Password' });
     }
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ════════════════════════════════════════════════════════
+//  SUPER ADMIN (login + change password)
+// ════════════════════════════════════════════════════════
+
+app.post('/api/super-admin/login', async (req, res) => {
+  try {
+    const { id, password } = req.body;
+    if (!id || !password) return res.status(400).json({ error: 'id and password required' });
+    const sa = await SuperAdmin.findOne({ super_id: id, password });
+    if (!sa) return res.status(401).json({ error: 'Invalid Super Admin ID or Password' });
+    res.json({ success: true, superAdmin: { id: sa.super_id, name: sa.name } });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/super-admin/change-password', async (req, res) => {
+  try {
+    const { id, currentPassword, newPassword } = req.body;
+    if (!id || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'id, currentPassword and newPassword are required' });
+    }
+    const sa = await SuperAdmin.findOne({ super_id: id });
+    if (!sa) return res.status(404).json({ error: 'Super Admin not found' });
+    if (sa.password !== currentPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    sa.password = newPassword;
+    await sa.save();
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

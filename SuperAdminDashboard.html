@@ -1000,6 +1000,16 @@
       <button class="tab-btn" onclick="switchTab('admins')">
         👤 Manage Admins
       </button>
+      <!-- <button class="tab-btn" onclick="switchTab('empdb')">
+        🗂️ Employee Database
+      </button> -->
+
+      <a href="EmployeeHistory.html" class="tab-btn" style="text-decoration:none;color:#2e7d32;background:#e8f5e9;" title="Open new employee registration form">
+        🆕 Employee Database
+      </a>
+      <a href="Registration.html" class="tab-btn" style="text-decoration:none;color:#2e7d32;background:#e8f5e9;" title="Open new employee registration form">
+        🆕 New Employee Registration
+      </a>
       <a href="AdminLogin.html" class="tab-btn admin-login-link" title="Go to Admin Login page">
         🔐 Admin Login
       </a>
@@ -1021,10 +1031,10 @@
           <div class="num orange" id="statHalf">0</div>
           <div class="lbl">Half Day</div>
         </div>
-        <div class="stat-card">
+        <!-- <div class="stat-card">
           <div class="num blue" id="statLive">0</div>
           <div class="lbl">In Progress</div>
-        </div>
+        </div> -->
         <div class="stat-card">
           <div class="num amber" id="statSandwich">0</div>
           <div class="lbl">🥪 Sandwich Leaves</div>
@@ -1033,6 +1043,45 @@
           <div class="num red" id="statAbsent">0</div>
           <div class="lbl">Absent Today</div>
         </div>
+      </div>
+
+      <!-- Monthly Overview Row -->
+      <div class="stats-row" style="margin-top:-8px;">
+        <div class="stat-card">
+          <div class="num green" id="statActiveEmp">0</div>
+          <div class="lbl">✅ Active Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="num red" id="statInactiveEmp">0</div>
+          <div class="lbl">🚫 Inactive Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="num blue" id="statWorkingDaysMonth">0</div>
+          <div class="lbl">📆 Working Days (This Month)</div>
+        </div>
+        <div class="stat-card">
+          <div class="num orange" id="statWorkingHoursMonth">0</div>
+          <div class="lbl">⏱ Working Hours (This Month)</div>
+        </div>
+        <div class="stat-card">
+          <div class="num amber" id="statFullDayMonth">0</div>
+          <div class="lbl">✓ Full Day (This Month)</div>
+        </div>
+        <div class="stat-card">
+          <div class="num orange" id="statHalfDayMonth">0</div>
+          <div class="lbl">½ Half Day (This Month)</div>
+        </div>
+        <div class="stat-card">
+          <div class="num green" id="statSalaryTillYesterday">₹0</div>
+          <div class="lbl">💰 Salary Paid (Till Yesterday)</div>
+        </div>
+      </div>
+
+      <!-- Backend connection banner (shown only if API is unreachable) -->
+      <div id="backendWarning" style="display:none;background:#fee2e2;border-left:5px solid #dc2626;color:#7f1d1d;padding:14px 18px;border-radius:12px;margin-bottom:18px;font-size:13px;line-height:1.5;">
+        ⚠️ <strong>Could not reach the backend server</strong> at <code id="backendWarningUrl"></code>.
+        Records shown below are from local cache only. Make sure your Node/Express + MongoDB server is running
+        and that this page is opened from that server's URL (not from Live Server / a different port).
       </div>
 
       <!-- Sandwich Alert Panel -->
@@ -1148,21 +1197,39 @@
             </div>
           </div>
 
+          <!-- Role -->
+          <div class="form-group" style="grid-column: span 3;">
+            <label>🏷️ Admin Role — sets default permissions (you can still fine-tune below)</label>
+            <select id="adminRoleSelect" onchange="applyRolePreset()" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;">
+              <option value="normal">Normal Admin — Attendance, Leave, Salary, Employee Database</option>
+              <option value="recruiter">Recruiter — Attendance, Leave, Employee Database, New Employee Registration</option>
+              <option value="hr">HR — Full Access (all 5 modules)</option>
+            </select>
+          </div>
+
           <!-- Permissions -->
           <div class="form-group" style="grid-column: span 3;">
             <label>🔐 Permissions — What can this Admin access?</label>
-            <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:8px;">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e8f5e9;padding:10px 18px;border-radius:10px;border:2px solid #a5d6a7;">
+            <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e8f5e9;padding:10px 16px;border-radius:10px;border:2px solid #a5d6a7;">
                 <input type="checkbox" id="permAttendance" checked style="width:18px;height:18px;accent-color:#2e7d32;" />
                 <span style="font-weight:600;color:#2e7d32;">📋 Attendance</span>
               </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e3f2fd;padding:10px 18px;border-radius:10px;border:2px solid #90caf9;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e3f2fd;padding:10px 16px;border-radius:10px;border:2px solid #90caf9;">
                 <input type="checkbox" id="permLeave" style="width:18px;height:18px;accent-color:#1565c0;" />
                 <span style="font-weight:600;color:#1565c0;">📅 Leave</span>
               </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff3e0;padding:10px 18px;border-radius:10px;border:2px solid #ffcc80;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff3e0;padding:10px 16px;border-radius:10px;border:2px solid #ffcc80;">
                 <input type="checkbox" id="permSalary" style="width:18px;height:18px;accent-color:#e65100;" />
                 <span style="font-weight:600;color:#e65100;">💰 Salary</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#ede9fe;padding:10px 16px;border-radius:10px;border:2px solid #c4b5fd;">
+                <input type="checkbox" id="permEmployeeDB" checked style="width:18px;height:18px;accent-color:#6d28d9;" />
+                <span style="font-weight:600;color:#6d28d9;">🗂️ Employee Database</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fce7f3;padding:10px 16px;border-radius:10px;border:2px solid #f9a8d4;">
+                <input type="checkbox" id="permNewReg" style="width:18px;height:18px;accent-color:#be185d;" />
+                <span style="font-weight:600;color:#be185d;">🆕 New Employee Registration</span>
               </label>
             </div>
           </div>
@@ -1203,6 +1270,56 @@
         <div class="admins-grid" id="adminsGrid">
           <div class="empty-state">No admins created yet.</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ========== TAB 3: EMPLOYEE DATABASE ========== -->
+    <div class="tab-content" id="tabEmpDB">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num" id="edbTotal">0</div>
+          <div class="lbl">Total Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="num green" id="edbActive">0</div>
+          <div class="lbl">Active</div>
+        </div>
+        <div class="stat-card">
+          <div class="num red" id="edbInactive">0</div>
+          <div class="lbl">Inactive</div>
+        </div>
+      </div>
+
+      <div class="filters">
+        <input type="text" id="edbSearch" placeholder="🔍 Search by Name, ID, Dept, City..." oninput="renderEmployeeDB()" />
+        <a href="EmployeeRegistration.html" class="filter-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;">
+          ➕ Add New Employee
+        </a>
+        <button class="filter-btn" onclick="renderEmployeeDB()">⟳ Refresh</button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h3>Employee Records</h3>
+          <span class="record-count" id="edbRecordCount">— records</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>City</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Joining Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="edbTableBody">
+            <tr><td colspan="8" style="text-align:center;padding:40px;color:#aaa;">Loading employees...</td></tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1253,7 +1370,15 @@
 
   <script>
     //////////////////////////////////
-    const SERVER_URL = '';
+    // If this page is opened from your backend (server.js on port 3000),
+    // relative '/api/...' calls work as-is (SERVER_URL stays '').
+    // If opened from anywhere else (e.g. Live Server on 5501, or a
+    // different port), API calls are auto-pointed at localhost:3000
+    // so the dashboard still works during quick UI testing.
+    const BACKEND_PORT = '4000';
+    const SERVER_URL = (location.port && location.port !== BACKEND_PORT)
+      ? `${location.protocol}//${location.hostname}:${BACKEND_PORT}`
+      : '';
 
     // ========== AUTH CHECK ==========
     const session = JSON.parse(localStorage.getItem('mev_superSession'));
@@ -1274,6 +1399,33 @@
       t.style.background = bg;
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    // Fetch with a hard timeout so the UI never gets stuck on "Loading..."
+    // if the backend is unreachable (wrong port / server not running / CORS).
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        clearTimeout(timer);
+        return res;
+      } catch (e) {
+        clearTimeout(timer);
+        throw e;
+      }
+    }
+
+    function showBackendWarning(show) {
+      const el = document.getElementById('backendWarning');
+      if (!el) return;
+      if (show) {
+        const base = SERVER_URL || window.location.origin;
+        document.getElementById('backendWarningUrl').textContent = base + '/api/...';
+        el.style.display = 'block';
+      } else {
+        el.style.display = 'none';
+      }
     }
 
     // ========== CHANGE PASSWORD (SUPER ADMIN) ==========
@@ -1354,10 +1506,14 @@
       if (tab === 'attendance') {
         document.getElementById('tabAttendance').classList.add('active');
         document.querySelector('.tab-btn:first-child').classList.add('active');
-      } else {
+      } else if (tab === 'admins') {
         document.getElementById('tabAdmins').classList.add('active');
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         loadAdminsTab();
+      } else if (tab === 'empdb') {
+        document.getElementById('tabEmpDB').classList.add('active');
+        document.querySelectorAll('.tab-btn')[2].classList.add('active');
+        renderEmployeeDB();
       }
     }
 
@@ -1392,7 +1548,7 @@
 
     async function getAllRecords() {
       try {
-        const response = await fetch('/api/attendance');
+        const response = await fetchWithTimeout('/api/attendance');
         if (response.ok) {
           const serverData = await response.json();
           const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
@@ -1401,10 +1557,13 @@
             const exists = merged.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
             if (!exists) merged.push(lr);
           });
+          showBackendWarning(false);
           return merged;
         }
+        showBackendWarning(true);
       } catch (e) {
         console.warn('Server offline:', e.message);
+        showBackendWarning(true);
       }
       return JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
     }
@@ -1514,6 +1673,101 @@
       </tr>`;
     }
 
+    // ========== MONTHLY OVERVIEW HELPERS ==========
+    function parseHoursToNumber(val) {
+      if (!val) return 0;
+      if (typeof val === 'number') return val;
+      const s = String(val).trim();
+      if (/^\d+(\.\d+)?$/.test(s)) return parseFloat(s);
+      const hm = s.match(/(\d+)\s*[:h]\s*(\d+)?/i);
+      if (hm) {
+        const h = parseInt(hm[1]) || 0;
+        const m = parseInt(hm[2]) || 0;
+        return h + m / 60;
+      }
+      return parseFloat(s) || 0;
+    }
+
+    function getWorkingDaysInMonth(year, month) {
+      // Excludes Sunday only (matches existing sandwich-leave weekend logic)
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      let count = 0;
+      for (let d = 1; d <= daysInMonth; d++) {
+        if (new Date(year, month, d).getDay() !== 0) count++;
+      }
+      return count;
+    }
+
+    function getWorkingDaysInMonthTillToday() {
+      const today = new Date();
+      const year = today.getFullYear(), month = today.getMonth(), day = today.getDate();
+      let count = 0;
+      for (let d = 1; d <= day; d++) {
+        if (new Date(year, month, d).getDay() !== 0) count++;
+      }
+      return count;
+    }
+
+    function updateMonthlyOverview(allRecords) {
+      const records = allRecords || [];
+      const today = new Date();
+      const year = today.getFullYear(), month = today.getMonth();
+      const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
+      // Filter this month's records
+      const monthRecords = records.filter(r => {
+        const iso = parseDate(r.date);
+        return iso && iso.startsWith(monthPrefix);
+      });
+
+      // Full/Half day counts this month
+      const fullDayMonth = monthRecords.filter(r => r.attendance_type === 'Full Day').length;
+      const halfDayMonth = monthRecords.filter(r => (r.attendance_type || '').includes('Half')).length;
+
+      // Working hours this month
+      const totalHours = monthRecords.reduce((sum, r) => sum + parseHoursToNumber(r.work_hours), 0);
+
+      document.getElementById('statWorkingDaysMonth').textContent = getWorkingDaysInMonthTillToday();
+      document.getElementById('statWorkingHoursMonth').textContent = totalHours.toFixed(1) + 'h';
+      document.getElementById('statFullDayMonth').textContent = fullDayMonth;
+      document.getElementById('statHalfDayMonth').textContent = halfDayMonth;
+
+      // Active / Inactive employees
+      const activeCount = allEmployeesData.filter(e => (e.status || 'active').toLowerCase() === 'active').length;
+      const inactiveCount = allEmployeesData.filter(e => (e.status || '').toLowerCase() === 'inactive').length;
+      document.getElementById('statActiveEmp').textContent = activeCount;
+      document.getElementById('statInactiveEmp').textContent = inactiveCount;
+
+      // Salary till yesterday
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const totalWorkingDaysMonth = getWorkingDaysInMonth(year, month);
+
+      const byEmp = {};
+      monthRecords.forEach(r => {
+        const iso = parseDate(r.date);
+        if (!iso) return;
+        const recDate = new Date(iso + 'T00:00:00');
+        if (recDate > yesterday) return;
+        const key = r.emp_id || r.emp_name;
+        if (!byEmp[key]) byEmp[key] = { full: 0, half: 0 };
+        if (r.attendance_type === 'Full Day') byEmp[key].full++;
+        else if ((r.attendance_type || '').includes('Half')) byEmp[key].half++;
+      });
+
+      let totalSalary = 0;
+      allEmployeesData.forEach(emp => {
+        const salary = parseFloat(emp.salary) || 0;
+        if (!salary || totalWorkingDaysMonth === 0) return;
+        const dailyRate = salary / totalWorkingDaysMonth;
+        const rec = byEmp[emp.emp_id] || { full: 0, half: 0 };
+        totalSalary += dailyRate * (rec.full + rec.half * 0.5);
+      });
+
+      document.getElementById('statSalaryTillYesterday').textContent =
+        '₹' + totalSalary.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    }
+
     async function renderRecords() {
       const all = await getAllRecords();
       lastAllData = all;
@@ -1563,7 +1817,6 @@
       document.getElementById('statTotal').textContent = all.length;
       document.getElementById('statFull').textContent = all.filter(r => r.attendance_type === 'Full Day').length;
       document.getElementById('statHalf').textContent = all.filter(r => (r.attendance_type || '').includes('Half')).length;
-      document.getElementById('statLive').textContent = all.filter(r => !r.clock_out || r.attendance_type === 'In Progress').length;
       document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
 
       const tbody = document.getElementById('tableBody');
@@ -1572,6 +1825,8 @@
       } else {
         tbody.innerHTML = filtered.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
       }
+
+      updateMonthlyOverview(all);
     }
 
     function clearFilters() {
@@ -1637,6 +1892,30 @@
     let selectedEmployeeIds = new Set();
     let allEmployeesCache = [];
 
+    // Role → default permission presets, matching the requested access matrix:
+    // Normal Admin: Attendance, Leave, Salary, Employee DB
+    // Recruiter:    Attendance, Leave, Employee DB, New Registration
+    // HR:           all 5
+    const ROLE_PRESETS = {
+      normal:    { attendance: true, leave: true,  salary: true,  employeeDatabase: true,  newEmployeeRegistration: false },
+      recruiter: { attendance: true, leave: true,  salary: false, employeeDatabase: true,  newEmployeeRegistration: true  },
+      hr:        { attendance: true, leave: true,  salary: true,  employeeDatabase: true,  newEmployeeRegistration: true  }
+    };
+
+    function applyRolePreset() {
+      const role = document.getElementById('adminRoleSelect').value;
+      const preset = ROLE_PRESETS[role] || ROLE_PRESETS.normal;
+      document.getElementById('permAttendance').checked = preset.attendance;
+      document.getElementById('permLeave').checked = preset.leave;
+      document.getElementById('permSalary').checked = preset.salary;
+      document.getElementById('permEmployeeDB').checked = preset.employeeDatabase;
+      document.getElementById('permNewReg').checked = preset.newEmployeeRegistration;
+    }
+
+    function roleLabel(role) {
+      return { normal: 'Normal Admin', recruiter: 'Recruiter', hr: 'HR' }[role] || 'Normal Admin';
+    }
+
     function getEmployeeDB() {
       try {
         return JSON.parse(localStorage.getItem('mev_employeeDB') || '{}');
@@ -1655,15 +1934,17 @@
 
     async function syncAdminsFromServer() {
       try {
-        const resp = await fetch(`${SERVER_URL}/api/admins`);
-        if (!resp.ok) return;
+        const resp = await fetchWithTimeout(`${SERVER_URL}/api/admins`);
+        if (!resp.ok) return getAdmins();
         const serverList = await resp.json();
         const localList = getAdmins();
         const merged = [...serverList.map(a => ({
           id: a.admin_id || a.id,
           password: a.password,
           employeeName: a.employee_name || a.employeeName || 'Admin',
-          assignedEmpIds: a.assigned_employees || a.assignedEmpIds || []
+          assignedEmpIds: a.assigned_employees || a.assignedEmpIds || [],
+          role: a.role || 'normal',
+          permissions: a.permissions
         }))];
         localList.forEach(la => {
           if (!merged.find(sa => sa.id === la.id)) merged.push(la);
@@ -1686,7 +1967,9 @@
             password: adm.password,
             employee_id: (adm.assignedEmpIds || [])[0] || 'unknown',
             employee_name: adm.employeeName || 'Admin',
-            assigned_employees: adm.assignedEmpIds || []
+            assigned_employees: adm.assignedEmpIds || [],
+            role: adm.role || 'normal',
+            permissions: adm.permissions
           })
         });
         console.log('✅ Admin saved to MongoDB');
@@ -1796,7 +2079,8 @@
 
     async function populateEmpDropdown() {
       try {
-        const res = await fetch(`${SERVER_URL}/api/employees`);
+        const res = await fetchWithTimeout(`${SERVER_URL}/api/employees`);
+        if (!res.ok) throw new Error('Employees API not reachable');
         allEmployeesData = await res.json();
         const sel = document.getElementById('adminEmpDropdown');
         sel.innerHTML = '<option value="">-- Select Employee --</option>';
@@ -1806,8 +2090,12 @@
           opt.textContent = `${emp.employee_name || emp.emp_id} (${emp.emp_id})`;
           sel.appendChild(opt);
         });
+        showBackendWarning(false);
+        updateMonthlyOverview(lastAllData);
+        renderEmployeeDB();
       } catch (e) {
         console.warn('Could not load employees:', e);
+        showBackendWarning(true);
       }
     }
 
@@ -1844,10 +2132,14 @@
         return;
       }
 
+      const role = document.getElementById('adminRoleSelect').value;
+
       const permissions = {
         attendance: document.getElementById('permAttendance').checked,
         leave:      document.getElementById('permLeave').checked,
         salary:     document.getElementById('permSalary').checked,
+        employeeDatabase: document.getElementById('permEmployeeDB').checked,
+        newEmployeeRegistration: document.getElementById('permNewReg').checked,
       };
 
       const assignedEmpIds = Array.from(selectedEmployeeIds);
@@ -1865,6 +2157,7 @@
             employee_id:        adminId,
             employee_name:      adminName,
             assigned_employees: assignedEmpIds,
+            role:               role,
             permissions:        permissions
           })
         });
@@ -1876,14 +2169,13 @@
           return;
         }
 
-        showToast(`✅ "${adminName}" is now an Admin with ${assignedEmpIds.length} employee(s)!`, '#10b981');
+        showToast(`✅ "${adminName}" is now ${roleLabel(role)} with ${assignedEmpIds.length} employee(s)!`, '#10b981');
 
         // Clear form
         document.getElementById('adminEmpDropdown').value = '';
         document.getElementById('selectedEmpInfo').style.display = 'none';
-        document.getElementById('permAttendance').checked = true;
-        document.getElementById('permLeave').checked = false;
-        document.getElementById('permSalary').checked = false;
+        document.getElementById('adminRoleSelect').value = 'normal';
+        applyRolePreset();
         selectedEmployeeIds.clear();
         updateSelectedDisplay();
         renderEmployeePicker();
@@ -1950,11 +2242,13 @@
           : '<span class="emp-tag-empty">No employees assigned</span>';
 
         // Permissions
-        const perms = admin.permissions || { attendance: true, leave: false, salary: false };
+        const perms = admin.permissions || { attendance: true, leave: false, salary: false, employeeDatabase: false, newEmployeeRegistration: false };
         const permBadges = [
           perms.attendance ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">📋 Attendance</span>' : '',
           perms.leave      ? '<span style="background:#e3f2fd;color:#1565c0;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">📅 Leave</span>' : '',
           perms.salary     ? '<span style="background:#fff3e0;color:#e65100;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">💰 Salary</span>' : '',
+          perms.employeeDatabase ? '<span style="background:#ede9fe;color:#6d28d9;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">🗂️ Employee DB</span>' : '',
+          perms.newEmployeeRegistration ? '<span style="background:#fce7f3;color:#be185d;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">🆕 New Registration</span>' : '',
         ].filter(Boolean).join(' ');
 
         // Admin profile info
@@ -1964,13 +2258,16 @@
         const phone    = adminEmp?.phone_number || '—';
         const loginId  = admin.admin_id || admin.id;
         const loginPw  = admin.password || adminEmp?.password || 'MEVRICK1707';
+        const roleTag  = roleLabel(admin.role || 'normal');
 
         return `
           <div class="admin-card" onclick="toggleAdminProfile('${loginId}')" style="cursor:pointer;">
             <div class="admin-card-header">
               <div class="admin-avatar">${initials}</div>
               <div class="admin-info">
-                <h4>${admin.employee_name || admin.employeeName || '—'}</h4>
+                <h4>${admin.employee_name || admin.employeeName || '—'}
+                  <span style="font-size:0.68rem;background:#eef2ff;color:#3f51b5;padding:2px 8px;border-radius:999px;font-weight:700;margin-left:6px;">${roleTag}</span>
+                </h4>
                 <div class="admin-id">${dept} · ${city}</div>
               </div>
               <span style="margin-left:auto;font-size:1.2rem;">▼</span>
@@ -2082,13 +2379,118 @@
               <div style="font-weight:600;">${emp.joining_date || '—'}</div>
             </div>
           </div>
-          <button onclick="document.getElementById('empProfileModal').remove()"
-            style="width:100%;margin-top:20px;padding:12px;background:linear-gradient(135deg,#3f51b5,#673ab7);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
-            Close
-          </button>
+          <div style="display:flex;gap:8px;margin-top:16px;">
+            <button onclick="document.getElementById('empProfileModal').remove(); viewEmployeeHistory('${emp.emp_id}')"
+              style="flex:1;padding:11px;background:#eef2ff;color:#3f51b5;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+              🕘 View Attendance History
+            </button>
+            <button onclick="document.getElementById('empProfileModal').remove()"
+              style="flex:1;padding:11px;background:linear-gradient(135deg,#3f51b5,#673ab7);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+              Close
+            </button>
+          </div>
         </div>
       `;
       modal.style.display = 'flex';
+    }
+
+    // Jump to Attendance tab, filtered to this one employee's full history
+    function viewEmployeeHistory(empId) {
+      switchTab('attendance');
+      document.getElementById('searchFilter').value = empId;
+      document.getElementById('dateFilter').value = '';
+      document.getElementById('typeFilter').value = '';
+      renderRecords();
+    }
+
+    // ========== EMPLOYEE DATABASE TAB ==========
+    async function fetchEmployeesFresh() {
+      try {
+        const res = await fetchWithTimeout(`${SERVER_URL}/api/employees`);
+        if (!res.ok) throw new Error('not ok');
+        allEmployeesData = await res.json();
+        showBackendWarning(false);
+      } catch (e) {
+        showBackendWarning(true);
+        // fall back to whatever we already have cached in memory / localStorage
+        if (!allEmployeesData.length) {
+          const db = getEmployeeDB();
+          allEmployeesData = Object.values(db).map(e => ({
+            emp_id: e.id, employee_name: e.name, dept: e.dept, city: e.city, salary: e.salary
+          }));
+        }
+      }
+      return allEmployeesData;
+    }
+
+    async function renderEmployeeDB() {
+      const tbody = document.getElementById('edbTableBody');
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#aaa;">Loading employees...</td></tr>`;
+
+      const employees = await fetchEmployeesFresh();
+      const search = (document.getElementById('edbSearch')?.value || '').toLowerCase();
+
+      let filtered = employees;
+      if (search) {
+        filtered = employees.filter(e => [e.employee_name, e.emp_id, e.dept, e.city, e.employee_email]
+          .some(v => (v || '').toLowerCase().includes(search)));
+      }
+
+      document.getElementById('edbTotal').textContent = employees.length;
+      document.getElementById('edbActive').textContent = employees.filter(e => (e.status || 'active').toLowerCase() === 'active').length;
+      document.getElementById('edbInactive').textContent = employees.filter(e => (e.status || '').toLowerCase() === 'inactive').length;
+      document.getElementById('edbRecordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
+
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="empty-row">${employees.length ? 'No employees match your search.' : 'No employees registered yet. Click "Add New Employee" to get started.'}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(e => `
+        <tr>
+          <td>
+            <div class="emp-name">${e.employee_name || '—'}</div>
+            <div class="emp-id">${e.emp_id || ''}</div>
+          </td>
+          <td>${e.dept || e.designation || '—'}</td>
+          <td>${e.city || e.work_location || '—'}</td>
+          <td>${e.employee_email || '—'}</td>
+          <td>${e.phone_number || '—'}</td>
+          <td>${e.joining_date || '—'}</td>
+          <td>${(e.status || 'Active').toLowerCase() === 'inactive'
+              ? '<span class="status-badge badge-absent">Inactive</span>'
+              : '<span class="status-badge badge-fullday">Active</span>'}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn-edit" onclick="viewEmployeeHistory('${e.emp_id}')" title="View full attendance history">🕘 History</button>
+              <button class="btn-delete" onclick="deleteEmployee('${e.emp_id}')" title="Remove employee">🗑️ Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function deleteEmployee(empId) {
+      if (!confirm(`Remove employee "${empId}" from the database? This cannot be undone.`)) return;
+      try {
+        await fetch(`${SERVER_URL}/api/employees/${encodeURIComponent(empId)}`, { method: 'DELETE' });
+      } catch (e) {
+        console.warn('Server delete failed (offline?):', e.message);
+      }
+      // Clean local caches too
+      const credDB = getEmployeeDB();
+      delete credDB[empId];
+      localStorage.setItem('mev_employeeDB', JSON.stringify(credDB));
+      try {
+        const LS_DB = 'mevtencia_employeeDatabase';
+        const fullDB = JSON.parse(localStorage.getItem(LS_DB) || '{}');
+        delete fullDB[empId];
+        localStorage.setItem(LS_DB, JSON.stringify(fullDB));
+      } catch (e) {}
+
+      allEmployeesData = allEmployeesData.filter(e => e.emp_id !== empId);
+      showToast(`🗑️ Employee "${empId}" removed.`, '#64748b');
+      renderEmployeeDB();
     }
 
     // ── INIT ──────────────────────────────────────────────
@@ -2110,10 +2512,14 @@
         document.getElementById('editAdminTitle').textContent =
           admin.employee_name || admin.employeeName || adminId;
 
-        const perms = admin.permissions || { attendance: true, leave: false, salary: false };
+        document.getElementById('editAdminRoleSelect').value = admin.role || 'normal';
+
+        const perms = admin.permissions || { attendance: true, leave: false, salary: false, employeeDatabase: false, newEmployeeRegistration: false };
         document.getElementById('editPermAttendance').checked = !!perms.attendance;
         document.getElementById('editPermLeave').checked      = !!perms.leave;
         document.getElementById('editPermSalary').checked     = !!perms.salary;
+        document.getElementById('editPermEmployeeDB').checked = !!perms.employeeDatabase;
+        document.getElementById('editPermNewReg').checked     = !!perms.newEmployeeRegistration;
 
         const assigned = admin.assigned_employees || admin.assignedEmpIds || [];
         editSelectedIds = new Set(assigned);
@@ -2134,6 +2540,16 @@
       editingAdminId = null;
       editSelectedIds = new Set();
       document.getElementById('editEmpSearch').value = '';
+    }
+
+    function applyEditRolePreset() {
+      const role = document.getElementById('editAdminRoleSelect').value;
+      const preset = ROLE_PRESETS[role] || ROLE_PRESETS.normal;
+      document.getElementById('editPermAttendance').checked = preset.attendance;
+      document.getElementById('editPermLeave').checked = preset.leave;
+      document.getElementById('editPermSalary').checked = preset.salary;
+      document.getElementById('editPermEmployeeDB').checked = preset.employeeDatabase;
+      document.getElementById('editPermNewReg').checked = preset.newEmployeeRegistration;
     }
 
     function renderEditPicker() {
@@ -2190,10 +2606,14 @@
       const assigned = Array.from(editSelectedIds);
       if (!assigned.length) { showToast('⚠️ Select at least one employee.', '#f59e0b'); return; }
 
+      const role = document.getElementById('editAdminRoleSelect').value;
+
       const permissions = {
         attendance: document.getElementById('editPermAttendance').checked,
         leave:      document.getElementById('editPermLeave').checked,
         salary:     document.getElementById('editPermSalary').checked,
+        employeeDatabase: document.getElementById('editPermEmployeeDB').checked,
+        newEmployeeRegistration: document.getElementById('editPermNewReg').checked,
       };
 
       try {
@@ -2201,7 +2621,7 @@
         let res = await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(editingAdminId)}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ assigned_employees: assigned, permissions })
+          body: JSON.stringify({ assigned_employees: assigned, role, permissions })
         });
 
         if (!res.ok) {
@@ -2219,6 +2639,7 @@
                 employee_id:        admin.employee_id,
                 employee_name:      admin.employee_name || admin.employeeName,
                 assigned_employees: assigned,
+                role,
                 permissions
               })
             });
@@ -2266,6 +2687,16 @@
       <button onclick="closeEditAdmin()" style="background:#f1f5f9;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;font-weight:700;">✕</button>
     </div>
 
+    <!-- Role -->
+    <div style="margin-bottom:16px;">
+      <div style="font-weight:700;font-size:0.9rem;color:#475569;margin-bottom:8px;">🏷️ Admin Role</div>
+      <select id="editAdminRoleSelect" onchange="applyEditRolePreset()" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;">
+        <option value="normal">Normal Admin — Attendance, Leave, Salary, Employee Database</option>
+        <option value="recruiter">Recruiter — Attendance, Leave, Employee Database, New Registration</option>
+        <option value="hr">HR — Full Access (all 5 modules)</option>
+      </select>
+    </div>
+
     <!-- Permissions -->
     <div style="margin-bottom:20px;">
       <div style="font-weight:700;font-size:0.9rem;color:#475569;margin-bottom:10px;">🔐 Permissions</div>
@@ -2281,6 +2712,14 @@
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff3e0;padding:9px 16px;border-radius:10px;border:2px solid #ffcc80;">
           <input type="checkbox" id="editPermSalary" style="width:16px;height:16px;accent-color:#e65100;" />
           <span style="font-weight:600;color:#e65100;font-size:0.85rem;">💰 Salary</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#ede9fe;padding:9px 16px;border-radius:10px;border:2px solid #c4b5fd;">
+          <input type="checkbox" id="editPermEmployeeDB" style="width:16px;height:16px;accent-color:#6d28d9;" />
+          <span style="font-weight:600;color:#6d28d9;font-size:0.85rem;">🗂️ Employee DB</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fce7f3;padding:9px 16px;border-radius:10px;border:2px solid #f9a8d4;">
+          <input type="checkbox" id="editPermNewReg" style="width:16px;height:16px;accent-color:#be185d;" />
+          <span style="font-weight:600;color:#be185d;font-size:0.85rem;">🆕 New Registration</span>
         </label>
       </div>
     </div>

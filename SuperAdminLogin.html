@@ -186,6 +186,11 @@
       transform: scale(0.99);
     }
 
+    .login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
     .msg {
       margin-top: 14px;
       padding: 12px 15px;
@@ -278,7 +283,7 @@
           </div>
         </div>
 
-        <button class="login-btn" onclick="doSuperLogin()">🛡️ Super Access</button>
+        <button class="login-btn" id="loginBtn" onclick="doSuperLogin()">🛡️ Super Access</button>
         <div class="msg error" id="msgErr"></div>
         <div class="msg success" id="msgOk"></div>
       </div>
@@ -288,10 +293,15 @@
   <footer>© 2026 MEVTENCIA · Super Admin Panel</footer>
 
   <script>
-    const SUPER_ADMINS = [
-      { id: 'admin@super', name: 'Samaresh ', password: 'super@20261', phone: '9876543210' },
-      { id: 'admin@super', name: 'Akash Singh', password: 'super@20262', phone: '8765432109' },
-      { id: 'admin@super', name: 'Somnath', password: 'super@20263', phone: '7654321098' }
+    // Kept as an OFFLINE FALLBACK only — if the backend (MongoDB-backed
+    // /api/super-admin/login) can't be reached, login still works using
+    // these fixed credentials. Once the backend responds, it is always
+    // used as the source of truth (so password changes via "Change
+    // Password" on the dashboard actually take effect).
+    const SUPER_ADMINS_FALLBACK = [
+      { id: 'super1', name: 'Samaresh ', password: 'super@20261', phone: '9876543210' },
+      { id: 'super2', name: 'Akash Singh', password: 'super@20262', phone: '8765432109' },
+      { id: 'super3', name: 'Somnath', password: 'super@20263', phone: '7654321098' }
     ];
 
     function showMsg(id, msg) {
@@ -299,19 +309,57 @@
     }
     function hideMsg(id) { const el = document.getElementById(id); el.classList.remove('show'); el.textContent = ''; }
 
-    function doSuperLogin() {
+    function grantAccess(id, name) {
+      localStorage.setItem('mev_superSession', JSON.stringify({ type: 'super', id, name, loginAt: new Date().toISOString() }));
+      showMsg('msgOk', '✅ Access Granted! Redirecting...');
+      setTimeout(() => window.location.href = 'SuperAdminDashboard.html', 800);
+    }
+
+    async function doSuperLogin() {
       hideMsg('msgErr'); hideMsg('msgOk');
       const id = document.getElementById('superId').value.trim();
       const pw = document.getElementById('password').value;
 
-      const admin = SUPER_ADMINS.find(a => a.id === id && a.password === pw);
-
       if (!id || !pw) { showMsg('msgErr', '⚠️ Please fill in all fields.'); return; }
-      if (!admin) { showMsg('msgErr', '❌ Invalid Super Admin ID or Password.'); return; }
 
-      localStorage.setItem('mev_superSession', JSON.stringify({ type: 'super', id: admin.id, name: admin.name, loginAt: new Date().toISOString() }));
-      showMsg('msgOk', '✅ Access Granted! Redirecting...');
-      setTimeout(() => window.location.href = 'SuperAdminDashboard.html', 800);
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      const originalLabel = btn.textContent;
+      btn.textContent = '⏳ Checking...';
+
+      // Try the server first (this is the source of truth, and the only
+      // place a changed password actually lives).
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 6000);
+        const res = await fetch('/api/super-admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, password: pw }),
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+
+        if (res.ok) {
+          const data = await res.json();
+          grantAccess(data.superAdmin.id, data.superAdmin.name);
+          return;
+        }
+        if (res.status === 401) {
+          btn.disabled = false; btn.textContent = originalLabel;
+          showMsg('msgErr', '❌ Invalid Super Admin ID or Password.');
+          return;
+        }
+        // Any other server error (e.g. DB down) -> fall through to offline fallback
+      } catch (e) {
+        // Network error / timeout -> fall through to offline fallback
+      }
+
+      // Offline fallback so Super Admin can still get in if the backend is down.
+      const admin = SUPER_ADMINS_FALLBACK.find(a => a.id === id && a.password === pw);
+      btn.disabled = false; btn.textContent = originalLabel;
+      if (!admin) { showMsg('msgErr', '❌ Invalid Super Admin ID or Password.'); return; }
+      grantAccess(admin.id, admin.name);
     }
 
     document.addEventListener('keypress', e => { if (e.key === 'Enter') doSuperLogin(); });
