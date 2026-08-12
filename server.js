@@ -166,7 +166,38 @@ const Admin      = mongoose.model('Admin',      adminSchema);
 const Salary     = mongoose.model('Salary',     salarySchema);
 const Document   = mongoose.model('Document',   documentSchema);
 const SuperAdmin = mongoose.model('SuperAdmin', superAdminSchema);
+///////////////////////////////////
 
+// ════════════════════════════════════════════════════════
+//  PERMISSION MIDDLEWARE
+// ════════════════════════════════════════════════════════
+function requirePermission(permKey) {
+  return async (req, res, next) => {
+    try {
+      if (req.headers['x-super-admin'] === 'true') return next();
+
+      const adminId = req.headers['x-admin-id'];
+      if (!adminId) {
+        return res.status(401).json({ error: 'Missing admin identity (x-admin-id header)' });
+      }
+
+      const admin = await Admin.findOne({ admin_id: adminId });
+      if (!admin) {
+        return res.status(404).json({ error: 'Admin not found' });
+      }
+
+      if (!admin.permissions || !admin.permissions[permKey]) {
+        return res.status(403).json({ error: `You don't have permission for "${permKey}"` });
+      }
+
+      req.currentAdmin = admin;
+      next();
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+}
+/////////////////////////////////
 // One-time seed: if the SuperAdmin collection is empty, create the same
 // 3 accounts that used to be hardcoded in SuperAdminLogin.html, so nothing
 // breaks for existing users on first deploy of this DB-backed version.
@@ -255,7 +286,8 @@ app.post('/api/employees', upload.any(), async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/register', upload.any(), async (req, res) => {
+// app.post('/api/register', upload.any(), async (req, res) => {
+app.post('/api/register', requirePermission('newEmployeeRegistration'), upload.any(), async (req, res) => {
   try {
     const emp = req.body;
     const empId = emp.emp_id || emp.employeeId;
@@ -356,7 +388,8 @@ app.patch('/api/admins/:adminId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 //////////////////////////////
-app.delete('/api/employees/:empId', async (req, res) => {
+// app.delete('/api/employees/:empId', async (req, res) => {
+  app.delete('/api/employees/:empId', requirePermission('employeeDatabase'), async (req, res) => {
   try {
     await Employee.deleteOne({ emp_id: decodeURIComponent(req.params.empId) });
     res.json({ success: true });
@@ -425,7 +458,8 @@ app.get('/api/leaves', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/leaves', async (req, res) => {
+// app.post('/api/leaves', async (req, res) => {
+  app.post('/api/leaves', requirePermission('leave'), async (req, res) => {
   try {
     const { key, data } = req.body;
     if (!key) return res.status(400).json({ error: 'key required' });
@@ -442,7 +476,9 @@ app.post('/api/leaves', async (req, res) => {
 //  SALARIES
 // ════════════════════════════════════════════════════════
 
-app.get('/api/salary', async (req, res) => {
+// app.get('/api/salary', async (req, res) => {
+
+  app.get('/api/salary', requirePermission('salary'), async (req, res) => {
   try {
     const { emp_id } = req.query;
     const filter = emp_id ? { emp_id } : {};
@@ -451,7 +487,8 @@ app.get('/api/salary', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/salary', async (req, res) => {
+// app.post('/api/salary', async (req, res) => {
+  app.post('/api/salary', requirePermission('salary'), async (req, res) => {
   try {
     const { emp_id, date, amount, note, empName, addedBy } = req.body;
     if (!emp_id || !date || !amount) {
@@ -472,7 +509,8 @@ app.post('/api/salary', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/salary/:id', async (req, res) => {
+// app.delete('/api/salary/:id', async (req, res) => {
+  app.delete('/api/salary/:id', requirePermission('salary'), async (req, res) => {
   try {
     const result = await Salary.findByIdAndDelete(req.params.id);
     if (!result) return res.status(404).json({ error: 'Salary entry not found' });
@@ -554,6 +592,8 @@ app.post('/api/admins', async (req, res) => {
       await existing.save();
       return res.json({ success: true, admin: existing, updated: true });
     }
+
+
 
     const admin = new Admin({
       admin_id,

@@ -1548,7 +1548,8 @@
 
     async function getAllRecords() {
       try {
-        const response = await fetchWithTimeout('/api/attendance');
+        const response = await fetchWithTimeout('/api/attendance', 
+        {}, 60000);
         if (response.ok) {
           const serverData = await response.json();
           const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');

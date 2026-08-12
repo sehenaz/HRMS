@@ -166,12 +166,14 @@
     let allData = [];
 
     window.onload = function() {
-      if (!localStorage.getItem('mev_adminSession')) {
-        window.location.href = 'AdminLogin.html';
-        return;
-      }
-      loadData();
-    };
+  const hasAdminSession = localStorage.getItem('mev_adminSession');
+  const hasSuperSession = localStorage.getItem('mev_superSession');
+  if (!hasAdminSession && !hasSuperSession) {
+    window.location.href = 'AdminLogin.html';
+    return;
+  }
+  loadData();
+};
 
     // ─────────────────────────────────────────────────────────────────────
     // localStorage / backend se aane wale employee object ko ek consistent
