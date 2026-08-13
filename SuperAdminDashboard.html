@@ -407,6 +407,69 @@
       font-weight: 900;
     }
 
+    /* View Toggle (Daily / Employee) */
+    .view-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      background: white;
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      width: fit-content;
+    }
+
+    .vt-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #888;
+      transition: all 0.2s;
+    }
+
+    .vt-btn.active {
+      background: #3f51b5;
+      color: white;
+      box-shadow: 0 2px 8px rgba(63,81,181,0.3);
+    }
+
+    /* Daily / Employee group cards */
+    .daily-group {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+    }
+
+    .daily-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .daily-date-label {
+      font-size: 15px;
+      font-weight: 700;
+      color: #3f51b5;
+    }
+
+    .daily-count-badge {
+      background: #e8eef5;
+      color: #3f51b5;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
     /* Table */
     .table-container {
       background: white;
@@ -1098,6 +1161,13 @@
         <div class="sandwich-list" id="sandwichList"></div>
       </div>
 
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button class="vt-btn active" id="btnViewAll"      onclick="setView('all')">📋 All Records</button>
+        <button class="vt-btn"        id="btnViewDaily"    onclick="setView('daily')">📅 Daily View</button>
+        <button class="vt-btn"        id="btnViewEmployee" onclick="setView('employee')">👤 By Employee</button>
+      </div>
+
       <!-- Filters -->
       <div class="filters">
         <input type="text" id="searchFilter" placeholder="🔍 Search by Name, ID, City, Dept..." oninput="renderRecords()" />
@@ -1116,10 +1186,10 @@
         </button>
       </div>
 
-      <!-- Table -->
-      <div class="table-container">
+      <!-- Table (All Records view) -->
+      <div class="table-container" id="tableContainer">
         <div class="table-header">
-          <h3>Attendance Records</h3>
+          <h3 id="tableTitle">Attendance Records</h3>
           <span class="record-count" id="recordCount">— records</span>
         </div>
         <table>
@@ -1141,6 +1211,9 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Daily / Employee grouped container -->
+      <div id="dailyContainer"></div>
 
       <!-- Mobile Cards -->
       <div class="mobile-list" id="mobileList"></div>
@@ -1520,6 +1593,7 @@
     // ========== ATTENDANCE FUNCTIONS ==========
     let lastFilteredData = [];
     let lastAllData = [];
+    let currentView = 'all';   // 'all' | 'daily' | 'employee'
 
     function parseDate(dateStr) {
       if (!dateStr) return '';
@@ -1544,6 +1618,16 @@
       if (type === 'On Leave') return '<span class="status-badge badge-leave">📅 On Leave</span>';
       if (type.includes('Half')) return '<span class="status-badge badge-halfday">½ Half Day</span>';
       return `<span class="status-badge badge-working">${type}</span>`;
+    }
+
+    // ========== VIEW TOGGLE (Daily / Employee / All) ==========
+    function setView(v) {
+      currentView = v;
+      ['All', 'Daily', 'Employee'].forEach(x => {
+        const btn = document.getElementById(`btnView${x}`);
+        if (btn) btn.classList.toggle('active', x.toLowerCase() === v);
+      });
+      renderRecords();
     }
 
     async function getAllRecords() {
@@ -1672,6 +1756,16 @@
         </td>
         <td>${getBadge(r.attendance_type)}${sandwichBadge}</td>
       </tr>`;
+    }
+
+    // ── MINI TABLE inside daily/employee groups ────────────
+    function buildMiniTable(rows, sandwichKeys) {
+      const thead = `<thead><tr>
+        <th>Photo</th><th>Employee</th><th>City</th><th>Date</th>
+        <th>Clock In</th><th>Clock Out</th><th>Work Hours</th><th>Location</th><th>Status</th>
+      </tr></thead>`;
+      const tbody = rows.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
+      return `<div style="overflow-x:auto;"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
     }
 
     // ========== MONTHLY OVERVIEW HELPERS ==========
@@ -1820,11 +1914,81 @@
       document.getElementById('statHalf').textContent = all.filter(r => (r.attendance_type || '').includes('Half')).length;
       document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
 
-      const tbody = document.getElementById('tableBody');
-      if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="empty-row">${all.length ? 'No records match your filters.' : 'No attendance records yet.'}</td></tr>`;
-      } else {
-        tbody.innerHTML = filtered.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
+      const tc = document.getElementById('tableContainer');
+      const dc = document.getElementById('dailyContainer');
+
+      // ── ALL RECORDS VIEW ──────────────────────────────────
+      if (currentView === 'all') {
+        tc.style.display = ''; dc.style.display = 'none'; dc.innerHTML = '';
+        document.getElementById('tableTitle').textContent = 'Attendance Records';
+
+        const tbody = document.getElementById('tableBody');
+        if (!filtered.length) {
+          tbody.innerHTML = `<tr><td colspan="9" class="empty-row">${all.length ? 'No records match your filters.' : 'No attendance records yet.'}</td></tr>`;
+        } else {
+          tbody.innerHTML = filtered.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
+        }
+      }
+
+      // ── DAILY VIEW ────────────────────────────────────────
+      else if (currentView === 'daily') {
+        tc.style.display = 'none'; dc.style.display = '';
+
+        if (!filtered.length) {
+          dc.innerHTML = `<div style="text-align:center;padding:60px;color:#aaa;background:white;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,0.08);">
+            ${all.length ? 'No records match filters.' : 'No attendance records yet.'}</div>`;
+        } else {
+          const grouped = {};
+          filtered.forEach(r => {
+            const d = parseDate(r.date) || r.date || 'Unknown';
+            if (!grouped[d]) grouped[d] = [];
+            grouped[d].push(r);
+          });
+
+          const sortedDates = Object.keys(grouped).sort().reverse();
+
+          dc.innerHTML = sortedDates.map(d => {
+            const rows = grouped[d];
+            return `<div class="daily-group">
+              <div class="daily-group-header">
+                <div>
+                  <span class="daily-date-label">📅 ${formatDateLabel(d)}</span>
+                </div>
+                <span class="daily-count-badge">${rows.length} employee${rows.length !== 1 ? 's' : ''}</span>
+              </div>
+              ${buildMiniTable(rows, sandwichKeys)}
+            </div>`;
+          }).join('');
+        }
+      }
+
+      // ── EMPLOYEE VIEW ─────────────────────────────────────
+      else if (currentView === 'employee') {
+        tc.style.display = 'none'; dc.style.display = '';
+
+        if (!filtered.length) {
+          dc.innerHTML = `<div style="text-align:center;padding:60px;color:#aaa;background:white;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,0.08);">
+            ${all.length ? 'No records match filters.' : 'No attendance records yet.'}</div>`;
+        } else {
+          const grouped = {};
+          filtered.forEach(r => {
+            const key = r.emp_id || r.emp_name || 'unknown';
+            if (!grouped[key]) grouped[key] = { name: r.emp_name || 'Unknown', id: r.emp_id, dept: r.dept, city: r.city, rows: [] };
+            grouped[key].rows.push(r);
+          });
+
+          dc.innerHTML = Object.values(grouped).map(emp => `
+            <div class="daily-group">
+              <div class="daily-group-header">
+                <div>
+                  <span class="daily-date-label">👤 ${emp.name || 'Unknown'}</span>
+                  <span style="font-size:12px;color:#888;margin-left:8px;">${emp.id || ''} · ${emp.dept || ''} · ${emp.city || ''}</span>
+                </div>
+                <span class="daily-count-badge">${emp.rows.length} day${emp.rows.length !== 1 ? 's' : ''}</span>
+              </div>
+              ${buildMiniTable(emp.rows, sandwichKeys)}
+            </div>`).join('');
+        }
       }
 
       updateMonthlyOverview(all);
@@ -2398,6 +2562,7 @@
     // Jump to Attendance tab, filtered to this one employee's full history
     function viewEmployeeHistory(empId) {
       switchTab('attendance');
+      setView('all');
       document.getElementById('searchFilter').value = empId;
       document.getElementById('dateFilter').value = '';
       document.getElementById('typeFilter').value = '';
