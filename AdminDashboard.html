@@ -543,6 +543,13 @@
     }
 
     .toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── PERMISSION-BASED VISIBILITY ──────────────────────
+       Toggled on <body> by applyRoleUI() based on the logged-in
+       admin's permissions object. Any element carrying one of
+       these classes is hidden when that module isn't granted. */
+    body.no-salary-access .salary-gated   { display: none !important; }
+    body.no-leave-access  .leave-gated    { display: none !important; }
   </style>
 </head>
 
@@ -672,7 +679,7 @@
             <th>Work Hours</th>
             <th>Location</th>
             <th>Status</th>
-            <th>Salary</th>
+            <th class="salary-gated">Salary</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -704,41 +711,101 @@
     let lastFilteredData = [];
     let lastAllData = [];
 
-    // ── ROLE / SCOPE STATE ───────────────────────────────────
+    // ── ROLE / SCOPE / PERMISSION STATE ─────────────────────
     // currentSession.type: 'superadmin' (sees everyone) or 'admin' (scoped to assignedEmpIds)
     let currentSession = null;
     let scopedEmpIds = null; // null = no restriction (superadmin), array = restricted (admin)
+    // currentPermissions gates individual MODULES (independent of employee scope):
+    //   attendance, leave, salary, employeeDatabase, newEmployeeRegistration
+    let currentPermissions = { attendance: true, leave: true, salary: true, employeeDatabase: true, newEmployeeRegistration: true };
 
-    function loadSession() {
+    async function loadSession() {
       currentSession = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
       if (!currentSession) return;
+
       if (currentSession.type === 'admin') {
         scopedEmpIds = Array.isArray(currentSession.assignedEmpIds) ? currentSession.assignedEmpIds : [];
+
+        // Permissions may already be embedded in the session (AdminLogin.html
+        // can store them at login time). If not present — or stale — pull
+        // the freshest copy from the backend and cache it back into the
+        // session so we don't need to hit the server on every page load.
+        if (currentSession.permissions && typeof currentSession.permissions === 'object') {
+          currentPermissions = currentSession.permissions;
+        } else {
+          currentPermissions = { attendance: true, leave: false, salary: false, employeeDatabase: false, newEmployeeRegistration: false };
+          try {
+            const res = await fetch('/api/admins');
+            if (res.ok) {
+              const admins = await res.json();
+              const me = admins.find(a => (a.admin_id || a.id) === currentSession.id);
+              if (me && me.permissions) {
+                currentPermissions = me.permissions;
+                currentSession.permissions = me.permissions;
+                localStorage.setItem('mev_adminSession', JSON.stringify(currentSession));
+              }
+            }
+          } catch (e) {
+            console.warn('Could not fetch admin permissions, defaulting to Attendance-only:', e.message);
+          }
+        }
       } else {
         scopedEmpIds = null; // superadmin — unrestricted
+        currentPermissions = { attendance: true, leave: true, salary: true, employeeDatabase: true, newEmployeeRegistration: true };
       }
       applyRoleUI();
     }
 
+    function hasPerm(key) {
+      const isSuper = !currentSession || currentSession.type === 'superadmin';
+      if (isSuper) return true;
+      return !!(currentPermissions && currentPermissions[key]);
+    }
+
     function applyRoleUI() {
       const isSuper = !currentSession || currentSession.type === 'superadmin';
-      // Only superadmin manages other admins, bulk registration & the full employee database page.
-      // Credentials modal stays visible for scoped admins too — it auto-filters to their
-      // assigned employees and lets them edit (not add/delete) those records.
-      ['navManageAdmins','navReg','navEmpDb'].forEach(id => {
+
+      // Manage Admins & bulk employee tooling stay Super Admin-only regardless of role.
+      const mgrEl = document.getElementById('navManageAdmins');
+      if (mgrEl) mgrEl.style.display = isSuper ? '' : 'none';
+
+      // Employee Database — gated by the employeeDatabase permission
+      ['navEmpDb', 'hdrEmpDbBtn'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = isSuper ? '' : 'none';
+        if (el) el.style.display = hasPerm('employeeDatabase') ? '' : 'none';
       });
-      ['hdrRegBtn','hdrEmpDbBtn'].forEach(id => {
+
+      // New Employee Registration — gated by the newEmployeeRegistration permission
+      ['navReg', 'hdrRegBtn'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = isSuper ? '' : 'none';
+        if (el) el.style.display = hasPerm('newEmployeeRegistration') ? '' : 'none';
       });
+
+      // Credentials / "My Employees" link — tied to employeeDatabase too
       const credLink = document.getElementById('navCred');
-      if (credLink) credLink.querySelector('a').innerHTML = isSuper ? '🔑 Credentials' : '🔑 My Employees';
+      if (credLink) {
+        const allowed = hasPerm('employeeDatabase');
+        credLink.style.display = allowed ? '' : 'none';
+        if (allowed) credLink.querySelector('a').innerHTML = isSuper ? '🔑 Credentials' : '🔑 My Employees';
+      }
+
+      // Salary & Leave — every Salary/Leave button and table column carries
+      // the .salary-gated / .leave-gated class; toggling these body classes
+      // hides them everywhere in one shot (see CSS at top of file).
+      document.body.classList.toggle('no-salary-access', !hasPerm('salary'));
+      document.body.classList.toggle('no-leave-access', !hasPerm('leave'));
+
       if (!isSuper) {
         document.getElementById('dashTitle').textContent = `Admin Dashboard — ${currentSession.name || currentSession.id}`;
+        const permLabels = [
+          hasPerm('attendance') ? '📋 Attendance' : '',
+          hasPerm('leave') ? '📅 Leave' : '',
+          hasPerm('salary') ? '💰 Salary' : '',
+          hasPerm('employeeDatabase') ? '🗂️ Employee DB' : '',
+          hasPerm('newEmployeeRegistration') ? '🆕 New Registration' : ''
+        ].filter(Boolean).join(' · ');
         document.getElementById('dashSubtitle').textContent =
-          `Scoped view · ${(scopedEmpIds||[]).length} employee(s) assigned · you can view & edit their attendance, leave and salary · Mevrick Solution Pvt. Ltd.`;
+          `Scoped view · ${(scopedEmpIds || []).length} employee(s) assigned · Access: ${permLabels || 'None'} · Mevrick Solution Pvt. Ltd.`;
       }
     }
 
@@ -749,9 +816,9 @@
     }
 
     // ── INIT ───────────────────────────────────────────────
-    window.onload = function () {
+    window.onload = async function () {
       if (!localStorage.getItem('mev_adminSession')) { window.location.href = 'AdminLogin.html'; return; }
-      loadSession();
+      await loadSession();
       renderRecords();
       setInterval(renderRecords, 30000);
     };
@@ -947,7 +1014,7 @@
             View Map</a>`:''}
         </td>
         <td>${getBadge(r.attendance_type)}${sandwichBadge}</td>
-        <td>
+        <td class="salary-gated">
           <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
             style="padding:5px 10px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
             💰 Salary
@@ -960,7 +1027,7 @@
     function buildMiniTable(rows, sandwichKeys) {
       const thead = `<thead><tr>
         <th>Photo</th><th>Employee</th><th>City</th><th>Date</th>
-        <th>Clock In</th><th>Clock Out</th><th>Work Hours</th><th>Location</th><th>Status</th><th>Salary</th>
+        <th>Clock In</th><th>Clock Out</th><th>Work Hours</th><th>Location</th><th>Status</th><th class="salary-gated">Salary</th>
       </tr></thead>`;
       const tbody = rows.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
       return `<div style="overflow-x:auto;"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
@@ -1127,7 +1194,7 @@
               📍 ${r.location||'Unknown location'}
               ${r.lat&&r.lng?`<br/><a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" style="margin-top:8px;font-size:12px">View Exact Location on Map</a>`:''}
             </div>
-            <div style="margin-top:10px;">
+            <div class="salary-gated" style="margin-top:10px;">
               <button onclick="openSalaryModal('${(r.emp_id||'').replace(/'/g,"\\'")}','${(r.emp_name||'').replace(/'/g,"\\'")}')"
                 style="width:100%;padding:8px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
                 💰 Salary History
@@ -1141,7 +1208,7 @@
     // ── EXPORT TO EXCEL (.xlsx) ────────────────────────────
     async function exportToExcel() {
       if (!lastFilteredData.length) { showToast('⚠️ No records to export!', '#e53935'); return; }
-      await salarySyncAllFromServer();
+      if (hasPerm('salary')) await salarySyncAllFromServer();
 
       const { sandwichKeys } = detectSandwichLeaves(lastAllData);
 
@@ -1270,30 +1337,32 @@
         ws3[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'2E7D32' }}, alignment:{ horizontal:'center' } };
       }
 
-      // ── Sheet 4: Salary History (scoped to visible employees) ─
-      const salDB = salaryGetDB();
-      const visibleEmpIds = new Set(Object.values(byEmp).map(e=>e.id).filter(Boolean));
-      const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
-      Object.entries(salDB).forEach(([empId, entries]) => {
-        if (visibleEmpIds.size && !visibleEmpIds.has(empId)) return;
-        (entries||[]).forEach(e => {
-          salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
-        });
-      });
-      const ws4 = XLSX.utils.aoa_to_sheet(salRows);
-      ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
-      for (let C = 0; C <= 5; C++) {
-        const ca = XLSX.utils.encode_cell({ r:0, c:C });
-        if (!ws4[ca]) continue;
-        ws4[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'1D6F42' }}, alignment:{ horizontal:'center' } };
-      }
-
       // ── Build Workbook ────────────────────────────────────
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, '📋 All Records');
       XLSX.utils.book_append_sheet(wb, ws2, '📅 Daily Summary');
       XLSX.utils.book_append_sheet(wb, ws3, '👤 Employee Summary');
-      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+
+      // ── Sheet 4: Salary History — only if this admin has Salary access ─
+      if (hasPerm('salary')) {
+        const salDB = salaryGetDB();
+        const visibleEmpIds = new Set(Object.values(byEmp).map(e=>e.id).filter(Boolean));
+        const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
+        Object.entries(salDB).forEach(([empId, entries]) => {
+          if (visibleEmpIds.size && !visibleEmpIds.has(empId)) return;
+          (entries||[]).forEach(e => {
+            salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
+          });
+        });
+        const ws4 = XLSX.utils.aoa_to_sheet(salRows);
+        ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
+        for (let C = 0; C <= 5; C++) {
+          const ca = XLSX.utils.encode_cell({ r:0, c:C });
+          if (!ws4[ca]) continue;
+          ws4[ca].s = { font:{ bold:true, color:{ rgb:'FFFFFF' }}, fill:{ fgColor:{ rgb:'1D6F42' }}, alignment:{ horizontal:'center' } };
+        }
+        XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+      }
 
       // Add metadata
       wb.Props = {
@@ -2187,11 +2256,11 @@
             ${leaveHTML}
             ${swHTML}
             <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
-              <button onclick="dsOpenLeaveModal('${key}','${(emp.name||'').replace(/'/g,"\\'")}','${emp.id||''}')"
+              <button class="leave-gated" onclick="dsOpenLeaveModal('${key}','${(emp.name||'').replace(/'/g,"\\'")}','${emp.id||''}')"
                 style="padding:6px 12px;background:#e8d5ff;color:#5b21b6;border:1px solid #c4b5fd;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
                 🗓️ Mark Leave
               </button>
-              <button onclick="openSalaryModal('${emp.id||''}','${(emp.name||'').replace(/'/g,"\\'")}')"
+              <button class="salary-gated" onclick="openSalaryModal('${emp.id||''}','${(emp.name||'').replace(/'/g,"\\'")}')"
                 style="padding:6px 12px;background:#e0f2e9;color:#1d6f42;border:1px solid #a8dcc4;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;">
                 💰 Salary History
               </button>
@@ -2208,6 +2277,7 @@
     let ds_leaveTarget = null;
 
     function dsOpenLeaveModal(key, name, id) {
+      if (!hasPerm('leave')) { showToast('⚠️ You do not have Leave access.', '#e53935'); return; }
       ds_leaveTarget = key;
       document.getElementById('dsLeaveEmpName').textContent = name;
       document.getElementById('dsLeaveEmpId').textContent   = id;
@@ -2229,6 +2299,7 @@
     }
 
     async function dsSaveLeave() {
+      if (!hasPerm('leave')) { showToast('⚠️ You do not have Leave access.', '#e53935'); return; }
       if (!ds_leaveTarget) return;
       const date    = document.getElementById('dsLeaveDate').value   || ds_currentDate;
       const type    = document.getElementById('dsLeaveType').value;
@@ -2263,7 +2334,7 @@
     // ── EXCEL EXPORT (Daily Sheet) ───────────────────────
     async function dsExportExcel() {
       if (!ds_currentDate) { showToast('⚠️ Please select a date first', '#e53935'); return; }
-      await salarySyncAllFromServer();
+      if (hasPerm('salary')) await salarySyncAllFromServer();
 
       const all       = await getAllRecords(); // already scoped
       const { sandwichKeys } = detectSandwichLeaves(all);
@@ -2368,49 +2439,54 @@
       ws2['!cols'] = [{wch:22},{wch:12},{wch:14}];
       ws2['A1'].s = { font:{bold:true,sz:14,color:{rgb:'1A237E'}} };
 
-      // ── Sheet 3: Leave Register (scoped) ──────────────────
-      const scopedIds = new Set(Object.keys(allEmps));
-      const leaveRows = [['Employee Name','Employee ID','Department','City','Date','Leave Type','Reason']];
-      Object.entries(ds_leaveStore).forEach(([k, v]) => {
-        const empKey = k.split('|')[0];
-        if (scopedEmpIds && !scopedIds.has(empKey)) return;
-        leaveRows.push([v.empName||'',v.empId||'',
-          allEmps[empKey]?.dept||'',
-          allEmps[empKey]?.city||'',
-          v.date||'',v.type||'',v.reason||'']);
-      });
-
-      const ws3 = XLSX.utils.aoa_to_sheet(leaveRows);
-      ws3['!cols'] = [22,14,18,14,12,18,30].map(w=>({wch:w}));
-      for (let C = 0; C < 7; C++) {
-        const ca = XLSX.utils.encode_cell({r:0,c:C});
-        if (!ws3[ca]) continue;
-        ws3[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'5B21B6'}}, alignment:{horizontal:'center'} };
-      }
-
-      // ── Sheet 4: Salary History (scoped) ──────────────────
-      const salDB = salaryGetDB();
-      const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
-      Object.entries(salDB).forEach(([empId, entriesArr]) => {
-        if (scopedEmpIds && !scopedIds.has(empId)) return;
-        (entriesArr||[]).forEach(e => {
-          salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
-        });
-      });
-      const ws4 = XLSX.utils.aoa_to_sheet(salRows);
-      ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
-      for (let C = 0; C < 6; C++) {
-        const ca = XLSX.utils.encode_cell({r:0,c:C});
-        if (!ws4[ca]) continue;
-        ws4[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1D6F42'}}, alignment:{horizontal:'center'} };
-      }
-
-      // ── Workbook ─────────────────────────────────────────
+      // ── Workbook base ─────────────────────────────────────
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws1, '📋 Daily Attendance');
       XLSX.utils.book_append_sheet(wb, ws2, '📊 Summary');
-      XLSX.utils.book_append_sheet(wb, ws3, '🗓️ Leave Register');
-      XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+
+      // ── Sheet 3: Leave Register (scoped) — only if Leave access ──
+      if (hasPerm('leave')) {
+        const scopedIds = new Set(Object.keys(allEmps));
+        const leaveRows = [['Employee Name','Employee ID','Department','City','Date','Leave Type','Reason']];
+        Object.entries(ds_leaveStore).forEach(([k, v]) => {
+          const empKey = k.split('|')[0];
+          if (scopedEmpIds && !scopedIds.has(empKey)) return;
+          leaveRows.push([v.empName||'',v.empId||'',
+            allEmps[empKey]?.dept||'',
+            allEmps[empKey]?.city||'',
+            v.date||'',v.type||'',v.reason||'']);
+        });
+
+        const ws3 = XLSX.utils.aoa_to_sheet(leaveRows);
+        ws3['!cols'] = [22,14,18,14,12,18,30].map(w=>({wch:w}));
+        for (let C = 0; C < 7; C++) {
+          const ca = XLSX.utils.encode_cell({r:0,c:C});
+          if (!ws3[ca]) continue;
+          ws3[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'5B21B6'}}, alignment:{horizontal:'center'} };
+        }
+        XLSX.utils.book_append_sheet(wb, ws3, '🗓️ Leave Register');
+      }
+
+      // ── Sheet 4: Salary History (scoped) — only if Salary access ──
+      if (hasPerm('salary')) {
+        const scopedIds = new Set(Object.keys(allEmps));
+        const salDB = salaryGetDB();
+        const salRows = [['Employee Name','Employee ID','Date','Amount (₹)','Note','Added By']];
+        Object.entries(salDB).forEach(([empId, entriesArr]) => {
+          if (scopedEmpIds && !scopedIds.has(empId)) return;
+          (entriesArr||[]).forEach(e => {
+            salRows.push([e.empName||'', empId, e.date||'', e.amount||0, e.note||'', e.addedBy||'']);
+          });
+        });
+        const ws4 = XLSX.utils.aoa_to_sheet(salRows);
+        ws4['!cols'] = [22,14,12,12,30,16].map(w=>({wch:w}));
+        for (let C = 0; C < 6; C++) {
+          const ca = XLSX.utils.encode_cell({r:0,c:C});
+          if (!ws4[ca]) continue;
+          ws4[ca].s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1D6F42'}}, alignment:{horizontal:'center'} };
+        }
+        XLSX.utils.book_append_sheet(wb, ws4, '💰 Salary History');
+      }
 
       wb.Props = { Title:`MEVTENCIA Daily Sheet — ${dateLabel}`, Author:'Mevrick Solution Pvt. Ltd.' };
 
@@ -2844,15 +2920,21 @@ function credSyncToServer(id, name, pw, dept, city, salary) {
 }
 
 function openCredModal() {
+  if (!hasPerm('employeeDatabase')) { showToast('⚠️ You do not have Employee Database access.', '#e53935'); return; }
   credGetDB();
   const addForm = document.getElementById('credAddFormBox');
   const header  = document.getElementById('credHeaderText');
-  if (scopedEmpIds) {
-    if (addForm) addForm.style.display = 'none';   // scoped admins edit only, can't create new employees
-    if (header)  header.innerHTML = '<h2>👥 My Employees</h2><p>View & edit details for your assigned employees</p>';
-  } else {
-    if (addForm) addForm.style.display = '';
-    if (header)  header.innerHTML = '<h2>🔑 Employee Credentials Manager</h2><p>Add, edit or remove employee login credentials</p>';
+  const isSuper = !currentSession || currentSession.type === 'superadmin';
+  const canAdd  = hasPerm('newEmployeeRegistration');
+  if (addForm) addForm.style.display = canAdd ? '' : 'none';
+  if (header) {
+    if (isSuper) {
+      header.innerHTML = '<h2>🔑 Employee Credentials Manager</h2><p>Add, edit or remove employee login credentials</p>';
+    } else if (canAdd) {
+      header.innerHTML = '<h2>👥 My Employees</h2><p>Add, edit or remove your assigned employees</p>';
+    } else {
+      header.innerHTML = '<h2>👥 My Employees</h2><p>View & edit details for your assigned employees</p>';
+    }
   }
   credRenderList();
   document.getElementById('credOverlay').classList.add('open');
@@ -2868,8 +2950,8 @@ document.getElementById('credOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeCredModal();
 });
 
-function credAdd() {
-  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can add new employees.', '#e53935'); return; }
+async function credAdd() {
+  if (!hasPerm('newEmployeeRegistration')) { showToast('⚠️ You do not have New Employee Registration access.', '#e53935'); return; }
   const name   = document.getElementById('credName').value.trim();
   const id     = document.getElementById('credId').value.trim().toUpperCase();
   const pw     = document.getElementById('credPw').value.trim();
@@ -2892,19 +2974,42 @@ function credAdd() {
   credSaveDB(db);
   credSyncToServer(id, name, pw, dept, city, salary);
 
+  // Scoped admins (not superadmin) automatically get the employee they just
+  // created added to their own assignedEmpIds, so it shows up in their
+  // attendance/salary/leave views right away instead of being invisible.
+  if (scopedEmpIds) {
+    scopedEmpIds.push(id);
+    if (currentSession) {
+      currentSession.assignedEmpIds = scopedEmpIds;
+      localStorage.setItem('mev_adminSession', JSON.stringify(currentSession));
+    }
+    try {
+      await fetch(`/api/admins/${encodeURIComponent(currentSession.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ assigned_employees: scopedEmpIds })
+      });
+    } catch (e) {
+      console.warn('Could not sync new assignment to server:', e.message);
+    }
+  }
+
   ['credName','credId','credPw','credDept','credCity','credSalary'].forEach(f => document.getElementById(f).value = '');
   credRenderList();
   showToast(`✅ ${name} add ho gaya!`, '#10b981');
+  renderRecords();
 }
 
 function credDelete(id) {
-  if (scopedEmpIds) { showToast('⚠️ Only the Super Admin can remove employees.', '#e53935'); return; }
+  if (!hasPerm('newEmployeeRegistration')) { showToast('⚠️ You do not have permission to remove employees.', '#e53935'); return; }
+  if (scopedEmpIds && !scopedEmpIds.includes(id)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
   if (!confirm(`"${id}" ko delete karna chahte ho?`)) return;
   const db = credGetDB();
   delete db[id];
   credSaveDB(db);
   credRenderList();
   showToast('🗑️ Employee removed.', '#64748b');
+  renderRecords();
 }
 
 let credEditingId = null;
@@ -2970,7 +3075,7 @@ function credRenderList() {
   list.innerHTML = entries.map(emp => {
     const initials = (emp.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const isEditing = credEditingId === emp.id;
-    const delBtn = scopedEmpIds ? '' : `<button class="cred-del-btn" onclick="credDelete('${emp.id}')" title="Delete">🗑️</button>`;
+    const delBtn = hasPerm('newEmployeeRegistration') ? `<button class="cred-del-btn" onclick="credDelete('${emp.id}')" title="Delete">🗑️</button>` : '';
 
     if (isEditing) {
       return `
@@ -3275,6 +3380,7 @@ let salaryTargetId = null;
 let salaryTargetName = null;
 
 async function openSalaryModal(empId, empName) {
+  if (!hasPerm('salary')) { showToast('⚠️ You do not have Salary access.', '#e53935'); return; }
   if (!empId) { showToast('⚠️ This record has no Employee ID to attach salary to.', '#e53935'); return; }
   if (scopedEmpIds && !scopedEmpIds.includes(empId)) { showToast('⚠️ This employee is not assigned to you.', '#e53935'); return; }
   salaryTargetId = empId;
@@ -3302,6 +3408,7 @@ document.getElementById('salOverlay').addEventListener('click', function(e) {
 });
 
 function salaryAddEntry() {
+  if (!hasPerm('salary')) { showToast('⚠️ You do not have Salary access.', '#e53935'); return; }
   if (!salaryTargetId) return;
   const date   = document.getElementById('salDate').value;
   const amount = parseFloat(document.getElementById('salAmount').value);
@@ -3346,6 +3453,7 @@ function salaryAddEntry() {
 }
 
 function salaryDeleteEntry(idx) {
+  if (!hasPerm('salary')) { showToast('⚠️ You do not have Salary access.', '#e53935'); return; }
   if (!salaryTargetId) return;
   const db = salaryGetDB();
   if (!db[salaryTargetId]) return;
