@@ -88,11 +88,11 @@
     .hero-tagline { color: #475569; font-size: 15px; margin-bottom: 22px; }
 
     .feature-row {
-      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+      display: flex; justify-content: space-between; flex-wrap: nowrap; gap: 8px;
       padding-top: 18px; border-top: 1px solid #f1f5f9;
     }
 
-    .feature-item { flex: 1; min-width: 80px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .feature-item { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 
     .feature-item .f-icon {
       width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
@@ -175,10 +175,22 @@
     footer { text-align: center; padding: 22px 10px 6px; color: #94a3b8; font-size: 12px; }
     footer .version { margin-top: 4px; color: #1d4ed8; font-weight: 600; font-size: 12px; }
 
+    /* ── MOBILE: keep the 5 feature icons on ONE line, just smaller,
+       instead of letting them wrap to a second row like before. ── */
     @media (max-width: 480px) {
-      .feature-row { justify-content: center; }
-      .feature-item { min-width: 70px; }
+      .hero-card { padding: 26px 14px; }
+      .feature-row { gap: 4px; }
+      .feature-item { min-width: 0; gap: 4px; }
+      .feature-item .f-icon { width: 26px; height: 26px; }
+      .feature-item .f-icon svg { width: 18px; height: 18px; }
+      .feature-item span { font-size: 9px; line-height: 1.15; }
       .rules-illustration { display: none; }
+    }
+
+    @media (max-width: 360px) {
+      .feature-item .f-icon { width: 22px; height: 22px; }
+      .feature-item .f-icon svg { width: 16px; height: 16px; }
+      .feature-item span { font-size: 8.3px; }
     }
   </style>
 </head>
