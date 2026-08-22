@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3f51b5" />
+  <title>MEVTENCIA — Leave Management</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', -apple-system, sans-serif; background: linear-gradient(135deg, #f5f7fa, #e8eef5); min-height: 100vh; }
+    .navbar { background: #3f51b5; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,.18); position: sticky; top: 0; z-index: 10; }
+    .logo { color: #fff; font-size: 20px; font-weight: 800; text-decoration: none; }
+    .nav-links { list-style: none; display: flex; gap: 10px; }
+    .nav-links a { color: #fff; text-decoration: none; font-size: 12px; padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.12); }
+    .container { max-width: 1200px; margin: 25px auto 50px; padding: 0 18px; }
+    .header-card { background: #fff; border-radius: 20px; padding: 25px 28px; box-shadow: 0 10px 40px rgba(0,0,0,.1); margin-bottom: 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+    .header-card h2 { color: #3f51b5; font-size: 20px; font-weight: 700; }
+    .header-card p { color: #666; font-size: 13px; margin-top: 4px; }
+
+    .scope-banner { background: #eef2ff; color: #3f51b5; border-radius: 14px; padding: 12px 18px; margin-bottom: 18px; font-size: 13px; font-weight: 600; display: none; align-items: center; gap: 8px; }
+    .scope-banner.show { display: flex; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 22px; }
+    @media(min-width:700px) { .stats-row { grid-template-columns: repeat(4,1fr); } }
+    .stat-card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 5px 20px rgba(0,0,0,.08); text-align: center; }
+    .stat-card .num { font-size: 30px; font-weight: bold; color: #3f51b5; margin-bottom: 6px; }
+    .stat-card .num.amber { color: #f59e0b; }
+    .stat-card .num.red { color: #f44336; }
+    .stat-card .num.green { color: #4caf50; }
+    .stat-card .lbl { color: #888; font-size: 12px; }
+
+    .filters { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+    .filters input { padding: 10px 15px; border-radius: 10px; border: 2px solid #e0e0e0; font-size: 14px; outline: none; background: white; font-family: inherit; flex: 1; min-width: 220px; }
+    .filters input:focus { border-color: #3f51b5; }
+    .filter-btn { padding: 10px 16px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: #555; white-space: nowrap; }
+    .filter-btn:hover { border-color: #3f51b5; color: #3f51b5; }
+    .export-btn { padding: 10px 18px; background: #2e7d32; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .export-btn:hover { background: #1b5e20; }
+
+    .table-container { background: #fff; border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,.1); overflow-x: auto; }
+    .table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .table-header h3 { color: #3f51b5; font-size: 16px; font-weight: 700; }
+    .record-count { color: #888; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th { background: #3f51b5; color: white; padding: 12px 14px; text-align: left; font-weight: 600; font-size: 13px; }
+    td { padding: 12px 14px; border-bottom: 1px solid #e0e7ff; font-size: 13px; vertical-align: middle; }
+    tr:hover { background: #f5f7fa; }
+    tr:last-child td { border-bottom: none; }
+
+    .emp-name { font-weight: 700; color: #333; }
+    .emp-id { font-size: 11px; color: #888; font-family: monospace; }
+
+    .leave-count { display:inline-flex; align-items:center; justify-content:center; min-width:34px; padding:4px 10px; border-radius: 20px; font-weight: 800; font-size: 13px; }
+    .lc-zero { background:#e8f5e9; color:#2e7d32; }
+    .lc-low  { background:#fff3cd; color:#856404; }
+    .lc-high { background:#fde2e1; color:#c0392b; }
+
+    .view-btn { background: #3f51b5; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .view-btn:hover { background: #303f9f; }
+
+    .empty-state { text-align: center; padding: 50px 20px; color: #aaa; font-size: 15px; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: white; border-radius: 20px; padding: 28px; max-width: 780px; width: 100%; max-height: 88vh; overflow-y: auto; position: relative; }
+    .modal-close { position: absolute; top: 16px; right: 20px; font-size: 26px; font-weight: 700; color: #aaa; cursor: pointer; }
+    .modal-close:hover { color: #333; }
+    .modal-title { color: #3f51b5; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .modal-subtitle { color: #888; font-size: 12px; margin-bottom: 18px; }
+
+    .modal-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .modal-stat { background: #f5f7fa; border-radius: 12px; padding: 14px; text-align: center; }
+    .modal-stat .n { font-size: 24px; font-weight: 800; color: #3f51b5; }
+    .modal-stat .l { font-size: 11px; color: #888; margin-top: 3px; }
+
+    .month-block { margin-bottom: 18px; }
+    .month-block-title { font-size: 13px; font-weight: 800; color: #3f51b5; border-bottom: 2px solid #e0e7ff; padding-bottom: 6px; margin-bottom: 10px; display:flex; justify-content:space-between; align-items:center; }
+    .month-block-title .mcount { font-size: 11px; font-weight: 700; color: #856404; background: #fff3cd; padding: 2px 10px; border-radius: 20px; }
+
+    .leave-day-list { display: flex; flex-direction: column; gap: 6px; }
+    .leave-day-row { display: flex; justify-content: space-between; align-items: center; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 8px 12px; font-size: 12.5px; }
+    .leave-day-row .ldl { font-weight: 700; color: #333; }
+    .leave-day-row .ldr { font-weight: 700; padding: 2px 10px; border-radius: 20px; font-size: 11px; }
+    .type-absent { background: #f8d7da; color: #721c24; }
+    .type-half   { background: #fff3cd; color: #856404; }
+    .type-onleave{ background: #e8d5ff; color: #3f51b5; }
+    .type-unmarked{ background: #e2e3e5; color: #555; }
+
+    .no-leave-msg { text-align:center; color:#4caf50; font-weight:600; font-size:13px; padding: 14px; background:#e8f5e9; border-radius:10px; }
+
+    .history-toggle { width: 100%; padding: 10px; border: 2px dashed #cbd5e1; border-radius: 12px; background: none; color: #3f51b5; font-size: 13px; font-weight: 700; cursor: pointer; margin-bottom: 12px; }
+    .history-toggle:hover { background: #f0f4ff; }
+
+    .loading-row { text-align:center; padding: 40px; color:#aaa; }
+
+    @media (max-width: 600px) {
+      .modal-stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <img src="assets/logo.png" alt="Mevrick Logo" style="height: 60px; width: 60px; object-fit: contain; background: white; border-radius: 50%; padding: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+      <a class="logo" href="index.html">MEVTENCIA</a>
+    </div>
+    <ul class="nav-links">
+      <li><a href="index.html" onclick="localStorage.removeItem('mev_adminSession')">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="header-card">
+      <div>
+        <h2>📅 Leave Management</h2>
+        <p>Leave overview for all employees · MEVRICK SOLUTIONS PRIVATE LIMITED</p>
+      </div>
+    </div>
+
+    <!-- Shown only for scoped (non-super) admins so they know they're seeing a filtered view -->
+    <div class="scope-banner" id="scopeBanner">
+      🔒 <span id="scopeBannerText">You are viewing only the employees assigned to you.</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="num" id="statEmployees">0</div><div class="lbl">Employees</div></div>
+      <div class="stat-card"><div class="num amber" id="statThisMonth">0</div><div class="lbl">Leaves This Month (Org)</div></div>
+      <div class="stat-card"><div class="num" id="statPrevMonth">0</div><div class="lbl">Leaves Previous Month (Org)</div></div>
+      <div class="stat-card"><div class="num red" id="statOnLeaveToday">0</div><div class="lbl">On Leave / Absent Today</div></div>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="searchFilter" placeholder="🔍 Search employee by Name, ID, Dept, City..." oninput="renderTable()" />
+      <button class="filter-btn" onclick="clearFilters()">✕ Clear</button>
+      <button class="filter-btn" onclick="loadData()">⟳ Refresh</button>
+      <button class="export-btn" onclick="exportToExcel()">📊 Export Excel</button>
+    </div>
+
+    <div class="table-container">
+      <div class="table-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h3>Employee Leave Overview</h3>
+          <span id="serverStatus" style="font-size: 10px; padding: 4px 8px; border-radius: 4px; background: #ffebee; color: #c62828; font-weight: bold;">✕ Server Offline</span>
+        </div>
+        <span class="record-count" id="recordCount">— employees</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Dept / City</th>
+            <th>This Month</th>
+            <th>Previous Month</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="5" class="loading-row">Loading employees & leave data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Employee Leave Detail Modal -->
+  <div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+    <div class="modal-box">
+      <span class="modal-close" onclick="document.getElementById('detailModal').classList.remove('show')">✕</span>
+      <div class="modal-title" id="modalTitle">Employee Leave Details</div>
+      <div class="modal-subtitle" id="modalSubtitle">—</div>
+
+      <div class="modal-stats">
+        <div class="modal-stat"><div class="n" id="mStatThis">0</div><div class="l">This Month</div></div>
+        <div class="modal-stat"><div class="n" id="mStatPrev">0</div><div class="l">Previous Month</div></div>
+        <div class="modal-stat"><div class="n" id="mStatTotal">0</div><div class="l">All-Time Leaves</div></div>
+      </div>
+
+      <div class="month-block">
+        <div class="month-block-title"><span id="thisMonthLabel">This Month</span> <span class="mcount" id="thisMonthCount">0 leave(s)</span></div>
+        <div class="leave-day-list" id="thisMonthList"></div>
+      </div>
+
+      <div class="month-block">
+        <div class="month-block-title"><span id="prevMonthLabel">Previous Month</span> <span class="mcount" id="prevMonthCount">0 leave(s)</span></div>
+        <div class="leave-day-list" id="prevMonthList"></div>
+      </div>
+
+      <button class="history-toggle" id="historyToggleBtn" onclick="toggleFullHistory()">📜 Show Full Leave History (All Time)</button>
+      <div id="fullHistoryContainer" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════════
+    // AUTH / SCOPE  — same pattern as EmployeeHistory.html, gated on the
+    // 'leave' permission instead of 'employeeDatabase'.
+    // ═══════════════════════════════════════════════════════════════════
+    let scopedEmpIds = null; // null = unrestricted (super admin)
+    let allEmployees = [];
+    let leaveDataByEmp = {}; // emp_id -> { attendanceMap: {'YYYY-MM': {day: type}}, joiningDate }
+
+    window.onload = function() {
+      const adminRaw = localStorage.getItem('mev_adminSession');
+      const superRaw = localStorage.getItem('mev_superSession');
+      const adminSession = adminRaw ? JSON.parse(adminRaw) : null;
+      const superSession = superRaw ? JSON.parse(superRaw) : null;
+
+      if (!adminSession && !superSession) {
+        window.location.href = 'AdminLogin.html';
+        return;
+      }
+
+      const isSuper = !!superSession || (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin'));
+
+      if (isSuper) {
+        scopedEmpIds = null;
+      } else {
+        const perms = (adminSession && adminSession.permissions) || {};
+        const hasAccess = perms.leave === true;
+
+        if (!hasAccess) {
+          alert('⚠️ You do not have permission to view Leave Management. Contact your Super Admin if you believe this is a mistake.');
+          window.location.href = 'AttendanceTracker.html';
+          return;
+        }
+
+        const assigned = (adminSession && (adminSession.assigned_employees || adminSession.assignedEmpIds)) || [];
+        scopedEmpIds = new Set(assigned);
+
+        const banner = document.getElementById('scopeBanner');
+        const bannerText = document.getElementById('scopeBannerText');
+        if (banner && bannerText) {
+          bannerText.textContent = `You are viewing only the ${scopedEmpIds.size} employee(s) assigned to you.`;
+          banner.classList.add('show');
+        }
+      }
+
+      loadData();
+    };
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DATE HELPERS — attendance dates are stored as DD/MM/YYYY (see
+    // AttendanceTracker.html's getToday()); some backend paths may already
+    // use ISO (YYYY-MM-DD). Normalize both to {year, monthIndex, day}.
+    // ═══════════════════════════════════════════════════════════════════
+    function parseAnyDate(dateStr) {
+      if (!dateStr) return null;
+      if (dateStr.includes('/')) {
+        const [d, m, y] = dateStr.split('/');
+        return { year: parseInt(y), monthIndex: parseInt(m) - 1, day: parseInt(d) };
+      }
+      if (dateStr.includes('-')) {
+        const [y, m, d] = dateStr.split('-');
+        return { year: parseInt(y), monthIndex: parseInt(m) - 1, day: parseInt(d) };
+      }
+      return null;
+    }
+
+    function monthKey(year, monthIndex) {
+      return `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+    }
+
+    function monthLabel(year, monthIndex) {
+      return new Date(year, monthIndex, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // FETCH EMPLOYEES
+    // ═══════════════════════════════════════════════════════════════════
+    function normalizeEmployee(obj) {
+      return {
+        emp_id:        obj.employeeId   || obj.emp_id   || obj.id,
+        employee_name: obj.employeeName || obj.employee_name || obj.name,
+        designation:   obj.designation  || obj.dept || obj.department,
+        work_location: obj.workLocation || obj.work_location || obj.city,
+        joining_date:  obj.joiningDate  || obj.joining_date
+      };
+    }
+
+    async function fetchEmployees() {
+      let list = [];
+      try {
+        const resp = await fetch('/api/employees');
+        if (resp.ok) {
+          list = (await resp.json()).map(normalizeEmployee);
+          document.getElementById('serverStatus').textContent = '✓ Server Online';
+          document.getElementById('serverStatus').style.background = '#e8f5e9';
+          document.getElementById('serverStatus').style.color = '#2e7d32';
+        }
+      } catch (e) {
+        document.getElementById('serverStatus').textContent = '✕ Server Offline';
+      }
+
+      if (!list.length) {
+        // Fallback to whatever full registration data is cached locally
+        try {
+          const lsStr = localStorage.getItem('mevtencia_employeeDatabase');
+          if (lsStr) list = Object.values(JSON.parse(lsStr)).map(normalizeEmployee);
+        } catch (e) {}
+      }
+
+      if (scopedEmpIds) {
+        list = list.filter(e => e.emp_id && scopedEmpIds.has(e.emp_id));
+      }
+
+      return list.filter(e => e.emp_id);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // FETCH + BUILD ATTENDANCE MAP FOR ONE EMPLOYEE
+    // ═══════════════════════════════════════════════════════════════════
+    async function getAttendanceMapForEmployee(empId) {
+      let records = [];
+      try {
+        const resp = await fetch('/api/employee-attendance?id=' + encodeURIComponent(empId));
+        if (resp.ok) records = await resp.json();
+      } catch (e) {}
+
+      if (!records || !records.length) {
+        try { records = JSON.parse(localStorage.getItem(`mev_att_${empId}`) || '[]'); } catch (e) { records = []; }
+      }
+
+      if (!records || !records.length) {
+        // Last-resort fallback: the super-admin local mirror log
+        try {
+          const allLog = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+          records = allLog.filter(r => r.emp_id === empId);
+        } catch (e) {}
+      }
+
+      const byMonth = {}; // 'YYYY-MM' -> { day: attendance_type }
+      let earliest = null;
+      records.forEach(r => {
+        const d = parseAnyDate(r.date);
+        if (!d) return;
+        const key = monthKey(d.year, d.monthIndex);
+        if (!byMonth[key]) byMonth[key] = {};
+        byMonth[key][d.day] = r.attendance_type || 'In Progress';
+        const stamp = d.year * 12 + d.monthIndex;
+        if (earliest === null || stamp < earliest) earliest = stamp;
+      });
+
+      return { byMonth, earliestStamp: earliest };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LEAVE COMPUTATION for a single month
+    // A day counts as leave when:
+    //  - explicit 'Absent' or 'On Leave' record            → full leave
+    //  - 'Half Day' record                                  → half leave
+    //  - no record at all on a weekday (not Sunday), and
+    //    the day is on/after joining date and on/before today → unmarked absence
+    // Sundays are treated as paid off-days, never leave.
+    // ═══════════════════════════════════════════════════════════════════
+    function computeMonthLeaves(byMonth, year, monthIndex, joiningInfo, capDay) {
+      const key = monthKey(year, monthIndex);
+      const dayMap = byMonth[key] || {};
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+      const lastDay = capDay != null ? Math.min(capDay, daysInMonth) : daysInMonth;
+      const leaves = [];
+
+      for (let day = 1; day <= lastDay; day++) {
+        const d = new Date(year, monthIndex, day);
+        if (d.getDay() === 0) continue; // Sunday — paid off day
+
+        if (joiningInfo) {
+          const stamp = year * 12 + monthIndex;
+          if (stamp === joiningInfo.stamp && day < joiningInfo.day) continue; // before joining
+          if (stamp < joiningInfo.stamp) continue;
+        }
+
+        const status = dayMap[day];
+        const dayLabel = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', weekday: 'short' });
+
+        if (status === 'Full Day' || status === 'In Progress') continue; // present
+        if (status && status.includes('Half')) {
+          leaves.push({ day, label: dayLabel, type: 'Half Day', cls: 'type-half', value: 0.5 });
+        } else if (status === 'On Leave') {
+          leaves.push({ day, label: dayLabel, type: 'On Leave', cls: 'type-onleave', value: 1 });
+        } else if (status === 'Absent') {
+          leaves.push({ day, label: dayLabel, type: 'Absent', cls: 'type-absent', value: 1 });
+        } else if (!status) {
+          leaves.push({ day, label: dayLabel, type: 'Absent (Unmarked)', cls: 'type-unmarked', value: 1 });
+        }
+      }
+      return leaves;
+    }
+
+    function getJoiningInfo(joiningDateStr) {
+      const d = parseAnyDate(joiningDateStr);
+      if (!d) return null;
+      return { stamp: d.year * 12 + d.monthIndex, day: d.day };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // LOAD + RENDER OVERVIEW TABLE
+    // ═══════════════════════════════════════════════════════════════════
+    async function loadData() {
+      document.getElementById('tableBody').innerHTML = '<tr><td colspan="5" class="loading-row">Loading employees & leave data...</td></tr>';
+
+      allEmployees = await fetchEmployees();
+
+      if (!allEmployees.length) {
+        const msg = scopedEmpIds
+          ? 'No employees are currently assigned to you. Contact your Super Admin.'
+          : 'No employees registered yet.';
+        document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" class="empty-state">${msg}</td></tr>`;
+        document.getElementById('statEmployees').textContent = 0;
+        document.getElementById('statThisMonth').textContent = 0;
+        document.getElementById('statPrevMonth').textContent = 0;
+        document.getElementById('statOnLeaveToday').textContent = 0;
+        return;
+      }
+
+      const today = new Date();
+      const thisYear = today.getFullYear(), thisMonthIdx = today.getMonth(), todayDate = today.getDate();
+      let prevYear = thisYear, prevMonthIdx = thisMonthIdx - 1;
+      if (prevMonthIdx < 0) { prevMonthIdx = 11; prevYear -= 1; }
+
+      leaveDataByEmp = {};
+
+      await Promise.all(allEmployees.map(async (emp) => {
+        const { byMonth } = await getAttendanceMapForEmployee(emp.emp_id);
+        const joiningInfo = getJoiningInfo(emp.joining_date);
+
+        const thisMonthLeaves = computeMonthLeaves(byMonth, thisYear, thisMonthIdx, joiningInfo, todayDate);
+        const prevMonthLeaves = computeMonthLeaves(byMonth, prevYear, prevMonthIdx, joiningInfo, null);
+
+        leaveDataByEmp[emp.emp_id] = { byMonth, joiningInfo, thisMonthLeaves, prevMonthLeaves };
+      }));
+
+      // Org-wide stats
+      let orgThis = 0, orgPrev = 0, onLeaveToday = 0;
+      allEmployees.forEach(emp => {
+        const data = leaveDataByEmp[emp.emp_id];
+        if (!data) return;
+        orgThis += data.thisMonthLeaves.reduce((s, l) => s + l.value, 0);
+        orgPrev += data.prevMonthLeaves.reduce((s, l) => s + l.value, 0);
+        if (data.thisMonthLeaves.some(l => l.day === todayDate)) onLeaveToday += 1;
+      });
+
+      document.getElementById('statEmployees').textContent = allEmployees.length;
+      document.getElementById('statThisMonth').textContent = orgThis;
+      document.getElementById('statPrevMonth').textContent = orgPrev;
+      document.getElementById('statOnLeaveToday').textContent = onLeaveToday;
+
+      renderTable();
+    }
+
+    function leaveBadgeClass(count) {
+      if (count === 0) return 'lc-zero';
+      if (count <= 2) return 'lc-low';
+      return 'lc-high';
+    }
+
+    function renderTable() {
+      const search = document.getElementById('searchFilter').value.toLowerCase();
+
+      const filtered = allEmployees.filter(e => {
+        if (!search) return true;
+        return [e.employee_name, e.emp_id, e.designation, e.work_location]
+          .some(v => (v || '').toLowerCase().includes(search));
+      });
+
+      document.getElementById('recordCount').textContent = `${filtered.length} employee${filtered.length !== 1 ? 's' : ''}`;
+
+      const tbody = document.getElementById('tableBody');
+      if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">${allEmployees.length ? 'No employees match your search.' : 'No employees registered yet.'}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(emp => {
+        const data = leaveDataByEmp[emp.emp_id] || { thisMonthLeaves: [], prevMonthLeaves: [] };
+        const thisCount = data.thisMonthLeaves.reduce((s, l) => s + l.value, 0);
+        const prevCount = data.prevMonthLeaves.reduce((s, l) => s + l.value, 0);
+
+        return `
+          <tr>
+            <td>
+              <div class="emp-name">${emp.employee_name || '—'}</div>
+              <div class="emp-id">${emp.emp_id || ''}</div>
+            </td>
+            <td>${emp.designation || '—'} · ${emp.work_location || '—'}</td>
+            <td><span class="leave-count ${leaveBadgeClass(thisCount)}">${thisCount}</span></td>
+            <td><span class="leave-count ${leaveBadgeClass(prevCount)}">${prevCount}</span></td>
+            <td><button class="view-btn" onclick="viewEmployeeLeave('${emp.emp_id}')">🔍 View Leave History</button></td>
+          </tr>`;
+      }).join('');
+    }
+
+    function clearFilters() {
+      document.getElementById('searchFilter').value = '';
+      renderTable();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // DETAIL MODAL
+    // ═══════════════════════════════════════════════════════════════════
+    function renderLeaveList(containerId, leaves) {
+      const el = document.getElementById(containerId);
+      if (!leaves.length) {
+        el.innerHTML = `<div class="no-leave-msg">✅ No leave taken.</div>`;
+        return;
+      }
+      el.innerHTML = leaves.map(l => `
+        <div class="leave-day-row">
+          <span class="ldl">${l.label}</span>
+          <span class="ldr ${l.cls}">${l.type}</span>
+        </div>
+      `).join('');
+    }
+
+    let currentModalEmpId = null;
+
+    function viewEmployeeLeave(empId) {
+      const emp = allEmployees.find(e => e.emp_id === empId);
+      const data = leaveDataByEmp[empId];
+      if (!emp || !data) return;
+
+      currentModalEmpId = empId;
+
+      const today = new Date();
+      const thisYear = today.getFullYear(), thisMonthIdx = today.getMonth();
+      let prevYear = thisYear, prevMonthIdx = thisMonthIdx - 1;
+      if (prevMonthIdx < 0) { prevMonthIdx = 11; prevYear -= 1; }
+
+      document.getElementById('modalTitle').textContent = `📅 ${emp.employee_name || '—'} — Leave History`;
+      document.getElementById('modalSubtitle').textContent = `${empId} · ${emp.designation || '—'} · ${emp.work_location || '—'}`;
+
+      const thisCount = data.thisMonthLeaves.reduce((s, l) => s + l.value, 0);
+      const prevCount = data.prevMonthLeaves.reduce((s, l) => s + l.value, 0);
+
+      document.getElementById('mStatThis').textContent = thisCount;
+      document.getElementById('mStatPrev').textContent = prevCount;
+      document.getElementById('mStatTotal').textContent = '…';
+
+      document.getElementById('thisMonthLabel').textContent = monthLabel(thisYear, thisMonthIdx);
+      document.getElementById('prevMonthLabel').textContent = monthLabel(prevYear, prevMonthIdx);
+      document.getElementById('thisMonthCount').textContent = `${thisCount} leave(s)`;
+      document.getElementById('prevMonthCount').textContent = `${prevCount} leave(s)`;
+
+      renderLeaveList('thisMonthList', data.thisMonthLeaves);
+      renderLeaveList('prevMonthList', data.prevMonthLeaves);
+
+      // Reset full-history section every time the modal opens for a (possibly new) employee
+      document.getElementById('fullHistoryContainer').style.display = 'none';
+      document.getElementById('fullHistoryContainer').innerHTML = '';
+      document.getElementById('historyToggleBtn').textContent = '📜 Show Full Leave History (All Time)';
+      document.getElementById('historyToggleBtn').dataset.loaded = '';
+
+      // Compute all-time total in the background (cheap once byMonth is cached)
+      computeAllTimeTotal(empId).then(total => {
+        if (currentModalEmpId === empId) document.getElementById('mStatTotal').textContent = total;
+      });
+
+      document.getElementById('detailModal').classList.add('show');
+    }
+
+    async function computeAllTimeTotal(empId) {
+      const { allMonths } = await buildFullHistory(empId);
+      let total = 0;
+      allMonths.forEach(m => { total += m.leaves.reduce((s, l) => s + l.value, 0); });
+      return total;
+    }
+
+    async function buildFullHistory(empId) {
+      const data = leaveDataByEmp[empId];
+      const emp = allEmployees.find(e => e.emp_id === empId);
+      const byMonth = data.byMonth;
+      const joiningInfo = data.joiningInfo;
+
+      const today = new Date();
+      const thisStamp = today.getFullYear() * 12 + today.getMonth();
+
+      // Determine the earliest month to walk back to: joining month if known,
+      // otherwise the earliest month with any attendance record, capped at
+      // 24 months back to keep this bounded for very old / incomplete data.
+      let startStamp;
+      if (joiningInfo) {
+        startStamp = joiningInfo.stamp;
+      } else {
+        const monthKeys = Object.keys(byMonth);
+        if (monthKeys.length) {
+          const stamps = monthKeys.map(k => { const [y, m] = k.split('-'); return parseInt(y) * 12 + (parseInt(m) - 1); });
+          startStamp = Math.min(...stamps);
+        } else {
+          startStamp = thisStamp - 23;
+        }
+      }
+      startStamp = Math.max(startStamp, thisStamp - 23);
+
+      const allMonths = [];
+      for (let stamp = thisStamp; stamp >= startStamp; stamp--) {
+        const year = Math.floor(stamp / 12);
+        const monthIndex = stamp % 12;
+        const capDay = stamp === thisStamp ? today.getDate() : null;
+        const leaves = computeMonthLeaves(byMonth, year, monthIndex, joiningInfo, capDay);
+        if (leaves.length) {
+          allMonths.push({ year, monthIndex, label: monthLabel(year, monthIndex), leaves });
+        }
+      }
+      return { allMonths };
+    }
+
+    async function toggleFullHistory() {
+      const btn = document.getElementById('historyToggleBtn');
+      const container = document.getElementById('fullHistoryContainer');
+
+      if (container.style.display === 'none') {
+        if (!btn.dataset.loaded) {
+          btn.textContent = '⏳ Loading full history...';
+          const { allMonths } = await buildFullHistory(currentModalEmpId);
+          if (!allMonths.length) {
+            container.innerHTML = `<div class="no-leave-msg">✅ No leave history found for this employee.</div>`;
+          } else {
+            container.innerHTML = allMonths.map(m => `
+              <div class="month-block">
+                <div class="month-block-title">
+                  <span>${m.label}</span>
+                  <span class="mcount">${m.leaves.reduce((s, l) => s + l.value, 0)} leave(s)</span>
+                </div>
+                <div class="leave-day-list">
+                  ${m.leaves.map(l => `
+                    <div class="leave-day-row">
+                      <span class="ldl">${l.label}</span>
+                      <span class="ldr ${l.cls}">${l.type}</span>
+                    </div>`).join('')}
+                </div>
+              </div>
+            `).join('');
+          }
+          btn.dataset.loaded = '1';
+        }
+        container.style.display = 'block';
+        btn.textContent = '📜 Hide Full Leave History';
+      } else {
+        container.style.display = 'none';
+        btn.textContent = '📜 Show Full Leave History (All Time)';
+      }
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('detailModal')) {
+        document.getElementById('detailModal').classList.remove('show');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // EXPORT
+    // ═══════════════════════════════════════════════════════════════════
+    function exportToExcel() {
+      if (!allEmployees.length) { alert('No records to export!'); return; }
+
+      const rows = [];
+      allEmployees.forEach(emp => {
+        const data = leaveDataByEmp[emp.emp_id];
+        if (!data) return;
+        const addRows = (leaves, monthLbl) => {
+          leaves.forEach(l => {
+            rows.push({
+              'Employee ID': emp.emp_id,
+              'Employee Name': emp.employee_name,
+              'Department': emp.designation,
+              'City': emp.work_location,
+              'Month': monthLbl,
+              'Date': l.label,
+              'Leave Type': l.type,
+              'Value': l.value
+            });
+          });
+        };
+        const today = new Date();
+        const thisYear = today.getFullYear(), thisMonthIdx = today.getMonth();
+        let prevYear = thisYear, prevMonthIdx = thisMonthIdx - 1;
+        if (prevMonthIdx < 0) { prevMonthIdx = 11; prevYear -= 1; }
+        addRows(data.thisMonthLeaves, monthLabel(thisYear, thisMonthIdx));
+        addRows(data.prevMonthLeaves, monthLabel(prevYear, prevMonthIdx));
+      });
+
+      if (!rows.length) { alert('No leave records (this month / previous month) to export!'); return; }
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Leave Records');
+      XLSX.writeFile(wb, `MEVTENCIA_Leave_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+  </script>
+</body>
+</html>
