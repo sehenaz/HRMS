@@ -211,13 +211,14 @@
         const assigned = (adminSession && (adminSession.assigned_employees || adminSession.assignedEmpIds)) || [];
         scopedEmpIds = new Set(assigned);
 
-        // Recruiters get full CRUD (add/view/delete) over the Employee
-        // Database, matching their role preset (Attendance, Leave, Employee
-        // Database, New Employee Registration). Normal/HR admins still
-        // can't hard-delete employee records — that stays limited to the
-        // role explicitly trusted with full database ownership.
+        // Recruiter and HR get full CRUD (add/view/delete) over the
+        // Employee Database, matching their role presets — HR has full
+        // access to all 5 modules (Attendance, Leave, Salary, Employee
+        // Database, New Registration), and Recruiter owns the Employee
+        // Database + New Registration modules. Normal admins still can't
+        // hard-delete employee records.
         const adminRole = (adminSession && adminSession.role) || 'normal';
-        window.canDeleteEmployees = adminRole === 'recruiter';
+        window.canDeleteEmployees = adminRole === 'recruiter' || adminRole === 'hr';
 
         const banner = document.getElementById('scopeBanner');
         const bannerText = document.getElementById('scopeBannerText');
@@ -651,7 +652,7 @@
       // without canDeleteEmployees, even if this function somehow gets
       // triggered without going through the (now-hidden) Delete button.
       if (!window.canDeleteEmployees) {
-        alert('⚠️ You do not have permission to delete employees. Only a Super Admin or Recruiter can do this.');
+        alert('⚠️ You do not have permission to delete employees. Only a Super Admin, HR, or Recruiter can do this.');
         return;
       }
 
