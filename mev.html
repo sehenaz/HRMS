@@ -1020,15 +1020,24 @@
           // value) falls through to the unrestricted superadmin branch,
           // which showed this admin EVERY employee instead of just the
           // ones assigned to them.
+          //
+          // FIX #2: also carry forward role & permissions — previously
+          // only id/name/assigned_employees were stored here, so every
+          // downstream page (EmployeeHistory.html, AttendanceTracker.html,
+          // AdminDashboard.html) had NO way to know what this admin was
+          // actually allowed to see/edit/delete, and effectively defaulted
+          // to showing/allowing everything to every admin.
           safeSetItem('mev_adminSession', JSON.stringify({
             type: 'admin',
             id: linkedAdminInfo.admin_id || linkedAdminInfo.id,
             name: linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
+            role: linkedAdminInfo.role || 'normal',
+            permissions: linkedAdminInfo.permissions || null,
             assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
             assignedEmpIds: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
             loginAt: new Date().toISOString()
           }));
-          debugLog('✓ mev_adminSession saved (type: admin, scoped)');
+          debugLog(`✓ mev_adminSession saved (type: admin, scoped, role: ${linkedAdminInfo.role || 'normal'})`);
         }
 
         // FIX: always land on AttendanceTracker.html first, even for
@@ -1057,10 +1066,15 @@
     function goToAdminDashboard() {
       if (linkedAdminInfo) {
         // FIX: type: 'admin', not 'normal' — see note in continueToDashboard().
+        // FIX #2: also persist role & permissions here (previously dropped
+        // in this path too, so navigating via the navbar link lost the
+        // admin's scope/permissions exactly like the auto-redirect did).
         safeSetItem('mev_adminSession', JSON.stringify({
           type: 'admin',
           id: linkedAdminInfo.admin_id || linkedAdminInfo.id,
           name: linkedAdminInfo.employee_name || linkedAdminInfo.employeeName,
+          role: linkedAdminInfo.role || 'normal',
+          permissions: linkedAdminInfo.permissions || null,
           assigned_employees: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
           assignedEmpIds: linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || [],
           loginAt: new Date().toISOString()

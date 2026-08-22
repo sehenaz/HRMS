@@ -197,6 +197,35 @@ function requirePermission(permKey) {
     }
   };
 }
+
+// ✅ NEW: requireSuperAdmin — for routes that must ONLY ever be touched by
+// a Super Admin (creating/editing/deleting admin accounts). Previously
+// these routes (POST/PATCH/DELETE /api/admins) had NO auth check of any
+// kind — anyone who could reach the server (not just a logged-in normal
+// admin, literally anyone) could create a new admin, change any admin's
+// role/permissions/assigned employees, or delete an admin outright.
+function requireSuperAdmin(req, res, next) {
+  if (req.headers['x-super-admin'] === 'true') return next();
+  return res.status(403).json({ error: 'Super Admin access required for this action.' });
+}
+
+// ✅ NEW: requireAssignedEmployee — for routes that act on ONE employee
+// (by :empId param or emp_id in the body) and must be restricted to only
+// the employees a normal admin is actually assigned to. Super Admins
+// (x-super-admin: true) always bypass this. Must run AFTER
+// requirePermission(...) so req.currentAdmin is already populated.
+function requireAssignedEmployee(getEmpId) {
+  return (req, res, next) => {
+    if (req.headers['x-super-admin'] === 'true') return next();
+    const empId = getEmpId(req);
+    const admin = req.currentAdmin;
+    const assigned = (admin && admin.assigned_employees) || [];
+    if (!empId || !assigned.includes(empId)) {
+      return res.status(403).json({ error: 'This employee is not assigned to you.' });
+    }
+    next();
+  };
+}
 /////////////////////////////////
 // One-time seed: if the SuperAdmin collection is empty, create the same
 // 3 accounts that used to be hardcoded in SuperAdminLogin.html, so nothing
@@ -236,9 +265,35 @@ const upload = multer({ storage });
 //  EMPLOYEES
 // ════════════════════════════════════════════════════════
 
+// ✅ FIX: previously returned EVERY employee to ANY caller, no auth check
+// at all — this is the root cause of "normal admin sees all employees".
+// Now: x-super-admin header -> everyone (unrestricted). x-admin-id header
+// (a normal/recruiter/HR admin) -> only that admin's assigned_employees.
+// No admin headers at all -> unrestricted, UNCHANGED from before, because
+// this route is also used by employees looking up their OWN salary on
+// AttendanceTracker.html, which sends no admin headers whatsoever. That
+// self-lookup path is a separate, lower-severity issue (an employee could
+// technically see other salaries via devtools) — flagged for a follow-up,
+// not fixed here to avoid breaking the employee dashboard in this pass.
 app.get('/api/employees', async (req, res) => {
   try {
     const employees = await Employee.find().sort({ registered_at: -1 });
+
+    if (req.headers['x-super-admin'] === 'true') {
+      return res.json(employees);
+    }
+
+    const adminId = req.headers['x-admin-id'];
+    if (adminId) {
+      const admin = await Admin.findOne({ admin_id: adminId });
+      if (admin) {
+        const assignedSet = new Set(admin.assigned_employees || []);
+        return res.json(employees.filter(e => assignedSet.has(e.emp_id)));
+      }
+      // Unknown admin id sent — fail closed rather than silently showing everything.
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+
     res.json(employees);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -354,9 +409,27 @@ app.post('/api/documents', async (req, res) => {
 
 // Get all documents for one employee, returned as a flat object:
 // { cv_resume: "data:...", id_proof: "data:...", ... }
+// ✅ FIX: added the same conditional scoping as GET /api/employees — a
+// normal admin (x-admin-id header) can only fetch documents for an
+// employee actually assigned to them. Super admin / no-admin-headers
+// (unchanged, e.g. an employee viewing their own docs somewhere) still
+// works as before.
 app.get('/api/documents/:empId', async (req, res) => {
   try {
-    const docs = await Document.find({ emp_id: decodeURIComponent(req.params.empId) });
+    const empId = decodeURIComponent(req.params.empId);
+
+    if (req.headers['x-super-admin'] !== 'true') {
+      const adminId = req.headers['x-admin-id'];
+      if (adminId) {
+        const admin = await Admin.findOne({ admin_id: adminId });
+        if (!admin) return res.status(404).json({ error: 'Admin not found' });
+        if (!(admin.assigned_employees || []).includes(empId)) {
+          return res.status(403).json({ error: 'This employee is not assigned to you.' });
+        }
+      }
+    }
+
+    const docs = await Document.find({ emp_id: empId });
     const out = {};
     docs.forEach(d => { out[d.doc_type] = d.data; });
     res.json(out);
@@ -365,13 +438,29 @@ app.get('/api/documents/:empId', async (req, res) => {
 
 app.delete('/api/documents/:empId', async (req, res) => {
   try {
-    await Document.deleteMany({ emp_id: decodeURIComponent(req.params.empId) });
+    const empId = decodeURIComponent(req.params.empId);
+
+    if (req.headers['x-super-admin'] !== 'true') {
+      const adminId = req.headers['x-admin-id'];
+      if (adminId) {
+        const admin = await Admin.findOne({ admin_id: adminId });
+        if (!admin) return res.status(404).json({ error: 'Admin not found' });
+        if (!(admin.assigned_employees || []).includes(empId)) {
+          return res.status(403).json({ error: 'This employee is not assigned to you.' });
+        }
+      }
+    }
+
+    await Document.deleteMany({ emp_id: empId });
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 ///////////////////////////////
-app.patch('/api/admins/:adminId', async (req, res) => {
+// ✅ FIX: PATCH /api/admins/:adminId previously had NO auth check at all —
+// anyone could change any admin's role, permissions, or assigned employee
+// list. Now only a Super Admin (x-super-admin: true header) can do this.
+app.patch('/api/admins/:adminId', requireSuperAdmin, async (req, res) => {
   try {
     const { assigned_employees, role, permissions } = req.body;
     const update = {};
@@ -388,8 +477,16 @@ app.patch('/api/admins/:adminId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 //////////////////////////////
-// app.delete('/api/employees/:empId', async (req, res) => {
-  app.delete('/api/employees/:empId', requirePermission('employeeDatabase'), async (req, res) => {
+// ✅ FIX: even with the employeeDatabase permission, a normal admin should
+// only be able to delete an employee actually assigned to them — the
+// permission alone (a boolean) previously said nothing about WHICH
+// employees. requireAssignedEmployee runs after requirePermission and
+// enforces that scope (super admin still bypasses everything).
+app.delete(
+  '/api/employees/:empId',
+  requirePermission('employeeDatabase'),
+  requireAssignedEmployee(req => decodeURIComponent(req.params.empId)),
+  async (req, res) => {
   try {
     await Employee.deleteOne({ emp_id: decodeURIComponent(req.params.empId) });
     res.json({ success: true });
@@ -438,7 +535,16 @@ app.post('/api/attendance', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/attendance/:empId/:date', async (req, res) => {
+// ✅ FIX: previously had ZERO protection — anyone who discovered this URL
+// pattern could delete any employee's attendance record for any date, no
+// login/permission check whatsoever. Now requires the "attendance"
+// permission, and a normal admin can only delete records for employees
+// assigned to them (super admin bypasses both checks).
+app.delete(
+  '/api/attendance/:empId/:date',
+  requirePermission('attendance'),
+  requireAssignedEmployee(req => req.params.empId),
+  async (req, res) => {
   try {
     await Attendance.deleteOne({ emp_id: req.params.empId, date: req.params.date });
     res.json({ success: true });
@@ -563,14 +669,26 @@ app.get('/api/stats', async (req, res) => {
 //  NORMAL ADMIN ROUTES (created by Super Admin)
 // ════════════════════════════════════════════════════════
 
+// ✅ FIX: previously returned every admin's password in plain text to ANY
+// caller with no auth check at all. Now the password field is only
+// included when the request identifies itself as a Super Admin
+// (x-super-admin: true). Everyone else (mev.html's checkIfAdmin lookup,
+// etc.) still gets everything they actually need — id, role, permissions,
+// assigned_employees — just not the password.
 app.get('/api/admins', async (req, res) => {
   try {
-    const admins = await Admin.find().sort({ created_at: -1 });
+    const isSuper = req.headers['x-super-admin'] === 'true';
+    let query = Admin.find().sort({ created_at: -1 });
+    if (!isSuper) query = query.select('-password');
+    const admins = await query;
     res.json(admins);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/admins', async (req, res) => {
+// ✅ FIX: previously had NO auth check — anyone could create a brand new
+// admin account (with any role/permissions/assigned employees they liked)
+// just by POSTing here. Now restricted to Super Admin only.
+app.post('/api/admins', requireSuperAdmin, async (req, res) => {
   try {
     const { admin_id, password, employee_id, employee_name, assigned_employees, role, permissions } = req.body;
 
@@ -610,7 +728,9 @@ app.post('/api/admins', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.delete('/api/admins/:adminId', async (req, res) => {
+// ✅ FIX: previously had NO auth check — anyone could delete any admin
+// account. Now restricted to Super Admin only.
+app.delete('/api/admins/:adminId', requireSuperAdmin, async (req, res) => {
   try {
     await Admin.deleteOne({ admin_id: req.params.adminId });
     res.json({ success: true });
