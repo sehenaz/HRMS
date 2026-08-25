@@ -762,6 +762,20 @@
       return !!(currentPermissions && currentPermissions[key]);
     }
 
+    // ── AUTH HEADERS FOR PERMISSION-GATED ROUTES ─────────────────────
+    // server.js's requirePermission() middleware (used on POST /api/leaves,
+    // GET/POST/DELETE /api/salary, POST /api/register, DELETE /api/employees/:id)
+    // checks for an 'x-super-admin: true' header OR an 'x-admin-id' header —
+    // neither was ever being sent from this page, so every one of those
+    // calls was silently getting rejected with 403 (the catch blocks just
+    // logged a console warning, so the UI kept showing "success" even
+    // though nothing was actually saved to MongoDB). This helper builds
+    // the right header for whoever is currently logged in.
+    function permHeaders() {
+      const isSuper = !currentSession || currentSession.type === 'superadmin';
+      return isSuper ? { 'x-super-admin': 'true' } : { 'x-admin-id': currentSession.id };
+    }
+
     function applyRoleUI() {
       const isSuper = !currentSession || currentSession.type === 'superadmin';
 
@@ -2316,14 +2330,25 @@
 
       // MongoDB save
       try {
-        await fetch('/api/leaves', {
+        const res = await fetch('/api/leaves', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...permHeaders() },
           body: JSON.stringify({ key: storeKey, data: leaveData })
         });
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          showToast(`⚠️ Saved locally only — server rejected it: ${errBody.error || res.status}`, '#e53935');
+          dsCloseLeaveModal();
+          dsRender();
+          return;
+        }
         console.log('✅ Leave saved to MongoDB!');
       } catch(e) {
         console.warn('Leave MongoDB sync failed:', e.message);
+        showToast('⚠️ Saved locally only — could not reach the server.', '#e53935');
+        dsCloseLeaveModal();
+        dsRender();
+        return;
       }
 
       dsCloseLeaveModal();
@@ -3337,7 +3362,7 @@ function salarySaveDB(db) {
 // into the local cache (used right before opening the modal, so it's fast).
 async function salarySyncEmployeeFromServer(empId) {
   try {
-    const resp = await fetch(`/api/salary?emp_id=${encodeURIComponent(empId)}`);
+    const resp = await fetch(`/api/salary?emp_id=${encodeURIComponent(empId)}`, { headers: permHeaders() });
     if (!resp.ok) return;
     const serverEntries = await resp.json();
     const db = salaryGetDB();
@@ -3356,7 +3381,7 @@ async function salarySyncEmployeeFromServer(empId) {
 // so the report reflects entries added from other devices/admins too.
 async function salarySyncAllFromServer() {
   try {
-    const resp = await fetch('/api/salary');
+    const resp = await fetch('/api/salary', { headers: permHeaders() });
     if (!resp.ok) return;
     const serverEntries = await resp.json();
     const db = {};
@@ -3435,7 +3460,7 @@ function salaryAddEntry() {
   // so the entry can be deleted server-side too.
   fetch('/api/salary', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...permHeaders() },
     body: JSON.stringify(entry)
   })
     .then(r => r.ok ? r.json() : null)
@@ -3463,7 +3488,7 @@ function salaryDeleteEntry(idx) {
   salaryRenderList();
 
   if (entry && entry._id) {
-    fetch(`/api/salary/${entry._id}`, { method: 'DELETE' })
+    fetch(`/api/salary/${entry._id}`, { method: 'DELETE', headers: permHeaders() })
       .then(() => console.log('✅ Salary entry deleted from MongoDB'))
       .catch(e => console.warn('Salary MongoDB delete failed:', e.message));
   }

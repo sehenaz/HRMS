@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -22,7 +20,6 @@
             overflow: hidden;
             display: flex;
             padding: 10px;
-            
         }
 
         .container {
@@ -390,6 +387,24 @@
     </div>
 
     <script>
+        // ── AUTH HEADERS FOR PERMISSION-GATED /api/register ──────────────
+        // server.js's requirePermission('newEmployeeRegistration') expects
+        // an 'x-super-admin: true' header or an 'x-admin-id' header. This
+        // form has no login of its own — it relies on whichever admin
+        // session is already in this browser's localStorage (i.e. an
+        // admin/HR/Recruiter with the New Registration permission should
+        // be the one filling this out, or sitting with the new employee
+        // while they fill it in). Without this, the save to MongoDB was
+        // silently rejected with 403 every single time.
+        function permHeaders() {
+            const superSession = JSON.parse(localStorage.getItem('mev_superSession') || 'null');
+            const adminSession  = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+            const isSuper = !!superSession || (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin'));
+            if (isSuper) return { 'x-super-admin': 'true' };
+            if (adminSession && adminSession.id) return { 'x-admin-id': adminSession.id };
+            return {};
+        }
+
         // ── Live preview update ──────────────────────────
         function updateCredPreview() {
             const id = document.getElementById('employeeId').value.trim().toUpperCase();
@@ -710,14 +725,17 @@
 
                     const mongoResp = await fetch('/api/register', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', ...permHeaders() },
                         body: JSON.stringify(mongoPayload)
                     });
 
                     if (mongoResp.ok) {
                         console.log('✅ Saved employee record to MongoDB Atlas!');
                     } else {
-                        console.warn('MongoDB employee save failed:', await mongoResp.text());
+                        const errText = await mongoResp.text();
+                        console.warn('MongoDB employee save failed:', errText);
+                        errorMsg.innerHTML = `⚠️ Registration was NOT saved to the database (server said: ${errText}). Make sure you're logged in as an admin/HR/Recruiter with New Employee Registration permission before filling this form.`;
+                        errorMsg.style.display = 'block';
                     }
                 } catch(mongoErr) {
                     console.warn('MongoDB error (offline?):', mongoErr.message);
@@ -808,7 +826,6 @@
                 submitBtn.disabled    = false;
             }
         });
-
 
         // DOB → Age
         document.getElementById('dob').addEventListener('change', function() {
