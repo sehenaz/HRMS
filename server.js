@@ -11,18 +11,6 @@ const PORT = process.env.PORT || 4000;
 mongoose.connect('mongodb://samaresh_Mondal:Mspl%402026@ac-yuzpvud-shard-00-00.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-01.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-02.xjccckc.mongodb.net:27017/mevtencia?authSource=admin&tls=true')
   .then(() => console.log('✅ MongoDB Atlas Connected!'))
   .catch(err => {
-    // ✅ FIX: previously this called process.exit(1), which killed the
-    // entire Node server (and every API route) the moment MongoDB failed
-    // to connect (e.g. due to an IP not being whitelisted on Atlas).
-    // That meant ALL employees saw the "✕ Server Offline" badge and every
-    // employee's salary fell back to the hardcoded ₹15000 default on
-    // AttendanceTracker.html, since /api/employees was unreachable.
-    //
-    // Now the server keeps running even if MongoDB is unreachable — API
-    // routes that hit the DB will fail individually (each already has its
-    // own try/catch returning a 500), but the rest of the app (static
-    // files, localStorage-based flows) keeps working, and once the IP is
-    // whitelisted on Atlas + the server is restarted, it reconnects fine.
     console.error('❌ MongoDB Error:', err.message);
     console.error('⚠️  Server will keep running, but any /api/* route that needs the database will fail until MongoDB connects.');
     console.error('⚠️  Fix: whitelist this server\'s IP in MongoDB Atlas → Network Access, then restart the server.');
@@ -44,11 +32,6 @@ const employeeSchema = new mongoose.Schema({
   password:       { type: String, default: 'MEVRICK1707' },
   work_location:  String,
   address:        String,
-  // ✅ FIX: these fields were completely missing from the schema, so
-  // Mongoose silently dropped them on every save (this is the same class
-  // of bug we already fixed for documents) — this is why DOB, Age, Marital
-  // Status, Blood Group, Nominee, and Bank details always showed N/A on
-  // the profile page even though Registration.html was sending them.
   alternative_phone: String,
   dob:               String,
   age:               String,
@@ -66,15 +49,6 @@ const employeeSchema = new mongoose.Schema({
   updated_at:     { type: Date, default: Date.now }
 });
 
-// ✅ FIX: documents (CV, ID proof, bank passbook, marksheet, appointment
-// letter) used to be stuffed as base64 strings directly onto the Employee
-// document. MongoDB caps every single document at 16MB — with 4 uploaded
-// files plus a generated PDF all base64-encoded (~33% larger than the raw
-// file) inside ONE employee record, larger uploads silently failed to save
-// or got truncated. Each document now gets its OWN MongoDB document in a
-// separate collection, keyed by emp_id + doc_type, so the 16MB limit
-// applies per-file instead of per-employee, and one employee's stored size
-// only grows with actual usage rather than being capped as a group.
 const documentSchema = new mongoose.Schema({
   emp_id:      { type: String, required: true },
   doc_type:    { type: String, required: true }, // 'cv_resume' | 'id_proof' | 'bank_passbook' | 'marksheet' | 'appointment_letter'
@@ -120,12 +94,6 @@ const adminSchema = new mongoose.Schema({
   employee_id:        String,
   employee_name:      String,
   assigned_employees: [String],   // array of emp_ids under this admin
-  // ✅ FIX: role and permissions were missing from the schema entirely, so
-  // Mongoose silently dropped them on every save/update — the Super Admin
-  // dashboard's Role dropdown (Normal Admin / Recruiter / HR) and the 5
-  // permission checkboxes (attendance, leave, salary, employeeDatabase,
-  // newEmployeeRegistration) always appeared to save but never persisted,
-  // so every admin reverted to default access after a refresh.
   role: { type: String, enum: ['normal', 'recruiter', 'hr'], default: 'normal' },
   permissions: {
     attendance:              { type: Boolean, default: true },
@@ -137,10 +105,6 @@ const adminSchema = new mongoose.Schema({
   created_at:         { type: Date, default: Date.now }
 });
 
-// ── SUPER ADMIN SCHEMA (top-level accounts, was previously hardcoded
-//    only inside SuperAdminLogin.html with no backend persistence at all
-//    — that's why "Change Password" always failed, there was no
-//    /api/super-admin/... route and nowhere in the DB to save a new one) ──
 const superAdminSchema = new mongoose.Schema({
   super_id:   { type: String, required: true, unique: true },
   name:       String,
@@ -171,10 +135,33 @@ const SuperAdmin = mongoose.model('SuperAdmin', superAdminSchema);
 // ════════════════════════════════════════════════════════
 //  PERMISSION MIDDLEWARE
 // ════════════════════════════════════════════════════════
+//
+// ✅ SECURITY FIX: previously `requireSuperAdmin` (and the super-admin
+// bypass inside `requirePermission`) trusted the client-supplied header
+// `x-super-admin: true` at face value. That header proves NOTHING — any
+// caller (curl, browser devtools, a modified frontend) could set it
+// themselves and instantly get full super-admin rights on every admin
+// route, with no credential check at all.
+//
+// Fix: the frontend now sends `x-super-admin-id` set to the *actual*
+// super admin's id (the one returned by /api/super-admin/login and
+// stored in `mev_superSession`). This middleware looks that id up in the
+// SuperAdmin collection — if it doesn't exist, the request is rejected.
+// This is still not as strong as a signed session token/JWT (a stolen id
+// string is still enough), but it closes the "anyone can just claim
+// x-super-admin: true" hole and ties every privileged action to a real,
+// provisioned Super Admin account.
+async function verifySuperAdmin(req) {
+  const superId = req.headers['x-super-admin-id'];
+  if (!superId) return false;
+  const sa = await SuperAdmin.findOne({ super_id: superId });
+  return !!sa;
+}
+
 function requirePermission(permKey) {
   return async (req, res, next) => {
     try {
-      if (req.headers['x-super-admin'] === 'true') return next();
+      if (await verifySuperAdmin(req)) return next();
 
       const adminId = req.headers['x-admin-id'];
       if (!adminId) {
@@ -198,25 +185,26 @@ function requirePermission(permKey) {
   };
 }
 
-// ✅ NEW: requireSuperAdmin — for routes that must ONLY ever be touched by
-// a Super Admin (creating/editing/deleting admin accounts). Previously
-// these routes (POST/PATCH/DELETE /api/admins) had NO auth check of any
-// kind — anyone who could reach the server (not just a logged-in normal
-// admin, literally anyone) could create a new admin, change any admin's
-// role/permissions/assigned employees, or delete an admin outright.
-function requireSuperAdmin(req, res, next) {
-  if (req.headers['x-super-admin'] === 'true') return next();
-  return res.status(403).json({ error: 'Super Admin access required for this action.' });
+// requireSuperAdmin — for routes that must ONLY ever be touched by a real
+// Super Admin (creating/editing/deleting admin accounts).
+async function requireSuperAdmin(req, res, next) {
+  try {
+    if (await verifySuperAdmin(req)) return next();
+    return res.status(403).json({ error: 'Super Admin access required for this action.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }
 
-// ✅ NEW: requireAssignedEmployee — for routes that act on ONE employee
-// (by :empId param or emp_id in the body) and must be restricted to only
-// the employees a normal admin is actually assigned to. Super Admins
-// (x-super-admin: true) always bypass this. Must run AFTER
-// requirePermission(...) so req.currentAdmin is already populated.
+// requireAssignedEmployee — for routes that act on ONE employee (by
+// :empId param or emp_id in the body) and must be restricted to only the
+// employees a normal admin is actually assigned to. Super Admins bypass
+// this. Must run AFTER requirePermission(...) so req.currentAdmin is
+// already populated (super admins skip this check entirely since
+// req.currentAdmin won't matter for them).
 function requireAssignedEmployee(getEmpId) {
-  return (req, res, next) => {
-    if (req.headers['x-super-admin'] === 'true') return next();
+  return async (req, res, next) => {
+    if (await verifySuperAdmin(req)) return next();
     const empId = getEmpId(req);
     const admin = req.currentAdmin;
     const assigned = (admin && admin.assigned_employees) || [];
@@ -247,10 +235,6 @@ async function seedSuperAdmins() {
 mongoose.connection.once('open', seedSuperAdmins);
 
 app.use(cors({ origin: '*' }));
-// Each request now carries at most ONE document (via /api/documents) instead
-// of four bundled together, so 8mb comfortably covers a base64-encoded 5MB
-// file (~6.7MB) with headroom, while still protecting the server from
-// oversized payloads.
 app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(express.static(__dirname));
@@ -265,21 +249,11 @@ const upload = multer({ storage });
 //  EMPLOYEES
 // ════════════════════════════════════════════════════════
 
-// ✅ FIX: previously returned EVERY employee to ANY caller, no auth check
-// at all — this is the root cause of "normal admin sees all employees".
-// Now: x-super-admin header -> everyone (unrestricted). x-admin-id header
-// (a normal/recruiter/HR admin) -> only that admin's assigned_employees.
-// No admin headers at all -> unrestricted, UNCHANGED from before, because
-// this route is also used by employees looking up their OWN salary on
-// AttendanceTracker.html, which sends no admin headers whatsoever. That
-// self-lookup path is a separate, lower-severity issue (an employee could
-// technically see other salaries via devtools) — flagged for a follow-up,
-// not fixed here to avoid breaking the employee dashboard in this pass.
 app.get('/api/employees', async (req, res) => {
   try {
     const employees = await Employee.find().sort({ registered_at: -1 });
 
-    if (req.headers['x-super-admin'] === 'true') {
+    if (await verifySuperAdmin(req)) {
       return res.json(employees);
     }
 
@@ -290,7 +264,6 @@ app.get('/api/employees', async (req, res) => {
         const assignedSet = new Set(admin.assigned_employees || []);
         return res.json(employees.filter(e => assignedSet.has(e.emp_id)));
       }
-      // Unknown admin id sent — fail closed rather than silently showing everything.
       return res.status(404).json({ error: 'Admin not found' });
     }
 
@@ -317,8 +290,6 @@ app.post('/api/employees', upload.any(), async (req, res) => {
       password:       emp.password      || 'MEVRICK1707',
       work_location:  emp.work_location || emp.workLocation || '',
       address:        emp.address       || '',
-      // ✅ FIX: previously missing — this is why DOB/Age/Marital Status/
-      // Blood Group/Nominee/Bank details always showed N/A.
       alternative_phone: emp.alternative_phone || emp.alternativePhone || '',
       dob:               emp.dob || '',
       age:               emp.age || '',
@@ -341,7 +312,6 @@ app.post('/api/employees', upload.any(), async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// app.post('/api/register', upload.any(), async (req, res) => {
 app.post('/api/register', requirePermission('newEmployeeRegistration'), upload.any(), async (req, res) => {
   try {
     const emp = req.body;
@@ -361,8 +331,6 @@ app.post('/api/register', requirePermission('newEmployeeRegistration'), upload.a
       password:       emp.password      || 'MEVRICK1707',
       work_location:  emp.work_location || emp.workLocation || '',
       address:        emp.address       || '',
-      // ✅ FIX: previously missing — this is why DOB/Age/Marital Status/
-      // Blood Group/Nominee/Bank details always showed N/A.
       alternative_phone: emp.alternative_phone || emp.alternativePhone || '',
       dob:               emp.dob || '',
       age:               emp.age || '',
@@ -386,12 +354,9 @@ app.post('/api/register', requirePermission('newEmployeeRegistration'), upload.a
 });
 
 // ════════════════════════════════════════════════════════
-//  DOCUMENTS (stored separately from the Employee record so a single
-//  large file — or several of them together — never risks hitting
-//  MongoDB's 16MB per-document limit on the Employee record itself)
+//  DOCUMENTS
 // ════════════════════════════════════════════════════════
 
-// Save/replace ONE document for one employee. Body: { emp_id, doc_type, filename, data }
 app.post('/api/documents', async (req, res) => {
   try {
     const { emp_id, doc_type, filename, data } = req.body;
@@ -407,18 +372,11 @@ app.post('/api/documents', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Get all documents for one employee, returned as a flat object:
-// { cv_resume: "data:...", id_proof: "data:...", ... }
-// ✅ FIX: added the same conditional scoping as GET /api/employees — a
-// normal admin (x-admin-id header) can only fetch documents for an
-// employee actually assigned to them. Super admin / no-admin-headers
-// (unchanged, e.g. an employee viewing their own docs somewhere) still
-// works as before.
 app.get('/api/documents/:empId', async (req, res) => {
   try {
     const empId = decodeURIComponent(req.params.empId);
 
-    if (req.headers['x-super-admin'] !== 'true') {
+    if (!(await verifySuperAdmin(req))) {
       const adminId = req.headers['x-admin-id'];
       if (adminId) {
         const admin = await Admin.findOne({ admin_id: adminId });
@@ -440,7 +398,7 @@ app.delete('/api/documents/:empId', async (req, res) => {
   try {
     const empId = decodeURIComponent(req.params.empId);
 
-    if (req.headers['x-super-admin'] !== 'true') {
+    if (!(await verifySuperAdmin(req))) {
       const adminId = req.headers['x-admin-id'];
       if (adminId) {
         const admin = await Admin.findOne({ admin_id: adminId });
@@ -457,9 +415,6 @@ app.delete('/api/documents/:empId', async (req, res) => {
 });
 
 ///////////////////////////////
-// ✅ FIX: PATCH /api/admins/:adminId previously had NO auth check at all —
-// anyone could change any admin's role, permissions, or assigned employee
-// list. Now only a Super Admin (x-super-admin: true header) can do this.
 app.patch('/api/admins/:adminId', requireSuperAdmin, async (req, res) => {
   try {
     const { assigned_employees, role, permissions } = req.body;
@@ -477,11 +432,6 @@ app.patch('/api/admins/:adminId', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 //////////////////////////////
-// ✅ FIX: even with the employeeDatabase permission, a normal admin should
-// only be able to delete an employee actually assigned to them — the
-// permission alone (a boolean) previously said nothing about WHICH
-// employees. requireAssignedEmployee runs after requirePermission and
-// enforces that scope (super admin still bypasses everything).
 app.delete(
   '/api/employees/:empId',
   requirePermission('employeeDatabase'),
@@ -535,11 +485,6 @@ app.post('/api/attendance', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ✅ FIX: previously had ZERO protection — anyone who discovered this URL
-// pattern could delete any employee's attendance record for any date, no
-// login/permission check whatsoever. Now requires the "attendance"
-// permission, and a normal admin can only delete records for employees
-// assigned to them (super admin bypasses both checks).
 app.delete(
   '/api/attendance/:empId/:date',
   requirePermission('attendance'),
@@ -564,8 +509,7 @@ app.get('/api/leaves', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// app.post('/api/leaves', async (req, res) => {
-  app.post('/api/leaves', requirePermission('leave'), async (req, res) => {
+app.post('/api/leaves', requirePermission('leave'), async (req, res) => {
   try {
     const { key, data } = req.body;
     if (!key) return res.status(400).json({ error: 'key required' });
@@ -582,9 +526,7 @@ app.get('/api/leaves', async (req, res) => {
 //  SALARIES
 // ════════════════════════════════════════════════════════
 
-// app.get('/api/salary', async (req, res) => {
-
-  app.get('/api/salary', requirePermission('salary'), async (req, res) => {
+app.get('/api/salary', requirePermission('salary'), async (req, res) => {
   try {
     const { emp_id } = req.query;
     const filter = emp_id ? { emp_id } : {};
@@ -593,8 +535,7 @@ app.get('/api/leaves', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// app.post('/api/salary', async (req, res) => {
-  app.post('/api/salary', requirePermission('salary'), async (req, res) => {
+app.post('/api/salary', requirePermission('salary'), async (req, res) => {
   try {
     const { emp_id, date, amount, note, empName, addedBy } = req.body;
     if (!emp_id || !date || !amount) {
@@ -615,8 +556,7 @@ app.get('/api/leaves', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// app.delete('/api/salary/:id', async (req, res) => {
-  app.delete('/api/salary/:id', requirePermission('salary'), async (req, res) => {
+app.delete('/api/salary/:id', requirePermission('salary'), async (req, res) => {
   try {
     const result = await Salary.findByIdAndDelete(req.params.id);
     if (!result) return res.status(404).json({ error: 'Salary entry not found' });
@@ -669,15 +609,9 @@ app.get('/api/stats', async (req, res) => {
 //  NORMAL ADMIN ROUTES (created by Super Admin)
 // ════════════════════════════════════════════════════════
 
-// ✅ FIX: previously returned every admin's password in plain text to ANY
-// caller with no auth check at all. Now the password field is only
-// included when the request identifies itself as a Super Admin
-// (x-super-admin: true). Everyone else (mev.html's checkIfAdmin lookup,
-// etc.) still gets everything they actually need — id, role, permissions,
-// assigned_employees — just not the password.
 app.get('/api/admins', async (req, res) => {
   try {
-    const isSuper = req.headers['x-super-admin'] === 'true';
+    const isSuper = await verifySuperAdmin(req);
     let query = Admin.find().sort({ created_at: -1 });
     if (!isSuper) query = query.select('-password');
     const admins = await query;
@@ -685,9 +619,6 @@ app.get('/api/admins', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ✅ FIX: previously had NO auth check — anyone could create a brand new
-// admin account (with any role/permissions/assigned employees they liked)
-// just by POSTing here. Now restricted to Super Admin only.
 app.post('/api/admins', requireSuperAdmin, async (req, res) => {
   try {
     const { admin_id, password, employee_id, employee_name, assigned_employees, role, permissions } = req.body;
@@ -698,11 +629,6 @@ app.post('/api/admins', requireSuperAdmin, async (req, res) => {
 
     const existing = await Admin.findOne({ admin_id });
     if (existing) {
-      // ✅ FIX: previously a duplicate admin_id was always rejected outright,
-      // even when the Super Admin was just re-saving the same admin with an
-      // updated role/permissions/assigned_employees list from the "Assign
-      // Admin Role" form (which POSTs, it doesn't PATCH). Now we update the
-      // existing admin instead of blocking the request.
       existing.employee_name = employee_name || existing.employee_name;
       existing.assigned_employees = assigned_employees || existing.assigned_employees;
       existing.role = role || existing.role;
@@ -710,8 +636,6 @@ app.post('/api/admins', requireSuperAdmin, async (req, res) => {
       await existing.save();
       return res.json({ success: true, admin: existing, updated: true });
     }
-
-
 
     const admin = new Admin({
       admin_id,
@@ -728,8 +652,6 @@ app.post('/api/admins', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ✅ FIX: previously had NO auth check — anyone could delete any admin
-// account. Now restricted to Super Admin only.
 app.delete('/api/admins/:adminId', requireSuperAdmin, async (req, res) => {
   try {
     await Admin.deleteOne({ admin_id: req.params.adminId });
@@ -786,7 +708,6 @@ app.post('/api/super-admin/change-password', async (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.json({
-    
     status: 'ok',
     time: new Date().toISOString(),
     db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'

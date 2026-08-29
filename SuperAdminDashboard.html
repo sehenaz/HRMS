@@ -8,8 +8,11 @@
   <title>MEVTENCIA — Super Admin Dashboard</title>
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Chart.js for Attendance Breakdown pie chart -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <style>
     * {
+      
       margin: 0;
       padding: 0;
       box-sizing: border-box;
@@ -144,7 +147,6 @@
       box-shadow: 0 2px 10px rgba(63, 81, 181, 0.3);
     }
 
-    /* Admin Login link styled like a tab but pinned to the right */
     .tab-btn.admin-login-link {
       margin-left: auto;
       text-decoration: none;
@@ -223,6 +225,9 @@
     }
     .stat-card .num.red {
       color: #f44336;
+    }
+    .stat-card .num.purple {
+      color: #7c3aed;
     }
 
     .stat-card .lbl {
@@ -317,6 +322,61 @@
     .sc-range {
       font-size: 10px;
       color: #aaa;
+    }
+
+    /* Attendance Breakdown Pie Chart Panel */
+    .chart-panel {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 20px;
+    }
+
+    .chart-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chart-panel-header h3 {
+      color: #3f51b5;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .chart-legend span.leg-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .chart-legend .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .chart-canvas-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      height: 280px;
+      margin: 0 auto;
     }
 
     /* Filters */
@@ -659,6 +719,66 @@
       font-size: 14px;
     }
 
+    /* Salary & Leave specific styles */
+    .salary-cell {
+      font-weight: 700;
+      color: #1d6f42;
+      font-family: monospace;
+    }
+
+    .leave-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .lc-zero {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+    .lc-low {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .lc-high {
+      background: #fde2e1;
+      color: #c0392b;
+    }
+
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .month-nav button {
+      background: #e8eef5;
+      border: none;
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 700;
+      color: #3f51b5;
+      transition: all 0.2s;
+    }
+
+    .month-nav button:hover {
+      background: #d0d9e8;
+    }
+
+    .month-label {
+      font-weight: 700;
+      font-size: 14px;
+      color: #333;
+      min-width: 130px;
+      text-align: center;
+    }
+
     /* Admin Cards List */
     .admins-grid {
       display: grid;
@@ -928,6 +1048,157 @@
       cursor: pointer;
     }
 
+    /* Leave Detail Modal */
+    .modal-box {
+      background: white;
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 780px;
+      width: 100%;
+      max-height: 88vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 26px;
+      font-weight: 700;
+      color: #aaa;
+      cursor: pointer;
+    }
+    .modal-close:hover {
+      color: #333;
+    }
+
+    .modal-title {
+      color: #3f51b5;
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .modal-subtitle {
+      color: #888;
+      font-size: 12px;
+      margin-bottom: 18px;
+    }
+
+    .modal-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .modal-stat {
+      background: #f5f7fa;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .modal-stat .n {
+      font-size: 24px;
+      font-weight: 800;
+      color: #3f51b5;
+    }
+    .modal-stat .l {
+      font-size: 11px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    .month-block {
+      margin-bottom: 18px;
+    }
+    .month-block-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #3f51b5;
+      border-bottom: 2px solid #e0e7ff;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .month-block-title .mcount {
+      font-size: 11px;
+      font-weight: 700;
+      color: #856404;
+      background: #fff3cd;
+      padding: 2px 10px;
+      border-radius: 20px;
+    }
+
+    .leave-day-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .leave-day-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+    }
+    .leave-day-row .ldl {
+      font-weight: 700;
+      color: #333;
+    }
+    .leave-day-row .ldr {
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+    }
+    .type-absent {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .type-half {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .type-onleave {
+      background: #e8d5ff;
+      color: #3f51b5;
+    }
+    .type-unmarked {
+      background: #e2e3e5;
+      color: #555;
+    }
+
+    .no-leave-msg {
+      text-align: center;
+      color: #4caf50;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 14px;
+      background: #e8f5e9;
+      border-radius: 10px;
+    }
+
+    .history-toggle {
+      width: 100%;
+      padding: 10px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      background: none;
+      color: #3f51b5;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .history-toggle:hover {
+      background: #f0f4ff;
+    }
+
     /* Toast */
     .toast {
       position: fixed;
@@ -1028,6 +1299,9 @@
       .stats-row {
         grid-template-columns: repeat(2, 1fr);
       }
+      .modal-stats {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -1057,25 +1331,13 @@
 
     <!-- Tabs -->
     <div class="tabs">
-      <button class="tab-btn active" onclick="switchTab('attendance')">
-        📊 Attendance Dashboard
-      </button>
-      <button class="tab-btn" onclick="switchTab('admins')">
-        👤 Manage Admins
-      </button>
-      <!-- <button class="tab-btn" onclick="switchTab('empdb')">
-        🗂️ Employee Database
-      </button> -->
-
-      <a href="EmployeeHistory.html" class="tab-btn" style="text-decoration:none;color:#2e7d32;background:#e8f5e9;" title="Open new employee registration form">
-        🆕 Employee Database
-      </a>
-      <a href="Registration.html" class="tab-btn" style="text-decoration:none;color:#2e7d32;background:#e8f5e9;" title="Open new employee registration form">
-        🆕 New Employee Registration
-      </a>
-      <a href="AdminLogin.html" class="tab-btn admin-login-link" title="Go to Admin Login page">
-        🔐 Admin Login
-      </a>
+      <button class="tab-btn active" onclick="switchTab('attendance')">📊 Attendance</button>
+      <button class="tab-btn" onclick="switchTab('salary')">💰 Salary</button>
+      <button class="tab-btn" onclick="switchTab('leave')">📅 Leave</button>
+      <button class="tab-btn" onclick="switchTab('admins')">👤 Manage Admins</button>
+      <a href="EmployeeHistory.html" class="tab-btn" style="text-decoration:none;color:#2e7d32;background:#e8f5e9;" title="Open new employee registration form">🆕 Employee Database</a>
+      <a href="Registration.html" class="tab-btn" style="text-decoration:none;color:#2e7d32;background:#e8f5e9;" title="Open new employee registration form">🆕 New Registration</a>
+      <a href="AdminLogin.html" class="tab-btn admin-login-link" title="Go to Admin Login page">🔐 Admin Login</a>
     </div>
 
     <!-- ========== TAB 1: ATTENDANCE DASHBOARD ========== -->
@@ -1094,10 +1356,6 @@
           <div class="num orange" id="statHalf">0</div>
           <div class="lbl">Half Day</div>
         </div>
-        <!-- <div class="stat-card">
-          <div class="num blue" id="statLive">0</div>
-          <div class="lbl">In Progress</div>
-        </div> -->
         <div class="stat-card">
           <div class="num amber" id="statSandwich">0</div>
           <div class="lbl">🥪 Sandwich Leaves</div>
@@ -1140,7 +1398,7 @@
         </div>
       </div>
 
-      <!-- Backend connection banner (shown only if API is unreachable) -->
+      <!-- Backend connection banner -->
       <div id="backendWarning" style="display:none;background:#fee2e2;border-left:5px solid #dc2626;color:#7f1d1d;padding:14px 18px;border-radius:12px;margin-bottom:18px;font-size:13px;line-height:1.5;">
         ⚠️ <strong>Could not reach the backend server</strong> at <code id="backendWarningUrl"></code>.
         Records shown below are from local cache only. Make sure your Node/Express + MongoDB server is running
@@ -1159,6 +1417,18 @@
           <button class="sandwich-toggle-btn" onclick="toggleSandwichList()">▼ Show Details</button>
         </div>
         <div class="sandwich-list" id="sandwichList"></div>
+      </div>
+
+      <!-- Attendance Breakdown Pie Chart -->
+      <div class="chart-panel">
+        <div class="chart-panel-header">
+          <h3>📊 Attendance Breakdown (All Records)</h3>
+          <span class="record-count" id="pieRecordCount">— records</span>
+        </div>
+        <div class="chart-legend" id="pieLegend"></div>
+        <div class="chart-canvas-wrap">
+          <canvas id="attendancePieChart" role="img" aria-label="Pie chart showing the split of attendance records by status: Full Day, Half Day, Absent, On Leave and In Progress">Attendance breakdown chart</canvas>
+        </div>
       </div>
 
       <!-- View Toggle -->
@@ -1219,7 +1489,132 @@
       <div class="mobile-list" id="mobileList"></div>
     </div>
 
-    <!-- ========== TAB 2: MANAGE ADMINS ========== -->
+    <!-- ========== TAB 2: SALARY ========== -->
+    <div class="tab-content" id="tabSalary">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num green" id="salaryStatEmployees">0</div>
+          <div class="lbl">Total Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="num blue" id="salaryStatFull">0</div>
+          <div class="lbl">Full Days</div>
+        </div>
+        <div class="stat-card">
+          <div class="num orange" id="salaryStatHalf">0</div>
+          <div class="lbl">Half Days</div>
+        </div>
+        <div class="stat-card">
+          <div class="num purple" id="salaryStatTotal">₹0</div>
+          <div class="lbl">Total Salary</div>
+        </div>
+      </div>
+
+      <!-- Month Selector -->
+      <div class="filters">
+        <div class="month-nav" style="margin-left:0;flex:1;">
+          <button onclick="changeSalaryMonth(-1)">◀</button>
+          <span class="month-label" id="salaryMonthLabel">January 2024</span>
+          <button onclick="changeSalaryMonth(1)">▶</button>
+        </div>
+        <button class="filter-btn" onclick="renderSalary()">⟳ Refresh</button>
+        <button class="btn-excel" onclick="handleSalaryExport()">
+          <span class="icon">X</span> Export Excel
+        </button>
+      </div>
+
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button class="vt-btn active" id="btnSalaryViewMonthly" onclick="setSalaryView('monthly')">📊 Monthly Summary</button>
+        <button class="vt-btn" id="btnSalaryViewDaily" onclick="setSalaryView('daily')">📅 Daily Salary</button>
+      </div>
+
+      <div class="table-container" id="salaryMonthlyContainer">
+        <div class="table-header">
+          <h3 id="salaryTitle">Monthly Salary Report</h3>
+          <span class="record-count" id="salaryCount">0 employees</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>Full Days</th>
+              <th>Half Days</th>
+              <th>Absent Days</th>
+              <th>Paid Days</th>
+              <th>Total Salary</th>
+            </tr>
+          </thead>
+          <tbody id="salaryBody">
+            <tr><td colspan="7" class="empty-row">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Daily Salary (date wise, per employee) -->
+      <div id="salaryDailyContainer" style="display:none;"></div>
+    </div>
+
+    <!-- ========== TAB 3: LEAVE ========== -->
+    <div class="tab-content" id="tabLeave">
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="num blue" id="leaveStatEmployees">0</div>
+          <div class="lbl">Total Employees</div>
+        </div>
+        <div class="stat-card">
+          <div class="num amber" id="leaveStatThisMonth">0</div>
+          <div class="lbl">Leaves This Month</div>
+        </div>
+        <div class="stat-card">
+          <div class="num orange" id="leaveStatPrevMonth">0</div>
+          <div class="lbl">Leaves Previous Month</div>
+        </div>
+        <div class="stat-card">
+          <div class="num red" id="leaveStatToday">0</div>
+          <div class="lbl">On Leave Today</div>
+        </div>
+      </div>
+
+      <!-- Month Selector -->
+      <div class="filters">
+        <div class="month-nav" style="margin-left:0;flex:1;">
+          <button onclick="changeLeaveMonth(-1)">◀</button>
+          <span class="month-label" id="leaveMonthLabel">January 2024</span>
+          <button onclick="changeLeaveMonth(1)">▶</button>
+        </div>
+        <button class="filter-btn" onclick="renderLeave()">⟳ Refresh</button>
+        <button class="btn-excel" onclick="exportLeaveExcel()">
+          <span class="icon">X</span> Export Excel
+        </button>
+      </div>
+
+      <div class="table-container">
+        <div class="table-header">
+          <h3 id="leaveTitle">Leave Overview</h3>
+          <span class="record-count" id="leaveCount">0 employees</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Employee</th>
+              <th>Department</th>
+              <th>Leaves</th>
+              <th>Details</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="leaveBody">
+            <tr><td colspan="5" class="empty-row">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ========== TAB 4: MANAGE ADMINS ========== -->
     <div class="tab-content" id="tabAdmins">
       <!-- Stats -->
       <div class="stats-row">
@@ -1345,62 +1740,36 @@
         </div>
       </div>
     </div>
-
-    <!-- ========== TAB 3: EMPLOYEE DATABASE ========== -->
-    <div class="tab-content" id="tabEmpDB">
-      <div class="stats-row">
-        <div class="stat-card">
-          <div class="num" id="edbTotal">0</div>
-          <div class="lbl">Total Employees</div>
-        </div>
-        <div class="stat-card">
-          <div class="num green" id="edbActive">0</div>
-          <div class="lbl">Active</div>
-        </div>
-        <div class="stat-card">
-          <div class="num red" id="edbInactive">0</div>
-          <div class="lbl">Inactive</div>
-        </div>
-      </div>
-
-      <div class="filters">
-        <input type="text" id="edbSearch" placeholder="🔍 Search by Name, ID, Dept, City..." oninput="renderEmployeeDB()" />
-        <a href="EmployeeRegistration.html" class="filter-btn" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;">
-          ➕ Add New Employee
-        </a>
-        <button class="filter-btn" onclick="renderEmployeeDB()">⟳ Refresh</button>
-      </div>
-
-      <div class="table-container">
-        <div class="table-header">
-          <h3>Employee Records</h3>
-          <span class="record-count" id="edbRecordCount">— records</span>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Employee</th>
-              <th>Department</th>
-              <th>City</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Joining Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="edbTableBody">
-            <tr><td colspan="8" style="text-align:center;padding:40px;color:#aaa;">Loading employees...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
   </div>
 
   <!-- Photo Modal -->
   <div class="modal-overlay" id="photoModal" onclick="closeModal()">
     <button class="modal-close-btn" onclick="closeModal()">✕</button>
     <img class="modal-img" id="modalImg" alt="Employee Photo" />
+  </div>
+
+  <!-- Leave Detail Modal -->
+  <div class="modal-overlay" id="leaveDetailModal" onclick="closeLeaveModal(event)">
+    <div class="modal-box">
+      <span class="modal-close" onclick="document.getElementById('leaveDetailModal').classList.remove('show')">✕</span>
+      <div class="modal-title" id="leaveModalTitle">Employee Leave Details</div>
+      <div class="modal-subtitle" id="leaveModalSubtitle">—</div>
+      <div class="modal-stats">
+        <div class="modal-stat"><div class="n" id="lmStatThis">0</div><div class="l">This Month</div></div>
+        <div class="modal-stat"><div class="n" id="lmStatPrev">0</div><div class="l">Previous Month</div></div>
+        <div class="modal-stat"><div class="n" id="lmStatTotal">0</div><div class="l">All-Time Leaves</div></div>
+      </div>
+      <div class="month-block">
+        <div class="month-block-title"><span id="lmThisLabel">This Month</span> <span class="mcount" id="lmThisCount">0 leave(s)</span></div>
+        <div class="leave-day-list" id="lmThisList"></div>
+      </div>
+      <div class="month-block">
+        <div class="month-block-title"><span id="lmPrevLabel">Previous Month</span> <span class="mcount" id="lmPrevCount">0 leave(s)</span></div>
+        <div class="leave-day-list" id="lmPrevList"></div>
+      </div>
+      <button class="history-toggle" id="lmHistoryToggle" onclick="toggleLeaveHistory()">📜 Show Full Leave History (All Time)</button>
+      <div id="lmFullHistory" style="display:none;"></div>
+    </div>
   </div>
 
   <!-- Change Password Modal -->
@@ -1462,8 +1831,14 @@
       document.getElementById('welcomeText').textContent = `Welcome, ${session.name}`;
     }
 
+    function superAdminHeaders(extra = {}) {
+      const superId = session.super_id || session.id || session.username;
+      return { 'x-super-admin-id': superId, ...extra };
+    }
+
     function logout() {
       localStorage.removeItem('mev_superSession');
+      window.location.href = 'SuperAdminLogin.html';
     }
 
     function showToast(msg, bg = '#2d3748') {
@@ -1474,8 +1849,6 @@
       setTimeout(() => t.classList.remove('show'), 3500);
     }
 
-    // Fetch with a hard timeout so the UI never gets stuck on "Loading..."
-    // if the backend is unreachable (wrong port / server not running / CORS).
     async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -1501,7 +1874,7 @@
       }
     }
 
-    // ========== CHANGE PASSWORD (SUPER ADMIN) ==========
+    // ========== CHANGE PASSWORD ==========
     function openChangePasswordModal() {
       document.getElementById('cpCurrentPassword').value = '';
       document.getElementById('cpNewPassword').value = '';
@@ -1558,7 +1931,6 @@
           return;
         }
 
-        // Keep local session in sync if it stores the password
         if (session.password) {
           session.password = newPassword;
           localStorage.setItem('mev_superSession', JSON.stringify(session));
@@ -1576,24 +1948,38 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
 
-      if (tab === 'attendance') {
-        document.getElementById('tabAttendance').classList.add('active');
-        document.querySelector('.tab-btn:first-child').classList.add('active');
-      } else if (tab === 'admins') {
-        document.getElementById('tabAdmins').classList.add('active');
-        document.querySelectorAll('.tab-btn')[1].classList.add('active');
-        loadAdminsTab();
-      } else if (tab === 'empdb') {
-        document.getElementById('tabEmpDB').classList.add('active');
-        document.querySelectorAll('.tab-btn')[2].classList.add('active');
-        renderEmployeeDB();
-      }
+      const map = {
+        attendance: 'tabAttendance',
+        salary: 'tabSalary',
+        leave: 'tabLeave',
+        admins: 'tabAdmins'
+      };
+      document.getElementById(map[tab]).classList.add('active');
+
+      const btns = document.querySelectorAll('.tabs .tab-btn');
+      btns.forEach((el, i) => {
+        const txt = el.textContent.trim().toLowerCase();
+        if (txt === tab || (tab === 'attendance' && txt === '📊 attendance') ||
+          (tab === 'salary' && txt === '💰 salary') ||
+          (tab === 'leave' && txt === '📅 leave') ||
+          (tab === 'admins' && txt === '👤 manage admins')) {
+          el.classList.add('active');
+        }
+      });
+
+      if (tab === 'attendance') renderRecords();
+      else if (tab === 'salary') renderSalary();
+      else if (tab === 'leave') renderLeave();
+      else if (tab === 'admins') loadAdminsTab();
     }
 
     // ========== ATTENDANCE FUNCTIONS ==========
     let lastFilteredData = [];
     let lastAllData = [];
-    let currentView = 'all';   // 'all' | 'daily' | 'employee'
+    let currentView = 'all';
+    let allEmployeesData = [];
+    let allAttendance = [];
+    let attendancePieChart = null;
 
     function parseDate(dateStr) {
       if (!dateStr) return '';
@@ -1620,7 +2006,6 @@
       return `<span class="status-badge badge-working">${type}</span>`;
     }
 
-    // ========== VIEW TOGGLE (Daily / Employee / All) ==========
     function setView(v) {
       currentView = v;
       ['All', 'Daily', 'Employee'].forEach(x => {
@@ -1632,8 +2017,7 @@
 
     async function getAllRecords() {
       try {
-        const response = await fetchWithTimeout('/api/attendance', 
-        {}, 60000);
+        const response = await fetchWithTimeout('/api/attendance', {}, 60000);
         if (response.ok) {
           const serverData = await response.json();
           const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
@@ -1642,6 +2026,7 @@
             const exists = merged.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
             if (!exists) merged.push(lr);
           });
+          allAttendance = merged;
           showBackendWarning(false);
           return merged;
         }
@@ -1650,7 +2035,8 @@
         console.warn('Server offline:', e.message);
         showBackendWarning(true);
       }
-      return JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+      allAttendance = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
+      return allAttendance;
     }
 
     function detectSandwichLeaves(allRecords) {
@@ -1758,7 +2144,6 @@
       </tr>`;
     }
 
-    // ── MINI TABLE inside daily/employee groups ────────────
     function buildMiniTable(rows, sandwichKeys) {
       const thead = `<thead><tr>
         <th>Photo</th><th>Employee</th><th>City</th><th>Date</th>
@@ -1768,7 +2153,6 @@
       return `<div style="overflow-x:auto;"><table>${thead}<tbody>${tbody}</tbody></table></div>`;
     }
 
-    // ========== MONTHLY OVERVIEW HELPERS ==========
     function parseHoursToNumber(val) {
       if (!val) return 0;
       if (typeof val === 'number') return val;
@@ -1784,7 +2168,6 @@
     }
 
     function getWorkingDaysInMonth(year, month) {
-      // Excludes Sunday only (matches existing sandwich-leave weekend logic)
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       let count = 0;
       for (let d = 1; d <= daysInMonth; d++) {
@@ -1803,23 +2186,18 @@
       return count;
     }
 
-    function updateMonthlyOverview(allRecords) {
-      const records = allRecords || [];
+    function updateMonthlyOverview(records) {
       const today = new Date();
       const year = today.getFullYear(), month = today.getMonth();
       const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
 
-      // Filter this month's records
       const monthRecords = records.filter(r => {
         const iso = parseDate(r.date);
         return iso && iso.startsWith(monthPrefix);
       });
 
-      // Full/Half day counts this month
       const fullDayMonth = monthRecords.filter(r => r.attendance_type === 'Full Day').length;
       const halfDayMonth = monthRecords.filter(r => (r.attendance_type || '').includes('Half')).length;
-
-      // Working hours this month
       const totalHours = monthRecords.reduce((sum, r) => sum + parseHoursToNumber(r.work_hours), 0);
 
       document.getElementById('statWorkingDaysMonth').textContent = getWorkingDaysInMonthTillToday();
@@ -1827,13 +2205,11 @@
       document.getElementById('statFullDayMonth').textContent = fullDayMonth;
       document.getElementById('statHalfDayMonth').textContent = halfDayMonth;
 
-      // Active / Inactive employees
       const activeCount = allEmployeesData.filter(e => (e.status || 'active').toLowerCase() === 'active').length;
       const inactiveCount = allEmployeesData.filter(e => (e.status || '').toLowerCase() === 'inactive').length;
       document.getElementById('statActiveEmp').textContent = activeCount;
       document.getElementById('statInactiveEmp').textContent = inactiveCount;
 
-      // Salary till yesterday
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
       const totalWorkingDaysMonth = getWorkingDaysInMonth(year, month);
@@ -1863,13 +2239,63 @@
         '₹' + totalSalary.toLocaleString('en-IN', { maximumFractionDigits: 0 });
     }
 
+    // ========== ATTENDANCE BREAKDOWN PIE CHART ==========
+    function renderStatsPieChart(all) {
+      const fullCount = all.filter(r => r.attendance_type === 'Full Day').length;
+      const halfCount = all.filter(r => (r.attendance_type || '').includes('Half')).length;
+      const absentCount = all.filter(r => r.attendance_type === 'Absent').length;
+      const leaveCount = all.filter(r => r.attendance_type === 'On Leave').length;
+      const progressCount = all.filter(r => !r.attendance_type || r.attendance_type === 'In Progress').length;
+
+      const labels = ['Full Day', 'Half Day', 'Absent', 'On Leave', 'In Progress'];
+      const data = [fullCount, halfCount, absentCount, leaveCount, progressCount];
+      const colors = ['#4caf50', '#ff9800', '#f44336', '#7c3aed', '#2196f3'];
+      const total = data.reduce((a, b) => a + b, 0);
+
+      const countEl = document.getElementById('pieRecordCount');
+      if (countEl) countEl.textContent = `${total} record${total !== 1 ? 's' : ''}`;
+
+      const legendEl = document.getElementById('pieLegend');
+      if (legendEl) {
+        legendEl.innerHTML = labels.map((l, i) => {
+          const pct = total ? Math.round((data[i] / total) * 100) : 0;
+          return `<span class="leg-item"><span class="dot" style="background:${colors[i]}"></span>${l}: ${data[i]} (${pct}%)</span>`;
+        }).join('');
+      }
+
+      const canvas = document.getElementById('attendancePieChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+
+      if (attendancePieChart) {
+        attendancePieChart.data.datasets[0].data = data;
+        attendancePieChart.update();
+      } else {
+        attendancePieChart = new Chart(canvas, {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: colors,
+              borderColor: '#ffffff',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+    }
+
     async function renderRecords() {
       const all = await getAllRecords();
       lastAllData = all;
 
       const { sandwichKeys, sandwichCases } = detectSandwichLeaves(all);
 
-      // Sandwich panel
       const panel = document.getElementById('sandwichPanel');
       const list = document.getElementById('sandwichList');
       document.getElementById('statSandwich').textContent = sandwichCases.length;
@@ -1893,7 +2319,6 @@
         list.innerHTML = '';
       }
 
-      // Filters
       const search = document.getElementById('searchFilter').value.toLowerCase();
       const dateVal = document.getElementById('dateFilter').value;
       const typeVal = document.getElementById('typeFilter').value;
@@ -1908,16 +2333,16 @@
       filtered.sort((a, b) => parseDate(b.date).localeCompare(parseDate(a.date)));
       lastFilteredData = filtered;
 
-      // Stats
       document.getElementById('statTotal').textContent = all.length;
       document.getElementById('statFull').textContent = all.filter(r => r.attendance_type === 'Full Day').length;
       document.getElementById('statHalf').textContent = all.filter(r => (r.attendance_type || '').includes('Half')).length;
       document.getElementById('recordCount').textContent = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
 
+      renderStatsPieChart(all);
+
       const tc = document.getElementById('tableContainer');
       const dc = document.getElementById('dailyContainer');
 
-      // ── ALL RECORDS VIEW ──────────────────────────────────
       if (currentView === 'all') {
         tc.style.display = ''; dc.style.display = 'none'; dc.innerHTML = '';
         document.getElementById('tableTitle').textContent = 'Attendance Records';
@@ -1928,10 +2353,7 @@
         } else {
           tbody.innerHTML = filtered.map(r => buildRow(r, sandwichKeys.has(sandwichKey(r)))).join('');
         }
-      }
-
-      // ── DAILY VIEW ────────────────────────────────────────
-      else if (currentView === 'daily') {
+      } else if (currentView === 'daily') {
         tc.style.display = 'none'; dc.style.display = '';
 
         if (!filtered.length) {
@@ -1960,10 +2382,7 @@
             </div>`;
           }).join('');
         }
-      }
-
-      // ── EMPLOYEE VIEW ─────────────────────────────────────
-      else if (currentView === 'employee') {
+      } else if (currentView === 'employee') {
         tc.style.display = 'none'; dc.style.display = '';
 
         if (!filtered.length) {
@@ -2053,14 +2472,597 @@
       showToast(`✅ Excel downloaded: ${fileName}`, '#1d6f42');
     }
 
+    // ========== SALARY FUNCTIONS ==========
+    let salaryMonth = new Date().getMonth();
+    let salaryYear = new Date().getFullYear();
+    let salaryView = 'monthly';
+
+    function getEmployeeSalary(empId) {
+      const emp = allEmployeesData.find(e => e.emp_id === empId);
+      return emp && emp.salary ? parseInt(emp.salary) : 15000;
+    }
+
+    function getEmployeeName(empId) {
+      const emp = allEmployeesData.find(e => e.emp_id === empId);
+      return emp ? emp.employee_name : empId;
+    }
+
+    function getEmployeeDept(empId) {
+      const emp = allEmployeesData.find(e => e.emp_id === empId);
+      return emp ? emp.dept : '—';
+    }
+
+    function getDaysInMonth(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    function computeMonthlySalary(empId, year, month) {
+      const monthly = getEmployeeSalary(empId);
+      const days = getDaysInMonth(year, month);
+      const rate = monthly / days;
+
+      const records = allAttendance.filter(r => {
+        const d = parseDate(r.date);
+        if (!d) return false;
+        const parts = d.split('-');
+        return parseInt(parts[0]) === year && parseInt(parts[1]) - 1 === month && r.emp_id === empId;
+      });
+
+      const map = {};
+      records.forEach(r => {
+        const d = parseDate(r.date);
+        if (d) {
+          const parts = d.split('-');
+          map[parseInt(parts[2])] = r.attendance_type;
+        }
+      });
+
+      let full = 0, half = 0, absent = 0;
+      for (let day = 1; day <= days; day++) {
+        const date = new Date(year, month, day);
+        const isSunday = date.getDay() === 0;
+        const status = map[day];
+
+        if (status === 'Full Day') full++;
+        else if (status === 'Half Day' || (status || '').includes('Half')) half++;
+        else if (isSunday) {
+          const satStatus = day > 1 ? map[day - 1] : null;
+          const monStatus = day < days ? map[day + 1] : null;
+          const satAbsent = !satStatus || satStatus === 'Absent' || satStatus === 'In Progress';
+          const monAbsent = !monStatus || monStatus === 'Absent' || monStatus === 'In Progress';
+          if (satAbsent && monAbsent) absent++;
+        } else if (!status || status === 'Absent' || status === 'In Progress') {
+          absent++;
+        }
+      }
+
+      const paid = full + (half * 0.5);
+      return { full, half, absent, paid, total: Math.round(paid * rate), monthly, days };
+    }
+
+    // Per-day salary status/factor for a single employee on a single day of the month.
+    // Mirrors the Sunday sandwich-off logic used in computeMonthlySalary().
+    function computeDaySalaryInfo(empId, year, month, day, days, attendanceMap) {
+      const date = new Date(year, month, day);
+      const isSunday = date.getDay() === 0;
+      const status = attendanceMap[day];
+      let factor = 0;
+      let label = 'Absent';
+
+      if (status === 'Full Day') {
+        factor = 1; label = 'Full Day';
+      } else if (status === 'Half Day' || (status || '').includes('Half')) {
+        factor = 0.5; label = 'Half Day';
+      } else if (status === 'On Leave') {
+        factor = 0; label = 'On Leave';
+      } else if (isSunday) {
+        const satStatus = day > 1 ? attendanceMap[day - 1] : null;
+        const monStatus = day < days ? attendanceMap[day + 1] : null;
+        const satAbsent = !satStatus || satStatus === 'Absent' || satStatus === 'In Progress';
+        const monAbsent = !monStatus || monStatus === 'Absent' || monStatus === 'In Progress';
+        if (satAbsent && monAbsent) {
+          factor = 0; label = 'Absent (Sandwich)';
+        } else {
+          factor = 1; label = 'Week Off (Paid)';
+        }
+      } else if (!status || status === 'Absent' || status === 'In Progress') {
+        factor = 0; label = status === 'In Progress' ? 'In Progress' : 'Absent';
+      }
+
+      return { factor, label };
+    }
+
+    function renderSalary() {
+      const label = document.getElementById('salaryMonthLabel');
+      label.textContent = new Date(salaryYear, salaryMonth).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      document.getElementById('salaryTitle').textContent = `💰 Monthly Salary - ${label.textContent}`;
+
+      const empIds = [...new Set(allAttendance.filter(r => {
+        const d = parseDate(r.date);
+        if (!d) return false;
+        const parts = d.split('-');
+        return parseInt(parts[0]) === salaryYear && parseInt(parts[1]) - 1 === salaryMonth;
+      }).map(r => r.emp_id))];
+
+      if (!empIds.length) {
+        document.getElementById('salaryBody').innerHTML = `<tr><td colspan="7" class="empty-row">No records for ${label.textContent}</td></tr>`;
+        document.getElementById('salaryCount').textContent = '0 employees';
+      } else {
+
+      let grandTotal = 0, totalFull = 0, totalHalf = 0;
+      const rows = empIds.map(id => {
+        const result = computeMonthlySalary(id, salaryYear, salaryMonth);
+        grandTotal += result.total;
+        totalFull += result.full;
+        totalHalf += result.half;
+        return `<tr>
+          <td><div class="emp-name">${getEmployeeName(id)}</div><div class="emp-id">${id}</div></td>
+          <td>${getEmployeeDept(id)}</td>
+          <td>${result.full}</td>
+          <td>${result.half}</td>
+          <td>${result.absent}</td>
+          <td>${result.paid.toFixed(1)}</td>
+          <td class="salary-cell">₹${result.total.toLocaleString('en-IN')}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('salaryBody').innerHTML = rows;
+      document.getElementById('salaryCount').textContent = `${empIds.length} employees`;
+      document.getElementById('salaryStatEmployees').textContent = allEmployeesData.length;
+      document.getElementById('salaryStatFull').textContent = totalFull;
+      document.getElementById('salaryStatHalf').textContent = totalHalf;
+      document.getElementById('salaryStatTotal').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+      }
+
+      if (salaryView === 'daily') renderDailySalary();
+    }
+
+    // ========== DAILY SALARY VIEW (date wise, per employee) ==========
+    function setSalaryView(v) {
+      salaryView = v;
+      document.getElementById('btnSalaryViewMonthly').classList.toggle('active', v === 'monthly');
+      document.getElementById('btnSalaryViewDaily').classList.toggle('active', v === 'daily');
+      document.getElementById('salaryMonthlyContainer').style.display = v === 'monthly' ? '' : 'none';
+      document.getElementById('salaryDailyContainer').style.display = v === 'daily' ? '' : 'none';
+      if (v === 'daily') renderDailySalary();
+    }
+
+    function getDailySalaryData() {
+      const days = getDaysInMonth(salaryYear, salaryMonth);
+      const empIds = [...new Set(allAttendance.filter(r => {
+        const d = parseDate(r.date);
+        if (!d) return false;
+        const parts = d.split('-');
+        return parseInt(parts[0]) === salaryYear && parseInt(parts[1]) - 1 === salaryMonth;
+      }).map(r => r.emp_id))];
+
+      const byDate = {};
+      empIds.forEach(id => {
+        const monthly = getEmployeeSalary(id);
+        const rate = monthly / days;
+
+        const records = allAttendance.filter(r => {
+          const d = parseDate(r.date);
+          if (!d) return false;
+          const parts = d.split('-');
+          return parseInt(parts[0]) === salaryYear && parseInt(parts[1]) - 1 === salaryMonth && r.emp_id === id;
+        });
+        const map = {};
+        records.forEach(r => {
+          const d = parseDate(r.date);
+          if (d) {
+            const parts = d.split('-');
+            map[parseInt(parts[2])] = r.attendance_type;
+          }
+        });
+
+        for (let day = 1; day <= days; day++) {
+          const { factor, label } = computeDaySalaryInfo(id, salaryYear, salaryMonth, day, days, map);
+          const dateKey = `${salaryYear}-${String(salaryMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          if (!byDate[dateKey]) byDate[dateKey] = [];
+          byDate[dateKey].push({
+            empId: id,
+            name: getEmployeeName(id),
+            dept: getEmployeeDept(id),
+            status: label,
+            rate: rate,
+            salary: Math.round(factor * rate)
+          });
+        }
+      });
+
+      return { byDate, empIds };
+    }
+
+    function dailySalaryBadge(label) {
+      if (label === 'Full Day') return '<span class="status-badge badge-fullday">✓ Full Day</span>';
+      if (label === 'Half Day') return '<span class="status-badge badge-halfday">½ Half Day</span>';
+      if (label === 'On Leave') return '<span class="status-badge badge-leave">📅 On Leave</span>';
+      if (label === 'Week Off (Paid)') return '<span class="status-badge badge-leave">🏖️ Week Off (Paid)</span>';
+      if (label === 'Absent (Sandwich)') return '<span class="badge-sandwich">🥪 Absent (Sandwich)</span>';
+      if (label === 'In Progress') return '<span class="status-badge badge-working">● In Progress</span>';
+      return '<span class="status-badge badge-absent">✗ Absent</span>';
+    }
+
+    function renderDailySalary() {
+      const container = document.getElementById('salaryDailyContainer');
+      const { byDate, empIds } = getDailySalaryData();
+
+      if (!empIds.length) {
+        container.innerHTML = `<div style="text-align:center;padding:60px;color:#aaa;background:white;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,0.08);">
+          No attendance records for this month — daily salary will appear here once employees mark attendance.</div>`;
+        return;
+      }
+
+      const todayISO = new Date().toISOString().split('T')[0];
+      const sortedDates = Object.keys(byDate).sort().reverse();
+
+      container.innerHTML = sortedDates.map(dateKey => {
+        const rows = byDate[dateKey].slice().sort((a, b) => a.name.localeCompare(b.name));
+        const isFuture = dateKey > todayISO;
+        const dayTotal = rows.reduce((s, r) => s + r.salary, 0);
+
+        const tableRows = rows.map(r => `
+          <tr>
+            <td><div class="emp-name">${r.name}</div><div class="emp-id">${r.empId}</div></td>
+            <td>${r.dept}</td>
+            <td>${dailySalaryBadge(r.status)}</td>
+            <td class="time-val">₹${r.rate.toFixed(0)}</td>
+            <td class="salary-cell">₹${r.salary.toLocaleString('en-IN')}</td>
+          </tr>`).join('');
+
+        return `<div class="daily-group">
+          <div class="daily-group-header">
+            <span class="daily-date-label">📅 ${formatDateLabel(dateKey)}</span>
+            <span class="daily-count-badge">${isFuture ? 'Upcoming' : `₹${dayTotal.toLocaleString('en-IN')} total`}</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead><tr><th>Employee</th><th>Department</th><th>Status</th><th>Daily Rate</th><th>Salary Earned</th></tr></thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function handleSalaryExport() {
+      if (salaryView === 'daily') exportDailySalaryExcel();
+      else exportSalaryExcel();
+    }
+
+    function changeSalaryMonth(delta) {
+      salaryMonth += delta;
+      if (salaryMonth > 11) { salaryMonth = 0; salaryYear++; }
+      if (salaryMonth < 0) { salaryMonth = 11; salaryYear--; }
+      renderSalary();
+    }
+
+    function exportSalaryExcel() {
+      const empIds = [...new Set(allAttendance.filter(r => {
+        const d = parseDate(r.date);
+        if (!d) return false;
+        const parts = d.split('-');
+        return parseInt(parts[0]) === salaryYear && parseInt(parts[1]) - 1 === salaryMonth;
+      }).map(r => r.emp_id))];
+
+      const data = [];
+      empIds.forEach(id => {
+        const result = computeMonthlySalary(id, salaryYear, salaryMonth);
+        data.push({
+          'Employee ID': id,
+          'Employee Name': getEmployeeName(id),
+          'Department': getEmployeeDept(id),
+          'Full Days': result.full,
+          'Half Days': result.half,
+          'Absent Days': result.absent,
+          'Paid Days': result.paid.toFixed(1),
+          'Total Salary': `₹${result.total.toLocaleString('en-IN')}`
+        });
+      });
+
+      if (!data.length) { showToast('No salary records to export', '#e53935'); return; }
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Salary Report');
+      XLSX.writeFile(wb, `MEVTENCIA_Salary_${new Date().toISOString().split('T')[0]}.xlsx`);
+      showToast('✅ Salary exported successfully!', '#1d6f42');
+    }
+
+    function exportDailySalaryExcel() {
+      const { byDate } = getDailySalaryData();
+      const dates = Object.keys(byDate).sort();
+
+      const data = [];
+      dates.forEach(dateKey => {
+        byDate[dateKey].forEach(r => {
+          data.push({
+            'Date': dateKey,
+            'Day': new Date(dateKey + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long' }),
+            'Employee ID': r.empId,
+            'Employee Name': r.name,
+            'Department': r.dept,
+            'Status': r.status,
+            'Daily Rate': r.rate.toFixed(0),
+            'Salary Earned': r.salary
+          });
+        });
+      });
+
+      if (!data.length) { showToast('No daily salary records to export', '#e53935'); return; }
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      ws['!cols'] = [12, 12, 15, 22, 16, 18, 12, 14].map(w => ({ wch: w }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Daily Salary');
+      XLSX.writeFile(wb, `MEVTENCIA_DailySalary_${new Date().toISOString().split('T')[0]}.xlsx`);
+      showToast('✅ Daily salary exported successfully!', '#1d6f42');
+    }
+
+    // ========== LEAVE FUNCTIONS ==========
+    let leaveMonth = new Date().getMonth();
+    let leaveYear = new Date().getFullYear();
+    let leaveModalEmpId = null;
+
+    function computeEmployeeLeaves(empId, year, month) {
+      const records = allAttendance.filter(r => {
+        const d = parseDate(r.date);
+        if (!d) return false;
+        const parts = d.split('-');
+        return parseInt(parts[0]) === year && parseInt(parts[1]) - 1 === month && r.emp_id === empId;
+      });
+
+      const map = {};
+      records.forEach(r => {
+        const d = parseDate(r.date);
+        if (d) {
+          const parts = d.split('-');
+          map[parseInt(parts[2])] = r.attendance_type;
+        }
+      });
+
+      const days = getDaysInMonth(year, month);
+      const leaves = [];
+      for (let day = 1; day <= days; day++) {
+        const date = new Date(year, month, day);
+        if (date.getDay() === 0) continue;
+        const status = map[day];
+        if (!status || status === 'Absent' || status === 'In Progress') {
+          leaves.push({ day, label: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', weekday: 'short' }), type: 'Absent' });
+        } else if (status === 'On Leave') {
+          leaves.push({ day, label: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', weekday: 'short' }), type: 'On Leave' });
+        } else if (status === 'Half Day' || status.includes('Half')) {
+          leaves.push({ day, label: date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', weekday: 'short' }), type: 'Half Day' });
+        }
+      }
+      return leaves;
+    }
+
+    function renderLeave() {
+      const label = document.getElementById('leaveMonthLabel');
+      label.textContent = new Date(leaveYear, leaveMonth).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      document.getElementById('leaveTitle').textContent = `📅 Leave Overview - ${label.textContent}`;
+
+      const empIds = [...new Set(allAttendance.filter(r => {
+        const d = parseDate(r.date);
+        if (!d) return false;
+        const parts = d.split('-');
+        return parseInt(parts[0]) === leaveYear && parseInt(parts[1]) - 1 === leaveMonth;
+      }).map(r => r.emp_id))];
+
+      if (!empIds.length) {
+        document.getElementById('leaveBody').innerHTML = `<tr><td colspan="5" class="empty-row">No records for ${label.textContent}</td></tr>`;
+        document.getElementById('leaveCount').textContent = '0 employees';
+        return;
+      }
+
+      let totalLeaves = 0;
+      const today = new Date();
+      let onLeaveToday = 0;
+
+      const rows = empIds.map(id => {
+        const leaves = computeEmployeeLeaves(id, leaveYear, leaveMonth);
+        const count = leaves.length;
+        totalLeaves += count;
+
+        const todayLeaves = leaves.filter(l => {
+          const d = new Date(l.label);
+          return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+        });
+        if (todayLeaves.length > 0) onLeaveToday++;
+
+        const details = leaves.length ? leaves.map(l => `${l.label}: ${l.type}`).join('<br>') : '✅ No leave';
+        return `<tr>
+          <td><div class="emp-name">${getEmployeeName(id)}</div><div class="emp-id">${id}</div></td>
+          <td>${getEmployeeDept(id)}</td>
+          <td>${getLeaveBadge(count)}</td>
+          <td style="font-size:11px;max-width:300px;word-break:break-word;">${details}</td>
+          <td><button class="filter-btn" onclick="viewEmployeeLeave('${id}')" style="padding:4px 12px;font-size:11px;">📋 Details</button></td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('leaveBody').innerHTML = rows;
+      document.getElementById('leaveCount').textContent = `${empIds.length} employees`;
+      document.getElementById('leaveStatEmployees').textContent = allEmployeesData.length;
+      document.getElementById('leaveStatThisMonth').textContent = totalLeaves;
+      document.getElementById('leaveStatToday').textContent = onLeaveToday;
+
+      let prevYear = leaveYear, prevMonth = leaveMonth - 1;
+      if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+      let prevLeaves = 0;
+      empIds.forEach(id => {
+        const leaves = computeEmployeeLeaves(id, prevYear, prevMonth);
+        prevLeaves += leaves.length;
+      });
+      document.getElementById('leaveStatPrevMonth').textContent = prevLeaves;
+    }
+
+    function getLeaveBadge(count) {
+      if (count === 0) return '<span class="leave-count lc-zero">0</span>';
+      if (count <= 2) return `<span class="leave-count lc-low">${count}</span>`;
+      return `<span class="leave-count lc-high">${count}</span>`;
+    }
+
+    function changeLeaveMonth(delta) {
+      leaveMonth += delta;
+      if (leaveMonth > 11) { leaveMonth = 0; leaveYear++; }
+      if (leaveMonth < 0) { leaveMonth = 11; leaveYear--; }
+      renderLeave();
+    }
+
+    function viewEmployeeLeave(empId) {
+      leaveModalEmpId = empId;
+
+      const today = new Date();
+      const thisYear = today.getFullYear(), thisMonth = today.getMonth();
+      let prevYear = thisYear, prevMonth = thisMonth - 1;
+      if (prevMonth < 0) { prevMonth = 11; prevYear--; }
+
+      const thisLeaves = computeEmployeeLeaves(empId, thisYear, thisMonth);
+      const prevLeaves = computeEmployeeLeaves(empId, prevYear, prevMonth);
+
+      document.getElementById('leaveModalTitle').textContent = `📅 ${getEmployeeName(empId)} — Leave History`;
+      document.getElementById('leaveModalSubtitle').textContent = `${empId} · ${getEmployeeDept(empId)}`;
+
+      document.getElementById('lmStatThis').textContent = thisLeaves.length;
+      document.getElementById('lmStatPrev').textContent = prevLeaves.length;
+
+      let totalAll = 0;
+      const allMonths = getAllLeaveMonths(empId);
+      allMonths.forEach(m => { totalAll += m.leaves.length; });
+      document.getElementById('lmStatTotal').textContent = totalAll;
+
+      document.getElementById('lmThisLabel').textContent = new Date(thisYear, thisMonth).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      document.getElementById('lmPrevLabel').textContent = new Date(prevYear, prevMonth).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+      document.getElementById('lmThisCount').textContent = `${thisLeaves.length} leave(s)`;
+      document.getElementById('lmPrevCount').textContent = `${prevLeaves.length} leave(s)`;
+
+      renderLeaveList('lmThisList', thisLeaves);
+      renderLeaveList('lmPrevList', prevLeaves);
+
+      document.getElementById('lmFullHistory').style.display = 'none';
+      document.getElementById('lmFullHistory').innerHTML = '';
+      document.getElementById('lmHistoryToggle').textContent = '📜 Show Full Leave History (All Time)';
+      document.getElementById('lmHistoryToggle').dataset.loaded = '';
+
+      document.getElementById('leaveDetailModal').classList.add('show');
+    }
+
+    function renderLeaveList(containerId, leaves) {
+      const el = document.getElementById(containerId);
+      if (!leaves.length) {
+        el.innerHTML = `<div class="no-leave-msg">✅ No leave taken.</div>`;
+        return;
+      }
+      el.innerHTML = leaves.map(l => `
+        <div class="leave-day-row">
+          <span class="ldl">${l.label}</span>
+          <span class="ldr ${l.type === 'Absent' ? 'type-absent' : l.type === 'Half Day' ? 'type-half' : 'type-onleave'}">${l.type}</span>
+        </div>
+      `).join('');
+    }
+
+    function getAllLeaveMonths(empId) {
+      const allMonths = [];
+      const today = new Date();
+      const startYear = today.getFullYear() - 2;
+
+      for (let y = startYear; y <= today.getFullYear(); y++) {
+        for (let m = 0; m < 12; m++) {
+          if (y === today.getFullYear() && m > today.getMonth()) break;
+          const leaves = computeEmployeeLeaves(empId, y, m);
+          if (leaves.length) {
+            allMonths.push({
+              year: y,
+              month: m,
+              label: new Date(y, m).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+              leaves
+            });
+          }
+        }
+      }
+      return allMonths.sort((a, b) => b.year - a.year || b.month - a.month);
+    }
+
+    function toggleLeaveHistory() {
+      const btn = document.getElementById('lmHistoryToggle');
+      const container = document.getElementById('lmFullHistory');
+
+      if (container.style.display === 'none') {
+        if (!btn.dataset.loaded) {
+          btn.textContent = '⏳ Loading full history...';
+          const allMonths = getAllLeaveMonths(leaveModalEmpId);
+          if (!allMonths.length) {
+            container.innerHTML = `<div class="no-leave-msg">✅ No leave history found.</div>`;
+          } else {
+            container.innerHTML = allMonths.map(m => `
+              <div class="month-block">
+                <div class="month-block-title">
+                  <span>${m.label}</span>
+                  <span class="mcount">${m.leaves.length} leave(s)</span>
+                </div>
+                <div class="leave-day-list">
+                  ${m.leaves.map(l => `
+                    <div class="leave-day-row">
+                      <span class="ldl">${l.label}</span>
+                      <span class="ldr ${l.type === 'Absent' ? 'type-absent' : l.type === 'Half Day' ? 'type-half' : 'type-onleave'}">${l.type}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('');
+          }
+          btn.dataset.loaded = '1';
+        }
+        container.style.display = 'block';
+        btn.textContent = '📜 Hide Full Leave History';
+      } else {
+        container.style.display = 'none';
+        btn.textContent = '📜 Show Full Leave History (All Time)';
+      }
+    }
+
+    function closeLeaveModal(e) {
+      if (e.target === document.getElementById('leaveDetailModal')) {
+        document.getElementById('leaveDetailModal').classList.remove('show');
+      }
+    }
+
+    function exportLeaveExcel() {
+      const empIds = [...new Set(allAttendance.filter(r => {
+        const d = parseDate(r.date);
+        if (!d) return false;
+        const parts = d.split('-');
+        return parseInt(parts[0]) === leaveYear && parseInt(parts[1]) - 1 === leaveMonth;
+      }).map(r => r.emp_id))];
+
+      const data = [];
+      empIds.forEach(id => {
+        const leaves = computeEmployeeLeaves(id, leaveYear, leaveMonth);
+        leaves.forEach(l => {
+          data.push({
+            'Employee ID': id,
+            'Employee Name': getEmployeeName(id),
+            'Department': getEmployeeDept(id),
+            'Date': l.label,
+            'Leave Type': l.type
+          });
+        });
+      });
+
+      if (!data.length) { showToast('No leave records to export', '#e53935'); return; }
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Leave Records');
+      XLSX.writeFile(wb, `MEVTENCIA_Leave_${new Date().toISOString().split('T')[0]}.xlsx`);
+      showToast('✅ Leave exported successfully!', '#1d6f42');
+    }
+
     // ========== ADMIN MANAGEMENT FUNCTIONS ==========
     let selectedEmployeeIds = new Set();
-    let allEmployeesCache = [];
 
-    // Role → default permission presets, matching the requested access matrix:
-    // Normal Admin: Attendance, Leave, Salary, Employee DB
-    // Recruiter:    Attendance, Leave, Employee DB, New Registration
-    // HR:           all 5
     const ROLE_PRESETS = {
       normal:    { attendance: true, leave: true,  salary: true,  employeeDatabase: true,  newEmployeeRegistration: false },
       recruiter: { attendance: true, leave: true,  salary: false, employeeDatabase: true,  newEmployeeRegistration: true  },
@@ -2099,7 +3101,9 @@
 
     async function syncAdminsFromServer() {
       try {
-        const resp = await fetchWithTimeout(`${SERVER_URL}/api/admins`);
+        const resp = await fetchWithTimeout(`${SERVER_URL}/api/admins`, {
+          headers: superAdminHeaders()
+        });
         if (!resp.ok) return getAdmins();
         const serverList = await resp.json();
         const localList = getAdmins();
@@ -2119,36 +3123,6 @@
       } catch (e) {
         console.warn('Sync failed:', e.message);
         return getAdmins();
-      }
-    }
-
-    async function pushAdminToServer(adm) {
-      try {
-        await fetch(`${SERVER_URL}/api/admins`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            admin_id: adm.id,
-            password: adm.password,
-            employee_id: (adm.assignedEmpIds || [])[0] || 'unknown',
-            employee_name: adm.employeeName || 'Admin',
-            assigned_employees: adm.assignedEmpIds || [],
-            role: adm.role || 'normal',
-            permissions: adm.permissions
-          })
-        });
-        console.log('✅ Admin saved to MongoDB');
-      } catch (e) {
-        console.warn('MongoDB save failed:', e.message);
-      }
-    }
-
-    async function deleteAdminFromServer(id) {
-      try {
-        await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(id)}`, { method: 'DELETE' });
-        console.log('✅ Admin deleted from MongoDB');
-      } catch (e) {
-        console.warn('MongoDB delete failed:', e.message);
       }
     }
 
@@ -2239,12 +3213,11 @@
       list.innerHTML = html;
     }
 
-    // ── EMPLOYEE DROPDOWN FUNCTIONS ────────────────────────
-    let allEmployeesData = [];
-
     async function populateEmpDropdown() {
       try {
-        const res = await fetchWithTimeout(`${SERVER_URL}/api/employees`);
+        const res = await fetchWithTimeout(`${SERVER_URL}/api/employees`, {
+          headers: superAdminHeaders()
+        });
         if (!res.ok) throw new Error('Employees API not reachable');
         allEmployeesData = await res.json();
         const sel = document.getElementById('adminEmpDropdown');
@@ -2256,7 +3229,7 @@
           sel.appendChild(opt);
         });
         showBackendWarning(false);
-        updateMonthlyOverview(lastAllData);
+        updateMonthlyOverview(allAttendance);
         renderEmployeeDB();
       } catch (e) {
         console.warn('Could not load employees:', e);
@@ -2315,7 +3288,7 @@
       try {
         const res = await fetch(`${SERVER_URL}/api/admins`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: superAdminHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({
             admin_id:           adminId,
             password:           adminPw,
@@ -2336,7 +3309,6 @@
 
         showToast(`✅ "${adminName}" is now ${roleLabel(role)} with ${assignedEmpIds.length} employee(s)!`, '#10b981');
 
-        // Clear form
         document.getElementById('adminEmpDropdown').value = '';
         document.getElementById('selectedEmpInfo').style.display = 'none';
         document.getElementById('adminRoleSelect').value = 'normal';
@@ -2353,7 +3325,10 @@
     async function deleteAdmin(adminId) {
       if (!confirm(`Remove admin "${adminId}"?`)) return;
       try {
-        await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(adminId)}`, { method: 'DELETE' });
+        await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(adminId)}`, {
+          method: 'DELETE',
+          headers: superAdminHeaders()
+        });
         let list = getAdmins();
         list = list.filter(a => a.id !== adminId);
         saveAdmins(list);
@@ -2406,7 +3381,6 @@
               </span>`).join('')
           : '<span class="emp-tag-empty">No employees assigned</span>';
 
-        // Permissions
         const perms = admin.permissions || { attendance: true, leave: false, salary: false, employeeDatabase: false, newEmployeeRegistration: false };
         const permBadges = [
           perms.attendance ? '<span style="background:#e8f5e9;color:#2e7d32;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">📋 Attendance</span>' : '',
@@ -2416,7 +3390,6 @@
           perms.newEmployeeRegistration ? '<span style="background:#fce7f3;color:#be185d;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;">🆕 New Registration</span>' : '',
         ].filter(Boolean).join(' ');
 
-        // Admin profile info
         const dept     = adminEmp?.dept || '—';
         const city     = adminEmp?.city || '—';
         const email    = adminEmp?.employee_email || '—';
@@ -2438,7 +3411,6 @@
               <span style="margin-left:auto;font-size:1.2rem;">▼</span>
             </div>
 
-            <!-- Profile (hidden by default, click to expand) -->
             <div id="profile_${loginId}" style="display:none;border-top:1px solid #f1f5f9;margin-top:12px;padding-top:12px;">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
                 <div><span style="color:#94a3b8;">📧 Email:</span> ${email}</div>
@@ -2470,7 +3442,6 @@
       }).join('');
     }
 
-    // ── TOGGLE ADMIN PROFILE ────────────────────────────────
     function toggleAdminProfile(adminId) {
       const el = document.getElementById(`profile_${adminId}`);
       if (el) {
@@ -2478,7 +3449,6 @@
       }
     }
 
-    // ── SHOW EMPLOYEE PROFILE MODAL ─────────────────────────
     function showEmpProfile(empId) {
       event.stopPropagation();
       const emp = allEmployeesData.find(e => e.emp_id === empId);
@@ -2486,7 +3456,6 @@
 
       const initials = (emp.employee_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
-      // Create modal
       let modal = document.getElementById('empProfileModal');
       if (!modal) {
         modal = document.createElement('div');
@@ -2559,7 +3528,6 @@
       modal.style.display = 'flex';
     }
 
-    // Jump to Attendance tab, filtered to this one employee's full history
     function viewEmployeeHistory(empId) {
       switchTab('attendance');
       setView('all');
@@ -2572,13 +3540,14 @@
     // ========== EMPLOYEE DATABASE TAB ==========
     async function fetchEmployeesFresh() {
       try {
-        const res = await fetchWithTimeout(`${SERVER_URL}/api/employees`);
+        const res = await fetchWithTimeout(`${SERVER_URL}/api/employees`, {
+          headers: superAdminHeaders()
+        });
         if (!res.ok) throw new Error('not ok');
         allEmployeesData = await res.json();
         showBackendWarning(false);
       } catch (e) {
         showBackendWarning(true);
-        // fall back to whatever we already have cached in memory / localStorage
         if (!allEmployeesData.length) {
           const db = getEmployeeDB();
           allEmployeesData = Object.values(db).map(e => ({
@@ -2591,6 +3560,7 @@
 
     async function renderEmployeeDB() {
       const tbody = document.getElementById('edbTableBody');
+      if (!tbody) return;
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:#aaa;">Loading employees...</td></tr>`;
 
       const employees = await fetchEmployeesFresh();
@@ -2639,11 +3609,13 @@
     async function deleteEmployee(empId) {
       if (!confirm(`Remove employee "${empId}" from the database? This cannot be undone.`)) return;
       try {
-        await fetch(`${SERVER_URL}/api/employees/${encodeURIComponent(empId)}`, { method: 'DELETE' });
+        await fetch(`${SERVER_URL}/api/employees/${encodeURIComponent(empId)}`, {
+          method: 'DELETE',
+          headers: superAdminHeaders()
+        });
       } catch (e) {
         console.warn('Server delete failed (offline?):', e.message);
       }
-      // Clean local caches too
       const credDB = getEmployeeDB();
       delete credDB[empId];
       localStorage.setItem('mev_employeeDB', JSON.stringify(credDB));
@@ -2659,25 +3631,21 @@
       renderEmployeeDB();
     }
 
-    // ── INIT ──────────────────────────────────────────────
-    populateEmpDropdown();
-    renderRecords();
-    setInterval(renderRecords, 30000);
-    // ── EDIT ADMIN ──────────────────────────────────────────
-    let editingAdminId  = null;
+    // ========== EDIT ADMIN ==========
+    let editingAdminId = null;
     let editSelectedIds = new Set();
 
     async function openEditAdmin(adminId) {
       editingAdminId = adminId;
       try {
-        const res    = await fetch(`${SERVER_URL}/api/admins`);
+        const res = await fetch(`${SERVER_URL}/api/admins`, {
+          headers: superAdminHeaders()
+        });
         const admins = await res.json();
-        const admin  = admins.find(a => (a.admin_id || a.id) === adminId);
+        const admin = admins.find(a => (a.admin_id || a.id) === adminId);
         if (!admin) { showToast('Admin not found', '#e53935'); return; }
 
-        document.getElementById('editAdminTitle').textContent =
-          admin.employee_name || admin.employeeName || adminId;
-
+        document.getElementById('editAdminTitle').textContent = admin.employee_name || admin.employeeName || adminId;
         document.getElementById('editAdminRoleSelect').value = admin.role || 'normal';
 
         const perms = admin.permissions || { attendance: true, leave: false, salary: false, employeeDatabase: false, newEmployeeRegistration: false };
@@ -2719,10 +3687,10 @@
     }
 
     function renderEditPicker() {
-      const db     = getEmployeeDB();
+      const db = getEmployeeDB();
       const search = (document.getElementById('editEmpSearch')?.value || '').toLowerCase();
       const picker = document.getElementById('editEmpPicker');
-      let entries  = Object.values(db);
+      let entries = Object.values(db);
       if (search) entries = entries.filter(e =>
         (e.name||'').toLowerCase().includes(search) ||
         (e.id||'').toLowerCase().includes(search)
@@ -2783,22 +3751,25 @@
       };
 
       try {
-        // Try PATCH first
         let res = await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(editingAdminId)}`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: superAdminHeaders({ 'Content-Type': 'application/json' }),
           body: JSON.stringify({ assigned_employees: assigned, role, permissions })
         });
 
         if (!res.ok) {
-          // Fallback: delete + recreate
-          const allAdmins = await (await fetch(`${SERVER_URL}/api/admins`)).json();
+          const allAdmins = await (await fetch(`${SERVER_URL}/api/admins`, {
+            headers: superAdminHeaders()
+          })).json();
           const admin = allAdmins.find(a => (a.admin_id||a.id) === editingAdminId);
           if (admin) {
-            await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(editingAdminId)}`, { method: 'DELETE' });
+            await fetch(`${SERVER_URL}/api/admins/${encodeURIComponent(editingAdminId)}`, {
+              method: 'DELETE',
+              headers: superAdminHeaders()
+            });
             await fetch(`${SERVER_URL}/api/admins`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: superAdminHeaders({ 'Content-Type': 'application/json' }),
               body: JSON.stringify({
                 admin_id:           editingAdminId,
                 password:           admin.password,
@@ -2819,13 +3790,9 @@
         showToast('Error: ' + e.message, '#e53935');
       }
     }
-/////////////////////////////////////
-  //   document.getElementById('editAdminOverlay').addEventListener('click', function(e) {
-  //     if (e.target === this) closeEditAdmin();
-  //   });
 
-  //   loadAdminsTab();
-  window.addEventListener('load', function() {
+    // ========== INIT ==========
+    window.addEventListener('load', function() {
       const editOverlayEl = document.getElementById('editAdminOverlay');
       if (editOverlayEl) {
         editOverlayEl.addEventListener('click', function(e) {
@@ -2838,85 +3805,116 @@
           if (e.target === this) closeChangePasswordModal();
         });
       }
+      const leaveOverlayEl = document.getElementById('leaveDetailModal');
+      if (leaveOverlayEl) {
+        leaveOverlayEl.addEventListener('click', function(e) {
+          if (e.target === this) closeLeaveModal(e);
+        });
+      }
+      const photoOverlayEl = document.getElementById('photoModal');
+      if (photoOverlayEl) {
+        photoOverlayEl.addEventListener('click', function(e) {
+          if (e.target === this) closeModal();
+        });
+      }
     });
 
-    loadAdminsTab();
+    // Initial load
+    async function init() {
+      await populateEmpDropdown();
+      await getAllRecords();
+      renderRecords();
+      renderSalary();
+      renderLeave();
+      loadAdminsTab();
+      renderEmployeeDB();
+
+      // Auto-refresh every 30 seconds
+      setInterval(async () => {
+        await getAllRecords();
+        const activeTab = document.querySelector('.tab-content.active');
+        if (activeTab) {
+          const id = activeTab.id;
+          if (id === 'tabAttendance') renderRecords();
+          else if (id === 'tabSalary') renderSalary();
+          else if (id === 'tabLeave') renderLeave();
+          else if (id === 'tabAdmins') loadAdminsTab();
+        }
+      }, 30000);
+    }
+
+    init();
   </script>
-  
 
-<!-- ══ EDIT ADMIN MODAL ══════════════════════════════════ -->
-<div id="editAdminOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;">
-  <div style="background:white;border-radius:20px;padding:30px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+  <!-- ══ EDIT ADMIN MODAL ══════════════════════════════════ -->
+  <div id="editAdminOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:white;border-radius:20px;padding:30px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h3 style="color:#1e293b;font-size:1.1rem;">✏️ Edit Admin — <span id="editAdminTitle">—</span></h3>
-      <button onclick="closeEditAdmin()" style="background:#f1f5f9;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;font-weight:700;">✕</button>
-    </div>
-
-    <!-- Role -->
-    <div style="margin-bottom:16px;">
-      <div style="font-weight:700;font-size:0.9rem;color:#475569;margin-bottom:8px;">🏷️ Admin Role</div>
-      <select id="editAdminRoleSelect" onchange="applyEditRolePreset()" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;">
-        <option value="normal">Normal Admin — Attendance, Leave, Salary, Employee Database</option>
-        <option value="recruiter">Recruiter — Attendance, Leave, Employee Database, New Registration</option>
-        <option value="hr">HR — Full Access (all 5 modules)</option>
-      </select>
-    </div>
-
-    <!-- Permissions -->
-    <div style="margin-bottom:20px;">
-      <div style="font-weight:700;font-size:0.9rem;color:#475569;margin-bottom:10px;">🔐 Permissions</div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e8f5e9;padding:9px 16px;border-radius:10px;border:2px solid #a5d6a7;">
-          <input type="checkbox" id="editPermAttendance" style="width:16px;height:16px;accent-color:#2e7d32;" />
-          <span style="font-weight:600;color:#2e7d32;font-size:0.85rem;">📋 Attendance</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e3f2fd;padding:9px 16px;border-radius:10px;border:2px solid #90caf9;">
-          <input type="checkbox" id="editPermLeave" style="width:16px;height:16px;accent-color:#1565c0;" />
-          <span style="font-weight:600;color:#1565c0;font-size:0.85rem;">📅 Leave</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff3e0;padding:9px 16px;border-radius:10px;border:2px solid #ffcc80;">
-          <input type="checkbox" id="editPermSalary" style="width:16px;height:16px;accent-color:#e65100;" />
-          <span style="font-weight:600;color:#e65100;font-size:0.85rem;">💰 Salary</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#ede9fe;padding:9px 16px;border-radius:10px;border:2px solid #c4b5fd;">
-          <input type="checkbox" id="editPermEmployeeDB" style="width:16px;height:16px;accent-color:#6d28d9;" />
-          <span style="font-weight:600;color:#6d28d9;font-size:0.85rem;">🗂️ Employee DB</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fce7f3;padding:9px 16px;border-radius:10px;border:2px solid #f9a8d4;">
-          <input type="checkbox" id="editPermNewReg" style="width:16px;height:16px;accent-color:#be185d;" />
-          <span style="font-weight:600;color:#be185d;font-size:0.85rem;">🆕 New Registration</span>
-        </label>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <h3 style="color:#1e293b;font-size:1.1rem;">✏️ Edit Admin — <span id="editAdminTitle">—</span></h3>
+        <button onclick="closeEditAdmin()" style="background:#f1f5f9;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;font-weight:700;">✕</button>
       </div>
-    </div>
 
-    <!-- Employees -->
-    <div style="margin-bottom:20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div style="font-weight:700;font-size:0.9rem;color:#475569;">👥 Assigned Employees</div>
-        <div style="display:flex;gap:8px;">
-          <button onclick="editSelectAll()" style="background:#3f51b5;color:white;border:none;padding:5px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;">✅ All</button>
-          <button onclick="editDeselectAll()" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;">✕ Clear</button>
+      <div style="margin-bottom:16px;">
+        <div style="font-weight:700;font-size:0.9rem;color:#475569;margin-bottom:8px;">🏷️ Admin Role</div>
+        <select id="editAdminRoleSelect" onchange="applyEditRolePreset()" style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;">
+          <option value="normal">Normal Admin — Attendance, Leave, Salary, Employee Database</option>
+          <option value="recruiter">Recruiter — Attendance, Leave, Employee Database, New Registration</option>
+          <option value="hr">HR — Full Access (all 5 modules)</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-weight:700;font-size:0.9rem;color:#475569;margin-bottom:10px;">🔐 Permissions</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e8f5e9;padding:9px 16px;border-radius:10px;border:2px solid #a5d6a7;">
+            <input type="checkbox" id="editPermAttendance" style="width:16px;height:16px;accent-color:#2e7d32;" />
+            <span style="font-weight:600;color:#2e7d32;font-size:0.85rem;">📋 Attendance</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#e3f2fd;padding:9px 16px;border-radius:10px;border:2px solid #90caf9;">
+            <input type="checkbox" id="editPermLeave" style="width:16px;height:16px;accent-color:#1565c0;" />
+            <span style="font-weight:600;color:#1565c0;font-size:0.85rem;">📅 Leave</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fff3e0;padding:9px 16px;border-radius:10px;border:2px solid #ffcc80;">
+            <input type="checkbox" id="editPermSalary" style="width:16px;height:16px;accent-color:#e65100;" />
+            <span style="font-weight:600;color:#e65100;font-size:0.85rem;">💰 Salary</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#ede9fe;padding:9px 16px;border-radius:10px;border:2px solid #c4b5fd;">
+            <input type="checkbox" id="editPermEmployeeDB" style="width:16px;height:16px;accent-color:#6d28d9;" />
+            <span style="font-weight:600;color:#6d28d9;font-size:0.85rem;">🗂️ Employee DB</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:#fce7f3;padding:9px 16px;border-radius:10px;border:2px solid #f9a8d4;">
+            <input type="checkbox" id="editPermNewReg" style="width:16px;height:16px;accent-color:#be185d;" />
+            <span style="font-weight:600;color:#be185d;font-size:0.85rem;">🆕 New Registration</span>
+          </label>
         </div>
       </div>
-      <input type="text" id="editEmpSearch" placeholder="🔍 Search employees..." oninput="renderEditPicker()"
-        style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;margin-bottom:8px;" />
-      <div id="editEmpPicker" style="border:2px solid #e0e0e0;border-radius:10px;padding:8px;max-height:220px;overflow-y:auto;"></div>
-      <div style="margin-top:8px;font-size:0.82rem;color:#64748b;font-weight:600;" id="editSelectedCount">0 selected</div>
-    </div>
 
-    <!-- Buttons -->
-    <div style="display:flex;gap:10px;">
-      <button onclick="saveEditAdmin()" style="flex:1;padding:12px;background:linear-gradient(135deg,#3f51b5,#512da8);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.95rem;">
-        💾 Save Changes
-      </button>
-      <button onclick="closeEditAdmin()" style="padding:12px 20px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
-        Cancel
-      </button>
-    </div>
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-weight:700;font-size:0.9rem;color:#475569;">👥 Assigned Employees</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="editSelectAll()" style="background:#3f51b5;color:white;border:none;padding:5px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;">✅ All</button>
+            <button onclick="editDeselectAll()" style="background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;padding:5px 12px;border-radius:6px;font-size:0.75rem;font-weight:700;cursor:pointer;">✕ Clear</button>
+          </div>
+        </div>
+        <input type="text" id="editEmpSearch" placeholder="🔍 Search employees..." oninput="renderEditPicker()"
+          style="width:100%;padding:9px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:0.9rem;outline:none;margin-bottom:8px;" />
+        <div id="editEmpPicker" style="border:2px solid #e0e0e0;border-radius:10px;padding:8px;max-height:220px;overflow-y:auto;"></div>
+        <div style="margin-top:8px;font-size:0.82rem;color:#64748b;font-weight:600;" id="editSelectedCount">0 selected</div>
+      </div>
 
+      <div style="display:flex;gap:10px;">
+        <button onclick="saveEditAdmin()" style="flex:1;padding:12px;background:linear-gradient(135deg,#3f51b5,#512da8);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:0.95rem;">
+          💾 Save Changes
+        </button>
+        <button onclick="closeEditAdmin()" style="padding:12px 20px;background:#f1f5f9;color:#64748b;border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+          Cancel
+        </button>
+      </div>
+
+    </div>
   </div>
-</div>
 
 </body>
 </html>
