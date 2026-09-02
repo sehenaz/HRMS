@@ -239,7 +239,18 @@ mongoose.connection.once('open', seedSuperAdmins);
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
-app.use(express.static(__dirname));
+// app.use(express.static(__dirname));
+
+app.use(express.static(__dirname, {
+  setHeaders: (res, filePath) => {
+    if (path.extname(filePath) === '.html') {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+    }
+  }
+}));
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'uploads/'),
