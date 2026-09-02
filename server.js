@@ -241,6 +241,41 @@ app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 // app.use(express.static(__dirname));
 
+////////////////////////////////////////
+const fs = require('fs');
+
+const BFCACHE_FIX_SCRIPT = `
+<script>
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
+</script>`;
+
+app.get(/^\/$|\.html$/, (req, res, next) => {
+  const reqPath = req.path === '/' ? '/index.html' : req.path;
+  const filePath = path.join(__dirname, decodeURIComponent(reqPath));
+  
+
+  fs.readFile(filePath, 'utf8', (err, html) => {
+    if (err) return next(); // file nahi mili, static/404 handle kar lega
+
+    let injected;
+    if (/<head[^>]*>/i.test(html)) {
+      injected = html.replace(/<head[^>]*>/i, (match) => `${match}${BFCACHE_FIX_SCRIPT}`);
+    } else {
+      injected = BFCACHE_FIX_SCRIPT + html;
+    }
+
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    res.send(injected);
+  });
+});
+//////////////////////////////////////
 app.use(express.static(__dirname, {
   setHeaders: (res, filePath) => {
     if (path.extname(filePath) === '.html') {
