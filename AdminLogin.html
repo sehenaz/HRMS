@@ -149,6 +149,11 @@
   <footer>© 2026 MEVTENCIA · Mevrick Solution Pvt. Ltd. · Admin Access</footer>
 
   <script>
+    window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
     // ── SUPER ADMIN (hardcoded, full unrestricted access) ──
     const SUPER_ADMIN = { id: 'admin', password: 'admin@2026' };
 

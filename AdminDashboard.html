@@ -706,6 +706,11 @@
   <div class="toast" id="toast"></div>
 
   <script>
+    window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
     // ── STATE ──────────────────────────────────────────────
     let currentView = 'all';   // 'all' | 'daily' | 'employee'
     let lastFilteredData = [];

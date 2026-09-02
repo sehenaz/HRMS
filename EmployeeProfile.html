@@ -105,6 +105,12 @@
   <footer>© 2026 MEVTENCIA · Mevrick Solution Pvt. Ltd.</footer>
 
   <script>
+
+    window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
     // ===== DEFAULT EMPLOYEES (hardcoded fallback) =====
     const DEFAULT_EMPLOYEES = {
       "MEV/336/2025": { id:"MEV/336/2025", name:"Sehenaz Khatun",   password:"MEVRICK1707" },

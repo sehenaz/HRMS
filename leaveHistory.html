@@ -194,6 +194,12 @@
   </div>
 
   <script>
+
+    window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
     // ═══════════════════════════════════════════════════════════════════
     // AUTH / SCOPE  — same pattern as EmployeeHistory.html, gated on the
     // 'leave' permission instead of 'employeeDatabase'.

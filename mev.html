@@ -541,6 +541,11 @@
   </div>
 
   <script>
+    window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
     // ========== GLOBAL STATE ==========
     let stream = null;
     let capturedData = null;

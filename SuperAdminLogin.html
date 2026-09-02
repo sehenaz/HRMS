@@ -293,6 +293,12 @@
   <footer>© 2026 MEVTENCIA · Super Admin Panel</footer>
 
   <script>
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
+
     // Kept as an OFFLINE FALLBACK only — if the backend (MongoDB-backed
     // /api/super-admin/login) can't be reached, login still works using
     // these fixed credentials. Once the backend responds, it is always

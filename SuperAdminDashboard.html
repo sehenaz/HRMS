@@ -1811,6 +1811,12 @@
   <div class="toast" id="toast"></div>
 
   <script>
+
+    window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    window.location.reload();
+  }
+});
     //////////////////////////////////
     // If this page is opened from your backend (server.js on port 4000),
     // relative '/api/...' calls work as-is (SERVER_URL stays '').
