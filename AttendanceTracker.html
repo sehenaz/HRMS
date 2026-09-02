@@ -1239,13 +1239,16 @@
       initAnalytics();
       schedule11PMClockout();
 
-      const captureAt = localStorage.getItem('mev_captureAt');
+      // FIX: previously only auto-clocked-in if the photo was captured
+      // within the last 30 minutes. That worked for a brand-new capture,
+      // but broke for returning employees whose photo is now reused from
+      // a PAST login (mev.html skips the camera for them entirely, see
+      // storedPhotoKey()/verifyEmployee() there). Auto clock-in now fires
+      // any time there's no attendance record yet for today and a valid
+      // photo is on file, regardless of when it was originally taken.
       const rec = getRecord();
-      if (photo && captureAt && !rec) {
-        const captureTime = new Date(captureAt);
-        if ((Date.now() - captureTime.getTime()) / 60000 < 30) {
-          doClockin(captureTime);
-        }
+      if (photo && !rec) {
+        doClockin();
       }
 
       (async () => {
@@ -1675,12 +1678,28 @@ function determineType(inTime, outTime) {
     function doClockin(timeOverride = null) {
       const rec = getRecord();
       if (rec) { showToast('Already clocked in today!'); return; }
+
+      // ✅ FIX: photo is now MANDATORY before a clock-in can be saved.
+      // Previously, doClockin() silently accepted an empty string from
+      // localStorage.getItem('mev_capturedPhoto') and saved the record
+      // anyway — this is why many attendance rows on the Super Admin
+      // dashboard show a blank placeholder icon instead of a real photo
+      // (the capture step upstream was skipped, failed, or the browser
+      // denied camera access, and this page never checked before saving).
+      const photo = localStorage.getItem('mev_capturedPhoto') || '';
+      if (!photo) {
+        showToast('⚠️ Photo not captured! Please go back and allow camera access before clocking in.');
+        // Send them back to the capture/login step rather than letting
+        // them get stuck on a disabled button with no explanation.
+        setTimeout(() => { window.location.href = 'mev.html'; }, 1800);
+        return;
+      }
+
       const now = timeOverride || new Date();
       const ih = now.getHours(),
         im = now.getMinutes();
       const lateIn = ih > HALF_IN_H || (ih === HALF_IN_H && im >= HALF_IN_M);
       const loc = JSON.parse(localStorage.getItem('mev_capturedLocation') || '{}');
-      const photo = localStorage.getItem('mev_capturedPhoto') || '';
       const record = {
         date: getToday(),
         clock_in: fmtTimeShort(now),

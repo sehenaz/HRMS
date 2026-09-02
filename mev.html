@@ -687,13 +687,6 @@
     // Check if employee is an Admin
     async function checkIfAdmin(empId) {
       try {
-        // FIX: was hardcoded to an unrelated external domain
-        // (https://hrms-2-n4kt.onrender.com/api/admins), so this always
-        // failed/mismatched against the real backend and isAdminEmployee
-        // stayed false forever — the Admin button never showed on
-        // AttendanceTracker.html no matter what the Super Admin assigned.
-        // Using a relative path hits the SAME backend this page is
-        // served from (same Render service), matching every other file.
         const res = await fetch('/api/admins');
         if (!res.ok) return null;
         const admins = await res.json();
@@ -730,6 +723,58 @@
       document.getElementById('statusMsg').className = 'status-msg';
     }
 
+    // ── FIX: photo is now saved PER EMPLOYEE, forever, not tied to a
+    // single day. mev_photo_<empId> holds the last photo this employee
+    // ever captured; once it exists, every future login for that same
+    // employee skips the camera step entirely.
+    function storedPhotoKey(empId) {
+      return 'mev_photo_' + empId;
+    }
+
+    // Silent location fetch used for the "returning employee, skip
+    // camera" path — grabs a fresh GPS fix for this login without
+    // touching the (hidden) camera-step location UI.
+    async function fetchLocationSilently() {
+      if (!navigator.geolocation) {
+        locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
+        return;
+      }
+      try {
+        const pos = await new Promise((res, rej) =>
+          navigator.geolocation.getCurrentPosition(res, rej, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+          })
+        );
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        try {
+          const r = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&zoom=18`,
+            { headers: { 'Accept': 'application/json', 'User-Agent': 'MevtenciaApp/1.0' } }
+          );
+          const d = await r.json();
+          if (d && d.address) {
+            const a = d.address;
+            const parts = [
+              a.building || a.office || a.amenity || '',
+              a.house_number || '',
+              a.road || '',
+              a.city || a.town || a.village || '',
+              a.state || '',
+              a.postcode || ''
+            ].filter(Boolean);
+            address = parts.join(', ');
+          }
+        } catch (geoErr) { console.warn('Geocoding failed'); }
+        locationData = { address, lat, lng, capturedAt: new Date().toISOString() };
+      } catch (e) {
+        locationData = { address: 'Unknown', lat: 0, lng: 0, capturedAt: new Date().toISOString() };
+      }
+    }
+
     // ========== STEP 1: VERIFY EMPLOYEE ==========
     async function verifyEmployee() {
       const empId = document.getElementById('empId').value.trim();
@@ -759,28 +804,28 @@
       document.getElementById('nameDisplay').style.display = 'block';
       showMsg(`✅ Welcome ${employee.name}!`, 'success');
 
-      // Check if employee already has captured photo today
-      const lastSession = JSON.parse(localStorage.getItem('mev_employeeSession') || '{}');
-      const today = new Date().toISOString().split('T')[0];
-      const lastLoginDate = lastSession.loginAt ? new Date(lastSession.loginAt).toISOString().split('T')[0] : '';
+      // FIX: skip the camera step for ANY returning login of this same
+      // employee (not just "later today") — once a photo has ever been
+      // captured for this emp_id, reuse it and go straight through.
+      const savedPhoto = localStorage.getItem(storedPhotoKey(empId));
 
-      // If same employee logged in today with photo, skip camera
-      if ((lastSession.id === empId || lastSession.empId === empId) && lastSession.photo && lastLoginDate === today) {
+      if (savedPhoto) {
         showMsg('✅ Welcome back! Redirecting to dashboard...', 'success');
-        capturedData = lastSession.photo;
-        locationData = lastSession.location || { address: 'Unknown', lat: 0, lng: 0 };
+        capturedData = savedPhoto;
+        safeSetItem('mev_captureAt', new Date().toISOString());
 
-        // Check admin status
+        await fetchLocationSilently();
+
         linkedAdminInfo = await checkIfAdmin(empId);
         isAdminEmployee = !!linkedAdminInfo;
 
         setTimeout(() => {
           continueToDashboard();
-        }, 1000);
+        }, 800);
         return;
       }
 
-      // First time today - need camera
+      // First time ever for this employee - need camera
       document.getElementById('loginForm').style.display = 'none';
       document.getElementById('cameraSection').style.display = 'block';
       setStep(2);
@@ -855,6 +900,12 @@
 
       // FIX: compress before using/storing (see compressImage() above)
       capturedData = await compressImage(rawData, 480, 0.7);
+      safeSetItem('mev_captureAt', new Date().toISOString());
+
+      // FIX: persist this photo under a per-employee key so every future
+      // login for this same employee can skip the camera step entirely
+      // (see storedPhotoKey() / verifyEmployee()).
+      safeSetItem(storedPhotoKey(verifiedEmployee.id), capturedData);
 
       document.getElementById('photo').src = capturedData;
 
@@ -876,7 +927,14 @@
       showMsg('⏳ Fetching location...', 'warning');
       await fetchLocation();
 
-      showMsg('✅ Ready! Click to continue.', 'success');
+      showMsg('✅ Ready! Redirecting...', 'success');
+
+      // FIX: auto-continue instead of waiting for the person to click
+      // "Go to Dashboard" — the button stays visible/clickable as a
+      // fallback in case the auto-redirect is ever interrupted.
+      setTimeout(() => {
+        continueToDashboard();
+      }, 600);
     }
 
     // ========== RETAKE ==========
@@ -990,10 +1048,6 @@
           location: locationData || { address: 'Unknown', lat: 0, lng: 0 },
           loginAt: new Date().toISOString(),
           isAdmin: isAdminEmployee,
-          // FIX: carry the assigned-employees list straight onto the
-          // employee session too, so AttendanceTracker.html's Admin
-          // button always has a fallback even if mev_adminSession is
-          // ever missing/cleared.
           assigned_employees: linkedAdminInfo ? (linkedAdminInfo.assigned_employees || linkedAdminInfo.assignedEmpIds || []) : []
         };
 
@@ -1014,19 +1068,6 @@
         debugLog(`✓ mev_capturedLocation saved: ${locSaved}`);
 
         if (isAdminEmployee && linkedAdminInfo) {
-          // FIX: type must be 'admin' (not 'normal') — AdminDashboard.html
-          // only scopes the view down to assignedEmpIds when it sees
-          // type === 'admin'. Anything else (including the old 'normal'
-          // value) falls through to the unrestricted superadmin branch,
-          // which showed this admin EVERY employee instead of just the
-          // ones assigned to them.
-          //
-          // FIX #2: also carry forward role & permissions — previously
-          // only id/name/assigned_employees were stored here, so every
-          // downstream page (EmployeeHistory.html, AttendanceTracker.html,
-          // AdminDashboard.html) had NO way to know what this admin was
-          // actually allowed to see/edit/delete, and effectively defaulted
-          // to showing/allowing everything to every admin.
           safeSetItem('mev_adminSession', JSON.stringify({
             type: 'admin',
             id: linkedAdminInfo.admin_id || linkedAdminInfo.id,
@@ -1040,10 +1081,6 @@
           debugLog(`✓ mev_adminSession saved (type: admin, scoped, role: ${linkedAdminInfo.role || 'normal'})`);
         }
 
-        // FIX: always land on AttendanceTracker.html first, even for
-        // admin-linked employees. They give their own attendance there;
-        // the golden "Admin" button that appears in the top nav is what
-        // takes them into their scoped Admin Dashboard, on demand.
         const targetPage = 'AttendanceTracker.html';
         debugLog(`✓ All done. Redirecting to: ${targetPage} in 800ms...`);
         showMsg('✅ Redirecting...', 'success');
@@ -1060,15 +1097,8 @@
     }
 
     // ========== GO TO ADMIN DASHBOARD ==========
-    // (Bound to the hidden #navAdminProfile link in the navbar above —
-    // kept working/consistent even though the main entry point is now
-    // the Admin button on AttendanceTracker.html.)
     function goToAdminDashboard() {
       if (linkedAdminInfo) {
-        // FIX: type: 'admin', not 'normal' — see note in continueToDashboard().
-        // FIX #2: also persist role & permissions here (previously dropped
-        // in this path too, so navigating via the navbar link lost the
-        // admin's scope/permissions exactly like the auto-redirect did).
         safeSetItem('mev_adminSession', JSON.stringify({
           type: 'admin',
           id: linkedAdminInfo.admin_id || linkedAdminInfo.id,

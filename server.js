@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
+app.use(cors({ origin: '*' }));  // sirf development ke liye, production me specific origins use karo
 
 mongoose.connect('mongodb://samaresh_Mondal:Mspl%402026@ac-yuzpvud-shard-00-00.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-01.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-02.xjccckc.mongodb.net:27017/mevtencia?authSource=admin&tls=true')
   .then(() => console.log('✅ MongoDB Atlas Connected!'))
@@ -76,6 +77,7 @@ const attendanceSchema = new mongoose.Schema({
   note:            String,
   updated_at:      { type: Date, default: Date.now }
 });
+attendanceSchema.index({ emp_id: 1, date: 1 });
 
 const leaveSchema = new mongoose.Schema({
   key:        { type: String, required: true, unique: true },
@@ -447,10 +449,59 @@ app.delete(
 //  ATTENDANCE
 // ════════════════════════════════════════════════════════
 
+function sendAttendancePhoto(res, photo) {
+  if (!photo || typeof photo !== 'string') return false;
+  const trimmed = photo.trim();
+  if (!trimmed) return false;
+  res.set('Cache-Control', 'private, max-age=300');
+  const dataUri = /^data:([^;]+);base64,([\s\S]+)$/i.exec(trimmed);
+  if (dataUri) {
+    res.set('Content-Type', dataUri[1]);
+    res.send(Buffer.from(dataUri[2].replace(/\s/g, ''), 'base64'));
+    return true;
+  }
+  try {
+    const buf = Buffer.from(trimmed.replace(/\s/g, ''), 'base64');
+    if (buf.length < 32) return false;
+    res.set('Content-Type', 'image/jpeg');
+    res.send(buf);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 app.get('/api/attendance', async (req, res) => {
   try {
-    const records = await Attendance.find().sort({ date: -1 });
+    // Do not send base64 selfies in the list payload — that response can be
+    // hundreds of MB and the dashboard fetch times out, then falls back to
+    // localStorage (the red "Could not reach the backend" banner).
+    const records = await Attendance.aggregate([
+      {
+        $addFields: {
+          has_photo: { $gt: [{ $strLenCP: { $ifNull: ['$photo', ''] } }, 30] }
+        }
+      },
+      { $project: { photo: 0 } },
+      { $sort: { date: -1 } }
+    ]).option({ maxTimeMS: 20000 });
     res.json(records);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/attendance-photo/:id', async (req, res) => {
+  try {
+    const rec = await Attendance.findById(req.params.id).select('photo').lean().maxTimeMS(10000);
+    if (!sendAttendancePhoto(res, rec && rec.photo)) return res.status(404).end();
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/attendance-photo', async (req, res) => {
+  try {
+    const { emp_id, date } = req.query;
+    if (!emp_id || !date) return res.status(400).json({ error: 'emp_id and date required' });
+    const rec = await Attendance.findOne({ emp_id, date }).select('photo').lean().maxTimeMS(10000);
+    if (!sendAttendancePhoto(res, rec && rec.photo)) return res.status(404).end();
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -458,7 +509,11 @@ app.get('/api/employee-attendance', async (req, res) => {
   try {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: 'id required' });
-    const records = await Attendance.find({ emp_id: id }).sort({ date: -1 });
+    const records = await Attendance.find({ emp_id: id })
+      .select('-photo')
+      .sort({ date: -1 })
+      .lean()
+      .maxTimeMS(15000);
     res.json(records);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -475,11 +530,15 @@ app.post('/api/attendance', async (req, res) => {
       attendance_type: d.attendance_type || 'In Progress',
       location: d.location || 'Unknown',
       lat: d.lat || null, lng: d.lng || null,
-      photo: d.photo || '', tasks: d.tasks || [],
+      tasks: d.tasks || [],
       note: d.note || '', updated_at: new Date()
     };
+    // Never overwrite an existing selfie with an empty string (clock-out / retry syncs).
+    if (d.photo) data.photo = d.photo;
     const entry = await Attendance.findOneAndUpdate(
-      { emp_id: d.emp_id, date: d.date }, data, { upsert: true, new: true }
+      { emp_id: d.emp_id, date: d.date },
+      { $set: data },
+      { upsert: true, new: true }
     );
     res.json({ success: true, entry });
   } catch (err) { res.status(500).json({ error: err.message }); }

@@ -857,6 +857,7 @@
           localData.forEach(lr => {
             const exists = merged.find(sr => sr.emp_id === lr.emp_id && sr.date === lr.date);
             if (!exists) merged.push(lr);
+            else if (!exists.has_photo && lr.photo) exists.photo = lr.photo;
           });
         }
       } catch (e) {
@@ -1001,9 +1002,17 @@
 
     // ── PHOTO HELPERS ──────────────────────────────────────
     function photoEl(r) {
-      return r.photo
-        ? `<img class="emp-photo" src="${r.photo}" alt="" onclick="openModal('${r.photo.replace(/'/g,"\\'")}')"/>`
-        : `<div class="emp-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`;
+      let src = '';
+      if (r.photo && String(r.photo).startsWith('data:')) src = r.photo;
+      else if (r._id) src = `/api/attendance-photo/${encodeURIComponent(r._id)}`;
+      else if (r.emp_id && r.date) {
+        src = `/api/attendance-photo?emp_id=${encodeURIComponent(r.emp_id)}&amp;date=${encodeURIComponent(r.date)}`;
+      }
+      if (!src) {
+        return `<div class="emp-photo-placeholder"><svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>`;
+      }
+      const safeSrc = src.replace(/'/g, "\\'");
+      return `<img class="emp-photo" src="${src}" alt="" onclick="openModal('${safeSrc}')" onerror="this.style.display='none'"/>`;
     }
 
     // ── TABLE ROW HTML ─────────────────────────────────────

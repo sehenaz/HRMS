@@ -578,14 +578,27 @@
     // rejected with 403 (the try/catch just swallowed it), so the row
     // still disappeared from the local table even though it never
     // actually left MongoDB.
-    function permHeaders() {
-      const superSession = JSON.parse(localStorage.getItem('mev_superSession') || 'null');
-      const adminSession  = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
-      const isSuper = !!superSession || (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin'));
-      if (isSuper) return { 'x-super-admin': 'true' };
-      return { 'x-admin-id': (adminSession && adminSession.id) || '' };
-    }
+    // function permHeaders() {
+    //   const superSession = JSON.parse(localStorage.getItem('mev_superSession') || 'null');
+    //   const adminSession  = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
+    //   const isSuper = !!superSession || (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin'));
+    //   if (isSuper) return { 'x-super-admin': 'true' };
+    //   return { 'x-admin-id': (adminSession && adminSession.id) || '' };
+    // }
+function permHeaders() {
+  const superSession = JSON.parse(localStorage.getItem('mev_superSession') || 'null');
+  const adminSession  = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
 
+  if (superSession) {
+    const superId = superSession.super_id || superSession.id || superSession.username;
+    return { 'x-super-admin-id': superId };
+  }
+  if (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin')) {
+    const superId = adminSession.super_id || adminSession.id || adminSession.username;
+    return { 'x-super-admin-id': superId };
+  }
+  return { 'x-admin-id': (adminSession && adminSession.id) || '' };
+}
     async function deleteEmployee(empId) {
       if (!confirm(`Delete employee ${empId}? This cannot be undone.`)) return;
 
