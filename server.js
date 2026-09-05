@@ -4,12 +4,61 @@ const cors     = require('cors');
 const path     = require('path');
 const multer   = require('multer');
 const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
+const bcrypt   = require('bcryptjs');
+
+// ── PASSWORD HASHING HELPERS ──
+// SALT_ROUNDS: cost factor for bcrypt hashing (10 is a solid default).
+const SALT_ROUNDS = 10;
+
+function hashPassword(plainPassword) {
+  return bcrypt.hash(plainPassword, SALT_ROUNDS);
+}
+
+function looksHashed(pw) {
+  // bcrypt hashes always look like $2a$10$..., $2b$10$..., or $2y$10$...
+  return typeof pw === 'string' && /^\$2[aby]\$\d{2}\$/.test(pw);
+}
+
+// verifyAndMigratePassword — compares a plaintext candidate against a
+// mongoose document's `password` field.
+// - If the stored value is already a bcrypt hash, does a normal bcrypt compare.
+// - If the stored value is still old plaintext (from before this fix), it
+//   compares directly, and — if it matches — silently re-hashes it and saves
+//   the document, so every account gets upgraded to a hash the next time it
+//   logs in successfully, with zero downtime and no forced password resets.
+async function verifyAndMigratePassword(candidatePlain, doc) {
+  if (!doc || typeof candidatePlain !== 'string' || !doc.password) return false;
+
+  if (looksHashed(doc.password)) {
+    return bcrypt.compare(candidatePlain, doc.password);
+  }
+
+  const matches = doc.password === candidatePlain;
+  if (matches) {
+    doc.password = await hashPassword(candidatePlain);
+    await doc.save();
+  }
+  return matches;
+}
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
 app.use(cors({ origin: '*' }));  // sirf development ke liye, production me specific origins use karo
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-mongoose.connect('mongodb://samaresh_Mondal:Mspl%402026@ac-yuzpvud-shard-00-00.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-01.xjccckc.mongodb.net:27017,ac-yuzpvud-shard-00-02.xjccckc.mongodb.net:27017/mevtencia?authSource=admin&tls=true')
+// Strict rate limiter ONLY for login endpoints (brute-force protection)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // max 20 login attempts per 15 min per IP
+  message: { error: 'Too many login attempts. Please wait 15 minutes and try again.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+// Note: NOT applying any global rate limiter — only login endpoints are limited
+
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ MongoDB Atlas Connected!'))
   .catch(err => {
     console.error('❌ MongoDB Error:', err.message);
@@ -225,9 +274,9 @@ async function seedSuperAdmins() {
     const count = await SuperAdmin.countDocuments();
     if (count > 0) return;
     await SuperAdmin.insertMany([
-      { super_id: 'super1', name: 'Samaresh',    password: 'super@20261', phone: '9876543210' },
-      { super_id: 'super2', name: 'Akash Singh', password: 'super@20262', phone: '8765432109' },
-      { super_id: 'super3', name: 'Somnath',     password: 'super@20263', phone: '7654321098' }
+      { super_id: 'super1', name: 'Samaresh',    password: await hashPassword('super@20261'), phone: '9876543210' },
+      { super_id: 'super2', name: 'Akash Singh', password: await hashPassword('super@20262'), phone: '8765432109' },
+      { super_id: 'super3', name: 'Somnath',     password: await hashPassword('super@20263'), phone: '7654321098' }
     ]);
     console.log('✅ Seeded default Super Admin accounts into MongoDB');
   } catch (err) {
@@ -236,7 +285,7 @@ async function seedSuperAdmins() {
 }
 mongoose.connection.once('open', seedSuperAdmins);
 
-app.use(cors({ origin: '*' }));
+// CORS is applied once at the top of the file
 app.use(express.json({ limit: '8mb' }));
 app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 // app.use(express.static(__dirname));
@@ -324,6 +373,18 @@ app.post('/api/employees', upload.any(), async (req, res) => {
     const emp = req.body;
     const empId = emp.emp_id || emp.employeeId;
     if (!empId) return res.status(400).json({ error: 'emp_id required' });
+
+    // Password handling: hash it if a new one was sent; otherwise keep the
+    // existing employee's (already-hashed) password instead of clobbering
+    // it with the plaintext default on every edit/upsert.
+    let passwordToStore;
+    if (emp.password) {
+      passwordToStore = await hashPassword(emp.password);
+    } else {
+      const existingEmp = await Employee.findOne({ emp_id: empId }).select('password');
+      passwordToStore = existingEmp ? existingEmp.password : await hashPassword('MEVRICK1707');
+    }
+
     const data = {
       emp_id: empId,
       employee_name:  emp.employee_name  || emp.employeeName  || '',
@@ -335,7 +396,7 @@ app.post('/api/employees', upload.any(), async (req, res) => {
       salary:         emp.salary        || '',
       joining_date:   emp.joining_date  || emp.joiningDate || '',
       employee_type:  emp.employee_type || emp.employeeType || 'Full Time',
-      password:       emp.password      || 'MEVRICK1707',
+      password:       passwordToStore,
       work_location:  emp.work_location || emp.workLocation || '',
       address:        emp.address       || '',
       alternative_phone: emp.alternative_phone || emp.alternativePhone || '',
@@ -365,6 +426,15 @@ app.post('/api/register', requirePermission('newEmployeeRegistration'), upload.a
     const emp = req.body;
     const empId = emp.emp_id || emp.employeeId;
     if (!empId) return res.status(400).json({ error: 'emp_id required' });
+
+    let passwordToStore;
+    if (emp.password) {
+      passwordToStore = await hashPassword(emp.password);
+    } else {
+      const existingEmp = await Employee.findOne({ emp_id: empId }).select('password');
+      passwordToStore = existingEmp ? existingEmp.password : await hashPassword('MEVRICK1707');
+    }
+
     const data = {
       emp_id:         empId,
       employee_name:  emp.employee_name  || emp.employeeName  || '',
@@ -376,7 +446,7 @@ app.post('/api/register', requirePermission('newEmployeeRegistration'), upload.a
       salary:         emp.salary        || '',
       joining_date:   emp.joining_date  || emp.joiningDate || '',
       employee_type:  emp.employee_type || emp.employeeType || 'Full Time',
-      password:       emp.password      || 'MEVRICK1707',
+      password:       passwordToStore,
       work_location:  emp.work_location || emp.workLocation || '',
       address:        emp.address       || '',
       alternative_phone: emp.alternative_phone || emp.alternativePhone || '',
@@ -676,8 +746,8 @@ app.delete('/api/salary/:id', requirePermission('salary'), async (req, res) => {
 app.post('/api/login', async (req, res) => {
   try {
     const { id, password } = req.body;
-    const emp = await Employee.findOne({ emp_id: id, password });
-    if (emp) {
+    const emp = await Employee.findOne({ emp_id: id });
+    if (emp && await verifyAndMigratePassword(password, emp)) {
       res.json({ success: true, employee: emp });
     } else {
       res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -744,7 +814,7 @@ app.post('/api/admins', requireSuperAdmin, async (req, res) => {
 
     const admin = new Admin({
       admin_id,
-      password,
+      password: await hashPassword(password),
       employee_id,
       employee_name: employee_name || '',
       assigned_employees: assigned_employees || [],
@@ -764,11 +834,24 @@ app.delete('/api/admins/:adminId', requireSuperAdmin, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/admin-login', async (req, res) => {
+app.post('/api/employee-login', loginLimiter, async (req, res) => {
+  try {
+    const { emp_id, password } = req.body;
+    if (!emp_id || !password) return res.status(400).json({ error: 'emp_id and password required' });
+    const emp = await Employee.findOne({ emp_id });
+    if (emp && await verifyAndMigratePassword(password, emp)) {
+      res.json({ success: true, employee: { id: emp.emp_id, name: emp.employee_name } });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid Employee ID or Password' });
+    }
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/admin-login', loginLimiter, async (req, res) => {
   try {
     const { admin_id, password } = req.body;
-    const admin = await Admin.findOne({ admin_id, password });
-    if (admin) {
+    const admin = await Admin.findOne({ admin_id });
+    if (admin && await verifyAndMigratePassword(password, admin)) {
       res.json({ success: true, admin });
     } else {
       res.status(401).json({ success: false, error: 'Invalid Admin ID or Password' });
@@ -780,12 +863,14 @@ app.post('/api/admin-login', async (req, res) => {
 //  SUPER ADMIN (login + change password)
 // ════════════════════════════════════════════════════════
 
-app.post('/api/super-admin/login', async (req, res) => {
+app.post('/api/super-admin/login', loginLimiter, async (req, res) => {
   try {
     const { id, password } = req.body;
     if (!id || !password) return res.status(400).json({ error: 'id and password required' });
-    const sa = await SuperAdmin.findOne({ super_id: id, password });
-    if (!sa) return res.status(401).json({ error: 'Invalid Super Admin ID or Password' });
+    const sa = await SuperAdmin.findOne({ super_id: id });
+    if (!sa || !await verifyAndMigratePassword(password, sa)) {
+      return res.status(401).json({ error: 'Invalid Super Admin ID or Password' });
+    }
     res.json({ success: true, superAdmin: { id: sa.super_id, name: sa.name } });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -798,10 +883,10 @@ app.post('/api/super-admin/change-password', async (req, res) => {
     }
     const sa = await SuperAdmin.findOne({ super_id: id });
     if (!sa) return res.status(404).json({ error: 'Super Admin not found' });
-    if (sa.password !== currentPassword) {
+    if (!await verifyAndMigratePassword(currentPassword, sa)) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
-    sa.password = newPassword;
+    sa.password = await hashPassword(newPassword);
     await sa.save();
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }

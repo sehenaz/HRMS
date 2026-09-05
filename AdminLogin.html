@@ -5,7 +5,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <meta name="theme-color" content="#3f51b5"/>
-  <title>MEVTENCIA — Admin Login</title>
+  <title>MEVTENCIA - Admin Login</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="auth.js"></script>
+  <script>redirectIfLoggedIn('AttendanceTracker.html', 'AdminDashboard.html', 'SuperAdminDashboard.html');</script>
   <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -154,8 +159,6 @@
     window.location.reload();
   }
 });
-    // ── SUPER ADMIN (hardcoded, full unrestricted access) ──
-    const SUPER_ADMIN = { id: 'admin', password: 'admin@2026' };
 
     function showMsg(id, msg) {
       const el = document.getElementById(id); el.textContent = msg; el.classList.add('show');
@@ -209,20 +212,6 @@
       const id = document.getElementById('adminId').value.trim();
       const pw = document.getElementById('password').value;
       if (!id || !pw) { showMsg('msgErr', '⚠️ Please fill in all fields.'); return; }
-
-      // 1) Check hardcoded Super Admin — sees every employee, unrestricted
-      if (id === SUPER_ADMIN.id && pw === SUPER_ADMIN.password) {
-        localStorage.setItem('mev_adminSession', JSON.stringify({
-          type: 'superadmin',
-          id,
-          name: 'Super Admin',
-          assignedEmpIds: null,   // null = no restriction
-          loginAt: new Date().toISOString()
-        }));
-        showMsg('msgOk', '✅ Admin login successful! Redirecting...');
-        setTimeout(() => window.location.href = 'AdminDashboard.html', 800);
-        return;
-      }
 
       // 2) Pull the freshest admin list from MongoDB, then check scoped admins
       //    created by the Super Admin via "Manage Admins".

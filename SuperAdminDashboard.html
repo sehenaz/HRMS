@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#673ab7" />
   <title>MEVTENCIA — Super Admin Dashboard</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="auth.js"></script>
+  <script>requireAuth(['super']);</script>
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Chart.js for Attendance Breakdown pie chart -->
@@ -1829,10 +1834,8 @@
       : '';
 
     // ========== AUTH CHECK ==========
-    const session = JSON.parse(localStorage.getItem('mev_superSession'));
-    if (!session || session.type !== 'super') {
-      window.location.href = 'SuperAdminLogin.html';
-    } else {
+    const session = JSON.parse(localStorage.getItem('mev_superSession') || '{}');
+    if (session && session.type === 'super') {
       document.getElementById('superName').textContent = session.name;
       document.getElementById('welcomeText').textContent = `Welcome, ${session.name}`;
     }
@@ -1843,8 +1846,7 @@
     }
 
     function logout() {
-      localStorage.removeItem('mev_superSession');
-      window.location.href = 'SuperAdminLogin.html';
+      authLogout();
     }
 
     function showToast(msg, bg = '#2d3748') {

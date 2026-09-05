@@ -1,8 +1,6 @@
-const CACHE = 'mevtencia-v2';
+const CACHE = 'mevtencia-v3';
 const ASSETS = [
-  './', './index.html', './mev.html',
-  './EmployeeProfile.html', './AttendanceTracker.html',
-  './AdminLogin.html', './AdminDashboard.html'
+  './'
 ];
 
 self.addEventListener('install', e => {
@@ -19,8 +17,11 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
     fetch(e.request).then(r => {
-      const clone = r.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
+      // Do not cache HTML files (security for back-button after logout)
+      if (e.request.url.indexOf('.html') === -1) {
+        const clone = r.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+      }
       return r;
     }).catch(() => caches.match(e.request))
   );

@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#3f51b5" />
   <title>MEVTENCIA — Admin Dashboard</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="auth.js"></script>
+  <script>requireAuth(['admin', 'super']);</script>
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -778,7 +783,7 @@
     // the right header for whoever is currently logged in.
     function permHeaders() {
       const isSuper = !currentSession || currentSession.type === 'superadmin';
-      return isSuper ? { 'x-super-admin': 'true' } : { 'x-admin-id': currentSession.id };
+      return isSuper ? { 'x-super-admin-id': currentSession ? currentSession.id : 'admin' } : { 'x-admin-id': currentSession.id };
     }
 
     function applyRoleUI() {
@@ -836,11 +841,14 @@
 
     // ── INIT ───────────────────────────────────────────────
     window.onload = async function () {
-      if (!localStorage.getItem('mev_adminSession')) { window.location.href = 'AdminLogin.html'; return; }
       await loadSession();
       renderRecords();
       setInterval(renderRecords, 30000);
     };
+
+    function adminLogout() {
+      authLogout();
+    }
 
     // ── DATA ───────────────────────────────────────────────
     // async function getAllRecords() {

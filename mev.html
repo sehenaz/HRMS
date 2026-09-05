@@ -6,13 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#3f51b5" />
   <title>MEVTENCIA — Employee Login</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="auth.js"></script>
+  <script>redirectIfLoggedIn('AttendanceTracker.html', 'AdminDashboard.html', 'SuperAdminDashboard.html');</script>
   <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <style>
     * {
       margin: 0;
-      
+
       padding: 0;
-      
+
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
     }
@@ -436,25 +441,31 @@
         margin: 15px auto 30px;
         padding: 0 12px;
       }
+
       .main-card {
         padding: 18px;
       }
+
       .header-card {
         padding: 20px;
       }
+
       .header-card h2 {
         font-size: 18px;
       }
+
       .btn {
         min-width: 100px;
         padding: 10px 14px;
         font-size: 13px;
       }
+
       .step {
         width: 28px;
         height: 28px;
         font-size: 11px;
       }
+
       .step-line {
         width: 25px;
       }
@@ -469,10 +480,11 @@
       MEVTENCIA
     </a>
     <ul class="nav-links">
-      <li><a href="index.html">Logout</a></li>
+      <li><a href="#" onclick="authLogout(); return false;">Logout</a></li>
       <!-- <li><a href="mev.html" class="active">Employee Login</a></li> -->
       <li><a href="SalaryHistory.html" id="navSalary" style="display:none;">💰 Salary</a></li>
-      <li><a href="AdminDashboard.html" id="navAdminProfile" style="display:none;" onclick="goToAdminDashboard()">🛡️ Admin</a></li>
+      <li><a href="AdminDashboard.html" id="navAdminProfile" style="display:none;" onclick="goToAdminDashboard()">🛡️
+          Admin</a></li>
     </ul>
   </nav>
 
@@ -524,14 +536,16 @@
           <strong>📍 Current Location</strong>
           <div class="location-address" id="locationAddress">Fetching precise GPS...</div>
           <div class="location-coords" id="locationCoords"></div>
-          <a id="locVerifyLink" class="loc-verify-btn" target="_blank" style="display:none;">🗺️ Verify on Google Maps</a>
+          <a id="locVerifyLink" class="loc-verify-btn" target="_blank" style="display:none;">🗺️ Verify on Google
+            Maps</a>
         </div>
 
         <div class="btn-group">
           <button class="btn btn-primary" id="enableBtn" onclick="enableCamera()">📷 Enable Camera</button>
           <button class="btn btn-primary btn-hidden" id="captureBtn" onclick="capturePhoto()">✓ Capture Photo</button>
           <button class="btn btn-secondary btn-hidden" id="retakeBtn" onclick="retake()">↩ Retake</button>
-          <button class="btn btn-success btn-hidden" id="continueBtn" onclick="continueToDashboard()">📊 Go to Dashboard</button>
+          <button class="btn btn-success btn-hidden" id="continueBtn" onclick="continueToDashboard()">📊 Go to
+            Dashboard</button>
         </div>
       </div>
 
@@ -542,10 +556,10 @@
 
   <script>
     window.addEventListener('pageshow', function (event) {
-  if (event.persisted) {
-    window.location.reload();
-  }
-});
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
     // ========== GLOBAL STATE ==========
     let stream = null;
     let capturedData = null;
@@ -554,96 +568,26 @@
     let isAdminEmployee = false;
     let linkedAdminInfo = null;
 
-    // ── DEBUG LOG PANEL (visible on-screen, no DevTools needed) ──
-    function debugLog(msg) {
-      const el = document.getElementById('debugInfo');
-      if (!el) return;
-      const time = new Date().toLocaleTimeString();
-      el.textContent += `[${time}] ${msg}\n`;
-      el.classList.add('show');
-      el.scrollTop = el.scrollHeight;
-    }
-
-    window.onerror = function(message, source, lineno, colno, error) {
-      debugLog(`❌ UNCAUGHT ERROR: ${message}\n   at line ${lineno}:${colno}`);
-      showMsg('⚠️ Something went wrong. See the debug box below - screenshot it and send it.', 'error');
+    window.onerror = function (message, source, lineno, colno, error) {
+      console.error(`Uncaught error: ${message} at line ${lineno}:${colno}`);
+      showMsg('⚠️ Something went wrong. Please refresh the page.', 'error');
       return false;
     };
 
-    // ========== EMPLOYEE DATABASE ==========
-    const DEFAULT_EMPLOYEES = {
-      "MEV/336/2025": {
-        id: "MEV/336/2025",
-        name: "Sehenaz Khatun",
-        password: "MEVRICK1707",
-       
-      },
-      "MEV/340/2026": {
-        id: "MEV/340/2026",
-        name: "Ishika Nayak",
-        password: "MEVRICK1707",
-        
-      },
-      "MEV/296/2025": {
-        id: "MEV/296/2025",
-        name: "Udita Karmakar",
-        password: "MEVRICK1707",
-       
-      },
-      "MEV/110/2022": {
-        id: "MEV/110/2022",
-        name: "Indrani Ganguly",
-        password: "MEVRICK1707",
-        
-      },
-      "MEV/339/2026": {
-        id: "MEV/339/2026",
-        name: "Sreeparna Biswas",
-        password: "MEVRICK1707",
-        
-      },
-      "MEV/322/2025": {
-        id: "MEV/322/2025",
-        name: "Tathagata Roy",
-        password: "MEVRICK1707",
-        
-      },
-      "MEV/323/2025": {
-        id: "MEV/323/2025",
-        name: "Swagata Dutta",
-        password: "MEVRICK1707",
-        
-      },
-      "MEV/264/2024": {
-        id: "MEV/264/2024",
-        name: "Sumit Naskar",
-        password: "MEVRICK1707",
-       
-      }
-    };
+    // Employee data is loaded exclusively from MongoDB via /api/employees
+    // No hardcoded employee list in client-side code for security
 
     function initEmployeeDB() {
       try {
         const stored = localStorage.getItem('mev_employeeDB');
         if (!stored) {
-          localStorage.setItem('mev_employeeDB', JSON.stringify(DEFAULT_EMPLOYEES));
-          return { ...DEFAULT_EMPLOYEES };
+          localStorage.setItem('mev_employeeDB', JSON.stringify({}));
+          return {};
         }
-        const db = JSON.parse(stored);
-        let updated = false;
-        Object.keys(DEFAULT_EMPLOYEES).forEach(key => {
-          if (!db[key]) {
-            db[key] = DEFAULT_EMPLOYEES[key];
-            updated = true;
-          }
-        });
-        if (updated) {
-          localStorage.setItem('mev_employeeDB', JSON.stringify(db));
-        }
-        return db;
+        return JSON.parse(stored);
       } catch (e) {
-        localStorage.setItem('mev_employeeDB', JSON.stringify(DEFAULT_EMPLOYEES));
-        return { ...DEFAULT_EMPLOYEES };
+        localStorage.setItem('mev_employeeDB', JSON.stringify({}));
+        return {};
       }
     }
 
@@ -709,10 +653,16 @@
     function setStep(n) {
       [1, 2, 3].forEach(i => {
         const s = document.getElementById('s' + i);
-        if (i < n) { s.className = 'step done';
-          s.textContent = '✓'; } else if (i === n) { s.className = 'step active';
-          s.textContent = i; } else { s.className = 'step';
-          s.textContent = i; }
+        if (i < n) {
+          s.className = 'step done';
+          s.textContent = '✓';
+        } else if (i === n) {
+          s.className = 'step active';
+          s.textContent = i;
+        } else {
+          s.className = 'step';
+          s.textContent = i;
+        }
         if (i < 3)
           document.getElementById('sl' + i).className = i < n ? 'step-line done' : 'step-line';
       });
@@ -790,51 +740,58 @@
         return;
       }
 
-      const db = getEmployeeDB();
-      const employee = db[empId];
+      try {
+        const response = await fetch('/api/employee-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emp_id: empId, password: empPw })
+        });
 
-      if (!employee) {
-        showMsg(`❌ Employee "${empId}" not found.`, 'error');
-        return;
+        const data = await response.json();
+
+        if (!data.success) {
+          showMsg(`❌ ${data.error || 'Invalid credentials'}`, 'error');
+          return;
+        }
+
+        // ✅ Employee verified
+        const employee = data.employee;
+        verifiedEmployee = employee;
+        document.getElementById('empName').value = employee.name;
+        document.getElementById('nameDisplay').style.display = 'block';
+        showMsg(`✅ Welcome ${employee.name}!`, 'success');
+
+        // FIX: skip the camera step for ANY returning login of this same
+        // employee (not just "later today") — once a photo has ever been
+        // captured for this emp_id, reuse it and go straight through.
+        const savedPhoto = localStorage.getItem(storedPhotoKey(empId));
+
+        if (savedPhoto) {
+          showMsg('✅ Welcome back! Redirecting to dashboard...', 'success');
+          capturedData = savedPhoto;
+          safeSetItem('mev_captureAt', new Date().toISOString());
+
+          await fetchLocationSilently();
+
+          linkedAdminInfo = await checkIfAdmin(empId);
+          isAdminEmployee = !!linkedAdminInfo;
+
+          setTimeout(() => {
+            continueToDashboard();
+          }, 800);
+          return;
+        }
+
+        // First time ever for this employee - need camera
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('cameraSection').style.display = 'block';
+        setStep(2);
+        setTimeout(enableCamera, 500);
+
+      } catch (err) {
+        showMsg('❌ Server error during login. Please try again.', 'error');
+        console.error('Login error:', err);
       }
-
-      if (employee.password !== empPw) {
-        showMsg('❌ Invalid password. Please try again.', 'error');
-        return;
-      }
-
-      // ✅ Employee verified
-      verifiedEmployee = employee;
-      document.getElementById('empName').value = employee.name;
-      document.getElementById('nameDisplay').style.display = 'block';
-      showMsg(`✅ Welcome ${employee.name}!`, 'success');
-
-      // FIX: skip the camera step for ANY returning login of this same
-      // employee (not just "later today") — once a photo has ever been
-      // captured for this emp_id, reuse it and go straight through.
-      const savedPhoto = localStorage.getItem(storedPhotoKey(empId));
-
-      if (savedPhoto) {
-        showMsg('✅ Welcome back! Redirecting to dashboard...', 'success');
-        capturedData = savedPhoto;
-        safeSetItem('mev_captureAt', new Date().toISOString());
-
-        await fetchLocationSilently();
-
-        linkedAdminInfo = await checkIfAdmin(empId);
-        isAdminEmployee = !!linkedAdminInfo;
-
-        setTimeout(() => {
-          continueToDashboard();
-        }, 800);
-        return;
-      }
-
-      // First time ever for this employee - need camera
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('cameraSection').style.display = 'block';
-      setStep(2);
-      setTimeout(enableCamera, 500);
     }
 
     // ========== STEP 2: CAMERA ==========
@@ -876,8 +833,10 @@
         showMsg('✅ Camera ready! Capture your photo.', 'success');
 
       } catch (e) {
-        if (stream) { stream.getTracks().forEach(t => t.stop());
-          stream = null; }
+        if (stream) {
+          stream.getTracks().forEach(t => t.stop());
+          stream = null;
+        }
         videoWrap.classList.remove('active');
         const errorMap = {
           NotAllowedError: '❌ Camera permission denied.',
@@ -947,8 +906,10 @@
       capturedData = null;
       locationData = null;
 
-      if (stream) { stream.getTracks().forEach(t => t.stop());
-        stream = null; }
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
 
       document.getElementById('photoWrap').classList.remove('active');
       document.getElementById('videoWrap').classList.remove('active');
@@ -1119,7 +1080,7 @@
     }
 
     // ========== KEYBOARD SUPPORT ==========
-    document.addEventListener('keypress', function(e) {
+    document.addEventListener('keypress', function (e) {
       if (e.key === 'Enter' && document.getElementById('loginForm').style.display !== 'none') {
         verifyEmployee();
       }
@@ -1132,8 +1093,6 @@
 
     // ========== INIT ==========
     initEmployeeDB();
-    document.getElementById('empId').value = 'MEV/336/2025';
-    document.getElementById('empPw').value = 'MEVRICK1707';
   </script>
 </body>
 
