@@ -728,15 +728,25 @@
       document.getElementById('statusMsg').className = 'status-msg';
     }
 
-    // ── FIX: photo is now saved PER EMPLOYEE, forever, not tied to a
-    // single day. mev_photo_<empId> holds the last photo this employee
-    // ever captured; once it exists, every future login for that same
-    // employee skips the camera step entirely.
-    function storedPhotoKey(empId) {
-      return 'mev_photo_' + empId;
+    // ── DAILY ATTENDANCE FIX: photo is now saved PER EMPLOYEE PER DAY.
+    // mev_photo_<empId>_<DD-MM-YYYY> holds today's captured photo for
+    // this employee. Once it exists (today), later logins the SAME day
+    // skip the camera step. Tomorrow the key is different (new date),
+    // so the key won't exist yet and the camera opens again — a fresh
+    // photo is mandatory once per day, per employee.
+    function getTodayKey() {
+      const d = new Date();
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      return `${dd}-${mm}-${yyyy}`;
     }
 
-    // Silent location fetch used for the "returning employee, skip
+    function storedPhotoKey(empId) {
+      return 'mev_photo_' + empId + '_' + getTodayKey();
+    }
+
+    // Silent location fetch used for the "already captured today, skip
     // camera" path — grabs a fresh GPS fix for this login without
     // touching the (hidden) camera-step location UI.
     async function fetchLocationSilently() {
@@ -809,9 +819,9 @@
       document.getElementById('nameDisplay').style.display = 'block';
       showMsg(`✅ Welcome ${employee.name}!`, 'success');
 
-      // FIX: skip the camera step for ANY returning login of this same
-      // employee (not just "later today") — once a photo has ever been
-      // captured for this emp_id, reuse it and go straight through.
+      // DAILY ATTENDANCE FIX: only skip the camera step if a photo was
+      // ALREADY captured TODAY for this employee (see storedPhotoKey()).
+      // A new calendar day always requires a fresh camera capture.
       const savedPhoto = localStorage.getItem(storedPhotoKey(empId));
 
       if (savedPhoto) {
@@ -830,7 +840,7 @@
         return;
       }
 
-      // First time ever for this employee - need camera
+      // First login today for this employee - need a fresh camera capture
       document.getElementById('loginForm').style.display = 'none';
       document.getElementById('cameraSection').style.display = 'block';
       setStep(2);
@@ -907,9 +917,10 @@
       capturedData = await compressImage(rawData, 480, 0.7);
       safeSetItem('mev_captureAt', new Date().toISOString());
 
-      // FIX: persist this photo under a per-employee key so every future
-      // login for this same employee can skip the camera step entirely
-      // (see storedPhotoKey() / verifyEmployee()).
+      // DAILY ATTENDANCE FIX: persist this photo under a per-employee,
+      // per-day key (see storedPhotoKey()) so it's reused only for the
+      // REST OF TODAY. Tomorrow's login will find no key for that new
+      // date and the camera will open again automatically.
       safeSetItem(storedPhotoKey(verifiedEmployee.id), capturedData);
 
       document.getElementById('photo').src = capturedData;

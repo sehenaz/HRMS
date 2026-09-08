@@ -91,7 +91,7 @@
     <ul class="nav-links">
       <!-- <li><a href="AdminDashboard.html">Attendance</a></li> -->
       <!-- <li><a href="Registration.html">Register</a></li> -->
-      <li><a href="index.html" onclick="localStorage.removeItem('mev_adminSession')">Logout</a></li>
+      <li><a href="index.html" onclick="return doLogout()">Logout</a></li>
     </ul>
   </nav>
 
@@ -180,6 +180,24 @@
   }
   loadData();
 };
+
+    // ✅ FIX: the old Logout link only ever removed 'mev_adminSession'.
+    // A Super Admin's session lives under the DIFFERENT key
+    // 'mev_superSession' — so if a Super Admin clicked "Logout" here,
+    // nothing actually cleared their session. window.onload's own check
+    // (hasSuperSession) would then still see a valid session on the very
+    // next load (via Back button, refresh, or bfcache restore), so the
+    // page kept showing as if the person were still logged in. This
+    // wasn't a caching glitch — the session genuinely never got cleared.
+    // Logout now clears BOTH possible session keys, whichever is in use,
+    // then hard-redirects (replace, so it doesn't leave a
+    // still-authenticated page in the Back-button history either).
+    function doLogout() {
+      localStorage.removeItem('mev_adminSession');
+      localStorage.removeItem('mev_superSession');
+      window.location.replace('index.html');
+      return false;
+    }
 
     // ─────────────────────────────────────────────────────────────────────
     // localStorage / backend se aane wale employee object ko ek consistent
@@ -272,17 +290,8 @@
         document.getElementById('serverStatus').textContent = '✕ Server Offline';
       }
 
-      // Normalize backend records too — previously these were used raw,
-      // so if the backend stored camelCase fields (e.g. from Registration.html's
-      // payload), r.emp_id / r.employee_name etc. would all read as undefined.
       const backendData = backendRaw.map(normalizeEmployee);
 
-      // ✅ FIX: the full registration record (Nominee/Bank/DOB/Documents)
-      // is saved by Registration.html under 'mevtencia_employeeDatabase'.
-      // This was previously (incorrectly) reading 'mev_employeeDB', which
-      // only ever holds the minimal login-credentials record
-      // ({id, name, password, dept, city, salary}) — that's why every
-      // profile showed N/A for everything except name/designation/salary.
       let localData = [];
       try {
         const lsStr = localStorage.getItem('mevtencia_employeeDatabase');
@@ -293,11 +302,6 @@
         console.warn('Local storage load failed:', e);
       }
 
-      // Start from local data (this is where the full registration form —
-      // including Nominee/Bank/DOB/Documents — actually gets saved on submit),
-      // then merge in the backend copy per-field so the backend's copy wins
-      // wherever it actually has a value (keeping things in sync across
-      // devices) but never blanks out a field the backend simply doesn't have.
       const mergedMap = new Map();
       localData.forEach(r => {
         if (r.emp_id) mergedMap.set(r.emp_id, { ...r });
@@ -310,12 +314,6 @@
 
       allData = Array.from(mergedMap.values());
 
-      // ✅ FIX: documents are no longer stored inline on the Employee record
-      // (they moved to a separate /api/documents collection to avoid hitting
-      // MongoDB's 16MB per-document limit when several files were bundled
-      // into one employee record). Fetch each employee's documents here and
-      // merge them in — falling back to whatever was already found locally
-      // (e.g. from mevtencia_employeeDatabase) if the server has none.
       if (allData.length > 0) {
         try {
           await Promise.all(allData.map(async (emp) => {
@@ -399,12 +397,6 @@
       }).join('');
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Document field ke liye display value banao
-    // Base64 (data:...) → View button
-    // Server path (/uploads/...) → View button
-    // null / N/A → N/A text
-    // ─────────────────────────────────────────────────────────────────────
     function docDisplay(val) {
       if (val && typeof val === 'string' && val.startsWith('data:')) {
         return `<a class="doc-btn" href="${val}" target="_blank">📄 View Document</a>`;
@@ -471,9 +463,6 @@
 
       let html = '';
 
-      // ⚠️ Incomplete-profile banner — purani/broken registrations
-      // (jinka document/bank/nominee data kabhi save hua hi nahi tha)
-      // ko clearly flag karo taaki N/A confusing na lage.
       if (isIncompleteRecord(emp)) {
         html += `<div class="incomplete-banner">⚠️ This profile looks incomplete — it was likely registered before documents/bank details were being saved. Please re-register this employee through the Registration form to complete their profile.</div>`;
       }
@@ -488,7 +477,6 @@
         });
       });
 
-      // ✅ Documents section — docDisplay() use karo
       html += `<div class="section-title">📄 Documents</div>`;
       const docs = [
         ['CV / Resume',         emp.cv_resume],
@@ -577,21 +565,7 @@
       }
     }
 
-    // ── AUTH HEADERS FOR PERMISSION-GATED ROUTES ─────────────────────
-    // server.js's requirePermission('employeeDatabase') on DELETE
-    // /api/employees/:id expects an 'x-super-admin: true' header or an
-    // 'x-admin-id' header. Without it every delete here was silently
-    // rejected with 403 (the try/catch just swallowed it), so the row
-    // still disappeared from the local table even though it never
-    // actually left MongoDB.
-    // function permHeaders() {
-    //   const superSession = JSON.parse(localStorage.getItem('mev_superSession') || 'null');
-    //   const adminSession  = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
-    //   const isSuper = !!superSession || (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin'));
-    //   if (isSuper) return { 'x-super-admin': 'true' };
-    //   return { 'x-admin-id': (adminSession && adminSession.id) || '' };
-    // }
-function permHeaders() {
+    function permHeaders() {
   const superSession = JSON.parse(localStorage.getItem('mev_superSession') || 'null');
   const adminSession  = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
 
@@ -620,7 +594,6 @@ function permHeaders() {
         return;
       }
 
-      // ✅ ADD: also remove this employee's documents (now stored separately)
       try {
         await fetch(`/api/documents/${encodeURIComponent(empId)}`, { method: 'DELETE', headers: permHeaders() });
       } catch (e) {}
