@@ -58,7 +58,6 @@ const loginLimiter = rateLimit({
 });
 // Note: NOT applying any global rate limiter — only login endpoints are limited
 
-<<<<<<< HEAD
 // ════════════════════════════════════════════════════════
 //  MONGODB CONNECTION (with auto-reconnect resilience)
 // ════════════════════════════════════════════════════════
@@ -97,15 +96,6 @@ mongoose.connection.on('disconnected', () => {
 mongoose.connection.on('error', (err) => {
   console.error('❌ MongoDB connection error:', err.message);
 });
-=======
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('✅ MongoDB Atlas Connected!'))
-  .catch(err => {
-    console.error('❌ MongoDB Error:', err.message);
-    console.error('⚠️  Server will keep running, but any /api/* route that needs the database will fail until MongoDB connects.');
-    console.error('⚠️  Fix: whitelist this server\'s IP in MongoDB Atlas → Network Access, then restart the server.');
-  });
->>>>>>> 9ca2aae22e3da3b91b8086fc495bcd6055396aaa
 
 
 
