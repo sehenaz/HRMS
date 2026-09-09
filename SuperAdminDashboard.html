@@ -1816,13 +1816,12 @@
   <div class="toast" id="toast"></div>
 
   <script>
-
     window.addEventListener('pageshow', function (event) {
-  if (event.persisted) {
-    window.location.reload();
-  }
-});
-    //////////////////////////////////
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+
     // If this page is opened from your backend (server.js on port 4000),
     // relative '/api/...' calls work as-is (SERVER_URL stays '').
     // If opened from anywhere else (e.g. Live Server on 5501, or a
@@ -1981,6 +1980,28 @@
       else if (tab === 'admins') loadAdminsTab();
     }
 
+    // ========== HELPER: PARSE TIME TO MINUTES ==========
+    function parseTimeToMinutes(str) {
+      if (!str) return null;
+      const trimmed = str.trim().toLowerCase();
+      const match = trimmed.match(/^(\d{1,2}):(\d{2})\s*(am|pm)?$/);
+      if (!match) return null;
+      let h = parseInt(match[1]);
+      const m = parseInt(match[2]);
+      const meridiem = match[3] || '';
+      if (meridiem === 'pm' && h !== 12) h += 12;
+      if (meridiem === 'am' && h === 12) h = 0;
+      return h * 60 + m;
+    }
+
+    function minsToHoursStr(totalMins) {
+      if (totalMins === null || totalMins < 0) return '—';
+      const h = Math.floor(totalMins / 60);
+      const m = Math.round(totalMins % 60);
+      if (h === 0 && m === 0) return '—';
+      return `${h}h ${m}m`;
+    }
+
     // ========== ATTENDANCE FUNCTIONS ==========
     let lastFilteredData = [];
     let lastAllData = [];
@@ -2024,8 +2045,8 @@
     }
 
     async function getAllRecords() {
-  try {
-    const response = await fetchWithTimeout(`${SERVER_URL}/api/attendance`, {}, 60000);
+      try {
+        const response = await fetchWithTimeout(`${SERVER_URL}/api/attendance`, {}, 60000);
         if (response.ok) {
           const serverData = await response.json();
           const localData = JSON.parse(localStorage.getItem('mev_adminLog') || '[]');
@@ -2142,8 +2163,26 @@
     }
     window.__photoPh = `<div class='emp-photo-placeholder'><svg viewBox='0 0 24 24'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg></div>`;
 
+    // ════════════════════════════════════════════════════════════════════
+    //  FIXED buildRow — Work Hours recomputed from clock_in/clock_out
+    // ════════════════════════════════════════════════════════════════════
     function buildRow(r, isSandwich) {
+      // Recalculate work hours from clock_in/clock_out (reliable)
+      let workHoursDisplay = '—';
+      if (r.clock_in && r.clock_out) {
+        const inMins = parseTimeToMinutes(r.clock_in);
+        const outMins = parseTimeToMinutes(r.clock_out);
+        if (inMins !== null && outMins !== null && outMins > inMins) {
+          workHoursDisplay = minsToHoursStr(outMins - inMins);
+        }
+      }
+      // fallback: agar recompute fail ho to stored work_hours use karo
+      if (workHoursDisplay === '—' && r.work_hours) {
+        workHoursDisplay = r.work_hours;
+      }
+
       const sandwichBadge = isSandwich ? `<div><span class="badge-sandwich">🥪 Sandwich Leave</span></div>` : '';
+
       return `<tr class="${isSandwich ? 'row-sandwich' : ''}">
         <td>${photoEl(r)}</td>
         <td>
@@ -2155,7 +2194,7 @@
         <td>${r.date || '—'}</td>
         <td class="time-val">${r.clock_in || '—'}</td>
         <td class="time-val">${r.clock_out || '<span style="color:#ccc">—</span>'}</td>
-        <td class="time-val">${r.work_hours || '<span style="color:#ccc">—</span>'}</td>
+        <td class="time-val">${workHoursDisplay}</td>
         <td>
           <div class="loc-val" title="${r.location || ''}">${r.location || 'Unknown'}</div>
           ${r.lat && r.lng ? `<a class="map-link" href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank">📍 View Map</a>` : ''}
@@ -2560,8 +2599,6 @@
       return { full, half, absent, paid, total: Math.round(paid * rate), monthly, days };
     }
 
-    // Per-day salary status/factor for a single employee on a single day of the month.
-    // Mirrors the Sunday sandwich-off logic used in computeMonthlySalary().
     function computeDaySalaryInfo(empId, year, month, day, days, attendanceMap) {
       const date = new Date(year, month, day);
       const isSunday = date.getDay() === 0;
@@ -2637,7 +2674,6 @@
       if (salaryView === 'daily') renderDailySalary();
     }
 
-    // ========== DAILY SALARY VIEW (date wise, per employee) ==========
     function setSalaryView(v) {
       salaryView = v;
       document.getElementById('btnSalaryViewMonthly').classList.toggle('active', v === 'monthly');

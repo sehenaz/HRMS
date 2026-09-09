@@ -166,6 +166,27 @@ const documentSchema = new mongoose.Schema({
 });
 documentSchema.index({ emp_id: 1, doc_type: 1 }, { unique: true });
 
+// const attendanceSchema = new mongoose.Schema({
+//   emp_id:          { type: String, required: true },
+//   emp_name:        String,
+//   dept:            String,
+//   city:            String,
+//   date:            { type: String, required: true },
+//   clock_in:        String,
+//   clock_out:       String,
+//   work_hours:      String,
+//   attendance_type: { type: String, default: 'In Progress' },
+//   location:        String,
+//   lat:             String,
+//   lng:             String,
+//   photo:           String,
+//   tasks:           Array,
+//   note:            String,
+//   updated_at:      { type: Date, default: Date.now }
+
+// });
+// attendanceSchema.index({ emp_id: 1, date: 1 });
+// attendanceSchema mein naye fields add karo
 const attendanceSchema = new mongoose.Schema({
   emp_id:          { type: String, required: true },
   emp_name:        String,
@@ -174,6 +195,8 @@ const attendanceSchema = new mongoose.Schema({
   date:            { type: String, required: true },
   clock_in:        String,
   clock_out:       String,
+  clock_in_iso:    String,   // ✅ ISO timestamp for accurate duration calc
+  clock_out_iso:   String,   // ✅ ISO timestamp for accurate duration calc
   work_hours:      String,
   attendance_type: { type: String, default: 'In Progress' },
   location:        String,
@@ -479,6 +502,8 @@ app.post('/api/employees', upload.any(), async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+
+
 app.post('/api/register', requirePermission('newEmployeeRegistration'), upload.any(), async (req, res) => {
   try {
     const emp = req.body;
@@ -692,6 +717,33 @@ app.get('/api/employee-attendance', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// app.post('/api/attendance', async (req, res) => {
+//   try {
+//     const d = req.body;
+//     if (!d.emp_id || !d.date) return res.status(400).json({ error: 'emp_id and date required' });
+//     const data = {
+//       emp_id: d.emp_id, emp_name: d.emp_name || '',
+//       dept: d.dept || '', city: d.city || '',
+//       date: d.date, clock_in: d.clock_in || '',
+//       clock_out: d.clock_out || '', work_hours: d.work_hours || '',
+//       attendance_type: d.attendance_type || 'In Progress',
+//       location: d.location || 'Unknown',
+//       lat: d.lat || null, lng: d.lng || null,
+//       tasks: d.tasks || [],
+//       note: d.note || '', updated_at: new Date()
+//     };
+//     // Never overwrite an existing selfie with an empty string (clock-out / retry syncs).
+//     if (d.photo) data.photo = d.photo;
+//     const entry = await Attendance.findOneAndUpdate(
+//       { emp_id: d.emp_id, date: d.date },
+//       { $set: data },
+//       { upsert: true, new: true }
+//     );
+//     res.json({ success: true, entry });
+//   } catch (err) { res.status(500).json({ error: err.message }); }
+// });
+
+
 app.post('/api/attendance', async (req, res) => {
   try {
     const d = req.body;
@@ -701,13 +753,14 @@ app.post('/api/attendance', async (req, res) => {
       dept: d.dept || '', city: d.city || '',
       date: d.date, clock_in: d.clock_in || '',
       clock_out: d.clock_out || '', work_hours: d.work_hours || '',
+      clock_in_iso: d.clock_in_iso || '',   // ✅ pass through
+      clock_out_iso: d.clock_out_iso || '', // ✅ pass through
       attendance_type: d.attendance_type || 'In Progress',
       location: d.location || 'Unknown',
       lat: d.lat || null, lng: d.lng || null,
       tasks: d.tasks || [],
       note: d.note || '', updated_at: new Date()
     };
-    // Never overwrite an existing selfie with an empty string (clock-out / retry syncs).
     if (d.photo) data.photo = d.photo;
     const entry = await Attendance.findOneAndUpdate(
       { emp_id: d.emp_id, date: d.date },
