@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#3f51b5" />
   <title>MEVTENCIA — Leave Management</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="auth.js"></script>
+  <script>requireAuth(['admin', 'super']);</script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -213,11 +218,6 @@
       const superRaw = localStorage.getItem('mev_superSession');
       const adminSession = adminRaw ? JSON.parse(adminRaw) : null;
       const superSession = superRaw ? JSON.parse(superRaw) : null;
-
-      if (!adminSession && !superSession) {
-        window.location.href = 'AdminLogin.html';
-        return;
-      }
 
       const isSuper = !!superSession || (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin'));
 

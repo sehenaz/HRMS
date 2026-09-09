@@ -6,7 +6,11 @@
     "start": "node server.js"
   },
   "dependencies": {
+<<<<<<< HEAD
     "bcryptjs": "^2.4.3",
+=======
+    "bcryptjs": "^3.0.3",
+>>>>>>> 9ca2aae22e3da3b91b8086fc495bcd6055396aaa
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

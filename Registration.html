@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mevrick Solution - Employee Registration</title>
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="auth.js"></script>
+    <script>requireAuth(['admin', 'super']);</script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -406,7 +411,7 @@
             const superSession = JSON.parse(localStorage.getItem('mev_superSession') || 'null');
             const adminSession  = JSON.parse(localStorage.getItem('mev_adminSession') || 'null');
             const isSuper = !!superSession || (adminSession && (adminSession.type === 'super' || adminSession.type === 'superadmin'));
-            if (isSuper) return { 'x-super-admin': 'true' };
+            if (isSuper) return { 'x-super-admin-id': superSession ? (superSession.super_id || superSession.id) : (adminSession.id || 'admin') };
             if (adminSession && adminSession.id) return { 'x-admin-id': adminSession.id };
             return {};
         }

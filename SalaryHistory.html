@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#3f51b5" />
   <title>MEVTENCIA — Salary History</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script src="auth.js"></script>
+  <script>requireAuth(['employee', 'admin']);</script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%); min-height: 100vh; }
@@ -114,7 +119,7 @@
         }
       }
 
-      if (!session) { window.location.href = 'mev.html'; return; }
+      // auth.js already handled redirect if unauthenticated
 
       document.getElementById('empName').textContent = session.name || 'Employee';
       document.getElementById('empMeta').textContent = (session.id || '') + ' · ' + (session.dept || 'Employee');
@@ -129,12 +134,7 @@
     };
 
     function logout() {
-      // FIX: clear the actual keys used by mev.html / AttendanceTracker.html
-      localStorage.removeItem('mev_employeeSession');
-      localStorage.removeItem('mev_adminSession');
-      localStorage.removeItem('mev_capturedPhoto');
-      localStorage.removeItem('mev_capturedLocation');
-      localStorage.removeItem('mev_captureAt');
+      authLogout();
     }
 
     async function calculateSalaryHistory(empId) {
