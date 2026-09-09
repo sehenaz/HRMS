@@ -548,6 +548,11 @@
     let verifiedEmployee = null;
     let isAdminEmployee = false;
     let linkedAdminInfo = null;
+    // FIX: guard so continueToDashboard() can never fire twice (once from
+    // the new auto-redirect timer, once from a manual click on the
+    // "Go to Dashboard" button if the person taps it during the countdown).
+    let hasRedirected = false;
+    let autoRedirectTimer = null;
 
     // ── DEBUG LOG PANEL (visible on-screen, no DevTools needed) ──
     function debugLog(msg) {
@@ -876,13 +881,30 @@
       showMsg('⏳ Fetching location...', 'warning');
       await fetchLocation();
 
-      showMsg('✅ Ready! Click to continue.', 'success');
+      // ✅ FIX: auto-redirect after capture — employee no longer has to
+      // tap "Go to Dashboard" manually. As soon as the photo + location
+      // are ready we count down and jump straight to
+      // AttendanceTracker.html, which itself auto clocks them in.
+      // The button stays visible/clickable during the countdown as a
+      // manual fallback (e.g. if someone wants to retake before the
+      // timer fires) — retake() below cancels the pending auto-redirect.
+      showMsg('✅ Captured! Redirecting to your dashboard...', 'success');
+      if (autoRedirectTimer) clearTimeout(autoRedirectTimer);
+      autoRedirectTimer = setTimeout(() => {
+        continueToDashboard();
+      }, 1200);
     }
 
     // ========== RETAKE ==========
     function retake() {
       capturedData = null;
       locationData = null;
+
+      // FIX: cancel the pending auto-redirect timer set in capturePhoto()
+      // so retaking a photo doesn't get overtaken by a redirect firing
+      // with the OLD (about-to-be-discarded) captured photo.
+      if (autoRedirectTimer) { clearTimeout(autoRedirectTimer);
+        autoRedirectTimer = null; }
 
       if (stream) { stream.getTracks().forEach(t => t.stop());
         stream = null; }
@@ -962,6 +984,10 @@
 
     // ========== CONTINUE TO DASHBOARD ==========
     function continueToDashboard() {
+      // FIX: guard against double-firing (auto-redirect timer + a manual
+      // click on "Go to Dashboard" arriving at nearly the same time).
+      if (hasRedirected) return;
+
       debugLog('▶️ continueToDashboard() called');
       try {
         if (!capturedData) {
@@ -975,6 +1001,10 @@
           showMsg('❌ Verification failed.', 'error');
           return;
         }
+
+        hasRedirected = true;
+        if (autoRedirectTimer) { clearTimeout(autoRedirectTimer);
+          autoRedirectTimer = null; }
 
         debugLog(`✓ capturedData present (${capturedData.length} chars), verifiedEmployee = ${verifiedEmployee.id}`);
         debugLog(`✓ isAdminEmployee = ${isAdminEmployee}`);
@@ -1054,6 +1084,7 @@
         }, 800);
 
       } catch (err) {
+        hasRedirected = false;
         debugLog(`🛑 CRASH in continueToDashboard: ${err.name}: ${err.message}`);
         showMsg('⚠️ An error stopped the redirect. See debug box below - please screenshot and send it.', 'error');
       }

@@ -1568,7 +1568,9 @@
           lng: record.lng || loc.lng || null,
           photo: record.photo || photo || '',
           tasks: record.tasks || [],
-          note: record.note || ''
+          note: record.note || '',
+          clock_in_iso: record.clock_in_iso || '',
+          clock_out_iso: record.clock_out_iso || ''
         };
         const resp = await fetch('/api/attendance', {
           method: 'POST',
@@ -1589,8 +1591,36 @@
     function fmtTimeShort(d) { return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit',
         hour12: true }); }
 
-    function diffHM(ms) { const h = Math.floor(ms / 3600000),
-        m = Math.floor((ms % 3600000) / 60000); return `${h}h ${m}m`; }
+    function diffHM(ms) {
+      if (ms === null || ms === undefined || isNaN(ms) || ms < 0) return '0h 0m';
+      const h = Math.floor(ms / 3600000),
+        m = Math.floor((ms % 3600000) / 60000);
+      return `${h}h ${m}m`;
+    }
+
+    // Rebuilds a proper Date for "today's" clock-in when clock_in_iso is
+    // missing or invalid (e.g. records pulled back from the backend, which
+    // only stores the clock_in display string, not the ISO timestamp).
+    // Without this, `new Date(undefined)` -> Invalid Date -> every hours
+    // calculation downstream becomes NaN, which is why "NaNh NaNm" was
+    // showing up in Work Hours.
+    function reconstructClockInDate(dateStr, timeStr) {
+      if (!dateStr || !timeStr) return null;
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return null;
+      const day = parseInt(parts[0], 10),
+        month = parseInt(parts[1], 10),
+        year = parseInt(parts[2], 10);
+      const match = timeStr.match(/(\d{1,2}):(\d{2})\s*([AaPp][Mm])/);
+      if (!match) return null;
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const ampm = match[3].toLowerCase();
+      if (ampm === 'pm' && h !== 12) h += 12;
+      if (ampm === 'am' && h === 12) h = 0;
+      const d = new Date(year, month - 1, day, h, m, 0, 0);
+      return isNaN(d.getTime()) ? null : d;
+    }
 
     function tickClock() {
       const now = new Date();
@@ -1608,7 +1638,7 @@
         shiftTag.className = 'shift-tag shift-normal';
         shiftTag.innerHTML = '<span class="shift-dot dot-green"></span> Normal Shift';
       }
-      if (clockInTime && !getRecord()?.clock_out) {
+      if (clockInTime && !isNaN(clockInTime.getTime()) && !getRecord()?.clock_out) {
         document.getElementById('statHours').textContent = diffHM(now - clockInTime);
       }
     }
@@ -1643,34 +1673,40 @@
     }
 
     ////////////////////////////////////////////
-// const FULL_DAY_MIN_HOURS = 9;   // >= 9h kaam → Full Day
-//     const HALF_DAY_MIN_HOURS = 5;   // >= 5h kaam → Half Day (isse kam ho to "Short Day")
+    // Full/Half/Short Day thresholds — worked hours based:
+    //   >= 9h worked  -> Full Day
+    //   >= 5h worked  -> Half Day
+    //   <  5h worked  -> Short Day
+    const FULL_DAY_MIN_HOURS = 9;   // >= 9h kaam -> Full Day
+    const HALF_DAY_MIN_HOURS = 5;   // >= 5h kaam -> Half Day (isse kam ho to "Short Day")
 
-//     function determineType(inTime, outTime) {
-//       const workedHours = (outTime - inTime) / 3600000;
-//       if (workedHours >= FULL_DAY_MIN_HOURS) return 'Full Day';
-//       if (workedHours >= HALF_DAY_MIN_HOURS) return 'Half Day';
-//       return 'Short Day';
-//     }
-
-
-const FULL_DAY_MIN_HOURS = 5;   // >= 5h kaam → Full Day
-
-function determineType(inTime, outTime) {
-  const workedHours = (outTime - inTime) / 3600000;
-  if (workedHours >= FULL_DAY_MIN_HOURS) return 'Full Day';
-  return 'Half Day';
-}
+    function determineType(inTime, outTime) {
+      const workedHours = (outTime - inTime) / 3600000;
+      if (workedHours >= FULL_DAY_MIN_HOURS) return 'Full Day';
+      if (workedHours >= HALF_DAY_MIN_HOURS) return 'Half Day';
+      return 'Short Day';
+    }
 
 
     function loadTodayState() {
       const rec = getRecord();
       if (!rec) return;
-      clockInTime = new Date(rec.clock_in_iso);
+
+      // FIX: backend-synced records don't carry clock_in_iso (syncToBackend
+      // previously never sent it), so this used to become an Invalid Date
+      // whenever today's record came back from the server merge — which
+      // then produced "NaNh NaNm" in the live Work Hours ticker. We now
+      // fall back to rebuilding the timestamp from date + clock_in string.
+      let cInDate = rec.clock_in_iso ? new Date(rec.clock_in_iso) : null;
+      if (!cInDate || isNaN(cInDate.getTime())) {
+        cInDate = reconstructClockInDate(rec.date, rec.clock_in);
+      }
+      clockInTime = cInDate;
+
       document.getElementById('statIn').textContent = rec.clock_in;
       if (rec.clock_out) {
         document.getElementById('statOut').textContent = rec.clock_out;
-        document.getElementById('statHours').textContent = rec.work_hours;
+        document.getElementById('statHours').textContent = rec.work_hours || '0h 0m';
         setStatusBadge(rec.attendance_type);
         document.getElementById('btnIn').disabled = true;
         document.getElementById('btnOut').disabled = true;
@@ -1679,6 +1715,9 @@ function determineType(inTime, outTime) {
         document.getElementById('btnOut').disabled = false;
         document.getElementById('statStatus').textContent = 'Working';
         setStatusBadge('In Progress');
+        if (clockInTime && !isNaN(clockInTime.getTime())) {
+          document.getElementById('statHours').textContent = diffHM(new Date() - clockInTime);
+        }
         schedule11PMClockout();
       }
     }
@@ -1738,7 +1777,7 @@ function determineType(inTime, outTime) {
     }
 
     function doClockout(auto = false, tasks = [], note = '') {
-      if (!clockInTime) return;
+      if (!clockInTime || isNaN(clockInTime.getTime())) return;
       const rec = getRecord();
       if (!rec || rec.clock_out) return;
 
@@ -1750,6 +1789,7 @@ function determineType(inTime, outTime) {
       const type = determineType(clockInTime, now);
       rec.clock_out = fmtTimeShort(now);
       rec.clock_out_iso = now.toISOString();
+      rec.clock_in_iso = rec.clock_in_iso || clockInTime.toISOString();
       rec.work_hours = diffHM(now - clockInTime);
       rec.attendance_type = type;
       rec.tasks = tasks;
@@ -1805,14 +1845,16 @@ function determineType(inTime, outTime) {
       }
       body.innerHTML = recs.slice(0, 30).map(r => {
         const isHalf = (r.attendance_type || '').includes('Half');
+        const isShort = (r.attendance_type || '') === 'Short Day';
         const isDone = !!r.clock_out;
         const isError = !isDone && r.date !== getToday() && r.clock_in;
 
         let statusClass, statusText;
         if (isError) { statusClass = 'status-error';
-          statusText = '⚠️ Missed Clock Out'; } else if (isDone) { statusClass = isHalf ? 'status-half' :
-            'status-present';
-          statusText = isHalf ? 'Half Day' : 'Present'; } else { statusClass = 'status-wip';
+          statusText = '⚠️ Missed Clock Out'; } else if (isDone) {
+          if (isShort) { statusClass = 'status-error'; statusText = 'Short Day'; }
+          else { statusClass = isHalf ? 'status-half' : 'status-present';
+          statusText = isHalf ? 'Half Day' : 'Present'; } } else { statusClass = 'status-wip';
           statusText = 'In Progress'; }
 
         const locText = r.location && r.location !== 'Unknown' ? r.location : null;

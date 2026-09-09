@@ -72,25 +72,52 @@ const loginLimiter = rateLimit({
 // Fix: wrap the connection in a reusable connectDB() function, retry on
 // initial failure, and listen for 'disconnected' to automatically call
 // connectDB() again — so the server self-heals without a manual restart.
+// FIX: guard against overlapping connection attempts. Without this,
+// a failed initial connect() also flips the connection state to
+// "disconnected", which fires the 'disconnected' listener below AND
+// the .catch() retry below at the same time — each spawning its own
+// connectDB() call, which then fail and re-trigger 'disconnected'
+// again immediately, producing a runaway flood of parallel connection
+// attempts (the endless "MongoDB disconnected! Attempting to
+// reconnect..." spam) instead of one clean retry every 5 seconds.
+let isConnectingDB = false;
+let reconnectTimer = null;
+
 function connectDB() {
+  if (isConnectingDB) return; // already trying — don't stack another attempt
+  isConnectingDB = true;
+
   mongoose.connect((process.env.MONGODB_URI || '').trim(), {
     serverSelectionTimeoutMS: 10000,
     socketTimeoutMS: 45000,
     heartbeatFrequencyMS: 10000,
     family: 4
   })
-    .then(() => console.log('✅ MongoDB Atlas Connected!'))
+    .then(() => {
+      isConnectingDB = false;
+      console.log('✅ MongoDB Atlas Connected!');
+    })
     .catch(err => {
+      isConnectingDB = false;
       console.error('❌ MongoDB Error:', err.message);
       console.error('⚠️  Retrying in 5 seconds...');
-      setTimeout(connectDB, 5000);
+      scheduleReconnect();
     });
 }
+
+function scheduleReconnect() {
+  if (reconnectTimer) return; // a retry is already scheduled
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    connectDB();
+  }, 5000);
+}
+
 connectDB();
 
 mongoose.connection.on('disconnected', () => {
   console.warn('⚠️  MongoDB disconnected! Attempting to reconnect...');
-  connectDB();
+  scheduleReconnect();
 });
 
 mongoose.connection.on('error', (err) => {
