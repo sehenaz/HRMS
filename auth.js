@@ -24,17 +24,8 @@ function requireAuth(allowedRoles) {
     if (allowedRoles.indexOf('super')    !== -1 && isSuper)    hasAccess = true;
 
     if (!hasAccess) {
-      // Pick the right login target
-      var target = 'index.html';
-      if (allowedRoles.indexOf('super') !== -1 && allowedRoles.indexOf('admin') === -1 && allowedRoles.indexOf('employee') === -1) {
-        target = 'SuperAdminLogin.html';
-      } else if (allowedRoles.indexOf('admin') !== -1 && allowedRoles.indexOf('employee') === -1) {
-        target = 'AdminLogin.html';
-      } else if (allowedRoles.indexOf('employee') !== -1) {
-        target = 'mev.html';
-      }
-      // Use replace() so this page is removed from history (Back button can't return here)
-      window.location.replace(target);
+      // If unauthenticated or after logout, always redirect to main index.html
+      window.location.replace('index.html');
       // Throw to stop any further JS on this page from running
       throw new Error('AUTH_REDIRECT');
     }
@@ -63,6 +54,7 @@ function authLogout() {
   localStorage.removeItem('mev_capturedPhoto');
   localStorage.removeItem('mev_capturedLocation');
   localStorage.removeItem('mev_captureAt');
+  try { sessionStorage.clear(); } catch(e) {}
 
   // Use replace() → removes current page from history stack
   // Back button will skip the protected page entirely

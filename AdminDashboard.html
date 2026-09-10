@@ -574,7 +574,7 @@
       <!-- <li id="navManageAdmins"><a href="#" onclick="openAdminMgrModal()" style="background:rgba(139,92,246,0.25);">🛠️ Manage Admins</a></li>
       <li><a href="Profile.html">👤 My Profile</a></li>
       <li><a href="#dailySheetSection" onclick="openDailySheet()">📸 Daily Sheet</a></li> -->
-      <li><a href="index.html" onclick="adminLogout()">Logout</a></li>
+      <li><a href="javascript:void(0)" onclick="adminLogout()">Logout</a></li>
     </ul>
   </nav>
 
@@ -595,7 +595,7 @@
         <a href="EmployeeHistory.html" id="hdrRegBtn"
           style="background:#3f51b5;color:white;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:700;font-size:13px;">👥
           Registration</a>
-        <a class="logout-btn" href="index.html" onclick="adminLogout()">Logout</a>
+        <a class="logout-btn" href="javascript:void(0)" onclick="adminLogout()">Logout</a>
       </div>
     </div>
 
@@ -1428,7 +1428,7 @@
 
     function closeModal() { document.getElementById('photoModal').classList.remove('show'); }
 
-    function adminLogout() { localStorage.removeItem('mev_adminSession'); }
+    function adminLogout() { authLogout(); }
 
     function showToast(msg, bg = '#1d6f42') {
       const t = document.getElementById('toast');

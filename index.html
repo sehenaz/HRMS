@@ -8,6 +8,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="MEVTENCIA" />
   <title>MEVTENCIA — Mevrick Solution Pvt. Ltd.</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <link rel="icon" href="assets/logo.png" type="image/x-icon">
   <link rel="manifest" href="manifest.json" />
   <style>
@@ -320,6 +323,19 @@
   </footer>
 
   <script>
+    // Ensure index.html is the root/main page and back button cannot navigate to previous login/dashboard pages
+    (function() {
+      try {
+        history.pushState(null, '', window.location.href);
+        window.addEventListener('popstate', function() {
+          history.pushState(null, '', window.location.href);
+        });
+        window.addEventListener('pageshow', function() {
+          history.pushState(null, '', window.location.href);
+        });
+      } catch (e) {}
+    })();
+
     function tick() {
       const now = new Date();
       document.getElementById('liveTime').textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
